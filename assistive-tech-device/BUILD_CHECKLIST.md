@@ -23,11 +23,13 @@ Parts:
 - [ ] Vibration motor (10×3mm "pancake" type)
 - [ ] 2N2222 NPN transistor
 - [ ] 1N4148 diode (flyback protection)
-- [ ] 220Ω resistor
-- [ ] LiPo battery (~350-500mAh)
+- [ ] Resistor, 220Ω-1k (either works as the transistor base resistor)
+- [ ] LiPo battery (~380-800mAh)
 - [ ] TP4056 Li-ion charge module
-- [ ] 5V boost converter module
-- [ ] Slide or toggle switch
+- [ ] (optional) 5V boost converter module - see PURCHASE_LIST.md's power
+      note; the current list skips this and wires the LiPo straight to 5V
+- [ ] (optional) Slide or toggle switch - current list disconnects the
+      battery by hand instead
 - [ ] Solderless breadboard
 - [ ] Jumper wire kit (male-male at minimum)
 

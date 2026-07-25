@@ -72,19 +72,32 @@ forward as true just because an earlier note said so.
 
 ## Bill of materials
 
-Full sourcing with real (2026-07-25-checked) store links and prices is in
-[`PURCHASE_LIST.md`](PURCHASE_LIST.md). Summary:
+Full sourcing with real, live-checked store links and prices is in
+[`PURCHASE_LIST.md`](PURCHASE_LIST.md) (currently the **Almaty edition** —
+re-check that file's header if building from a different city, since pickup
+vs. shipping flips between stores depending on where you are). For shopping
+on a phone, [`PURCHASE_LIST_almaty.html`](PURCHASE_LIST_almaty.html) is the
+same list as a self-contained, offline-capable checklist — tap to check
+items off, live running total, no server needed (open the file directly, or
+https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42 for a
+link instead of a download). Summary:
 
 | Part | Purpose |
 |---|---|
 | Arduino Nano (CH340 clone, USB-C) | microcontroller |
 | VL53L1X time-of-flight sensor | forward-facing distance sensing (up to ~4m) |
-| Vibration motor (10×3mm) | haptic output |
-| 2N2222 NPN transistor + 1N4148 flyback diode + 220Ω resistor | motor driver (a GPIO pin can't source a motor's current directly) |
-| LiPo battery (~350-500mAh) + TP4056 charge module + 5V boost converter | power |
-| Slide/toggle switch | power on/off |
+| Vibration motor (10mm coin type) | haptic output |
+| 2N2222 NPN transistor + 1N4148 flyback diode + resistor (220Ω-1k both work) | motor driver (a GPIO pin can't source a motor's current directly) |
+| LiPo battery (~380-800mAh) + TP4056 charge module | power |
 | Wristband strap | mounting |
 | Breadboard + jumper wires | prototyping (breadboard phase only) |
+
+`PURCHASE_LIST.md`'s current parts list skips a 5V boost converter and a
+power switch (wires the LiPo straight to 5V, disconnect the battery to turn
+off) to keep cost/complexity down - a common enough shortcut for
+battery-powered Nano clones, flagged there as worth watching for flaky
+behavior rather than treated as wrong. Add both back (a few hundred тг
+each) if the breadboard prototype turns out to need them.
 
 ### Sensor substitution warning
 
@@ -111,9 +124,13 @@ Motor circuit (D9 is PWM-capable):
   transistor emitter ----------------------- GND
   1N4148 flyback diode across motor leads, cathode (banded end) to Motor(+)
 
-Power:
-  LiPo -> TP4056 (charge/protect) -> 5V boost -> Nano 5V pin + motor circuit's 5V rail
+Power (as currently purchased - see PURCHASE_LIST.md's power note):
+  LiPo -> TP4056 (charge/protect) -> Nano 5V pin + motor circuit's 5V rail
   Common GND across sensor, motor circuit, and Nano.
+  Optional, not in the current parts list: a 5V boost converter between
+  TP4056 and the 5V rail (keeps the rail at a true regulated 5V instead of
+  the raw ~3.7-4.2V battery voltage), and a slide/toggle switch for power
+  on/off instead of disconnecting the battery by hand.
 ```
 
 Draw this into a real schematic before breadboarding — this is a text

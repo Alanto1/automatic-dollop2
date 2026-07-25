@@ -5,6 +5,25 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-25, follow-up: Almaty purchase list + mobile checklist
+
+A later session that day replaced `PURCHASE_LIST.md` with a more detailed
+Almaty-based version (the user supplied a different, more complete draft
+list - soldering/wiring tools, spare-part quantities - and asked for it to
+be re-based on Almaty instead of Astana, with a mobile-downloadable copy).
+Real research this time: AmperMarket.kz turns out to have **no Almaty
+pickup point** (Astana-only; Almaty orders ship via Kazpost, 1,600
+тг/shipment), while ChipDip.kz has a real Almaty office with **free
+pickup** - the opposite framing from the original Astana-based list, where
+ChipDip was the "ships in" store. `PURCHASE_LIST_almaty.html` is a
+self-contained, offline-capable checklist version of the same list
+(checkboxes persisted locally, live remaining-total, tap-through links) -
+also published as an Artifact, see the directory map below. This pass also
+noticed and flagged (but deliberately did not silently fix) two things the
+new parts list omits versus the original BOM: a 5V boost converter and a
+power switch - see `PURCHASE_LIST.md`'s "Power note" and README's wiring
+section.
+
 ## Session log — 2026-07-25 scaffolding pass
 
 This entire directory was built in one pass by Claude Code, inside the
@@ -101,7 +120,12 @@ assistive-tech-device/
 ├── CLAUDE.md                          this file
 ├── README.md                          project overview, BOM, wiring, roadmap, failure modes
 ├── BUILD_CHECKLIST.md                 checklist of every part/tool needed, by build phase
-├── PURCHASE_LIST.md                   the checklist above, but with real Astana store links, prices, quantities
+├── PURCHASE_LIST.md                   the checklist above, but with real store links, prices, quantities -
+│                                      currently the Almaty edition, see its own header before trusting it
+│                                      for a different city
+├── PURCHASE_LIST_almaty.html          same list, mobile-first standalone checklist (tap to check off, live
+│                                      running total, localStorage-persisted, works offline once opened).
+│                                      Published: https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42
 ├── outreach/
 │   ├── outreach_email_verband.md      draft email to a local Blinden- und Sehbehindertenverband chapter
 │   └── outreach_email_schule.md       draft email to a school accessibility/inclusion coordinator (parallel path)

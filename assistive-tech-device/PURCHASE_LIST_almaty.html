@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Purchase List — Almaty</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #10141b;
+    --surface: #171d27;
+    --surface-2: #1e2530;
+    --border: #2a3341;
+    --text: #e8ecf2;
+    --text-muted: #8b96a8;
+    --accent: #4fd8c4;
+    --tag-pickup-bg: #123326;
+    --tag-pickup-fg: #4ade80;
+    --tag-ships-bg: #12233a;
+    --tag-ships-fg: #6fa8f5;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f1ede6;
+      --surface: #fffdfa;
+      --surface-2: #ece6db;
+      --border: #ddd4c2;
+      --text: #1d1a14;
+      --text-muted: #6b6255;
+      --accent: #0e8c7a;
+      --tag-pickup-bg: #e2f4e8;
+      --tag-pickup-fg: #0f7a3d;
+      --tag-ships-bg: #e4edf9;
+      --tag-ships-fg: #1d5fbf;
+      --shadow: rgba(60, 50, 30, 0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10141b; --surface: #171d27; --surface-2: #1e2530; --border: #2a3341;
+    --text: #e8ecf2; --text-muted: #8b96a8; --accent: #4fd8c4;
+    --tag-pickup-bg: #123326; --tag-pickup-fg: #4ade80;
+    --tag-ships-bg: #12233a; --tag-ships-fg: #6fa8f5;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f1ede6; --surface: #fffdfa; --surface-2: #ece6db; --border: #ddd4c2;
+    --text: #1d1a14; --text-muted: #6b6255; --accent: #0e8c7a;
+    --tag-pickup-bg: #e2f4e8; --tag-pickup-fg: #0f7a3d;
+    --tag-ships-bg: #e4edf9; --tag-ships-fg: #1d5fbf;
+    --shadow: rgba(60, 50, 30, 0.12);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 48px;
+  }
+  a { color: var(--accent); }
+  .page { max-width: 640px; margin: 0 auto; padding: 0 14px; }
+
+  /* ---- Sticky header / progress ---- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner { max-width: 640px; margin: 0 auto; }
+  .title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .brand-sub { color: var(--text-muted); font-weight: 500; }
+  .theme-toggle {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .progress-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 10px; gap: 8px; }
+  .progress-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .progress-remaining { font-family: var(--font-mono); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .progress-bar { height: 5px; border-radius: 3px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.2s ease; }
+
+  /* ---- Callout ---- */
+  .callout {
+    margin: 14px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .callout strong { color: var(--text); }
+  .callout .tag { margin: 0 2px; }
+
+  /* ---- Section cards ---- */
+  .section { margin: 18px 0; }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 2px 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .item {
+    display: flex;
+    gap: 11px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .item:last-child { border-bottom: none; }
+
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    margin: 1px 0 0;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface-2);
+    cursor: pointer;
+    position: relative;
+  }
+  input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 6px; top: 2px;
+    width: 6px; height: 11px;
+    border: solid var(--bg);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .item-body { flex: 1; min-width: 0; }
+  .item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .item-name { font-size: 14.5px; line-height: 1.4; }
+  .item-qty { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+  .item-price { font-family: var(--font-mono); font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item.checked .item-name, .item.checked .item-price { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+
+  .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .tag-pickup { background: var(--tag-pickup-bg); color: var(--tag-pickup-fg); }
+  .tag-ships { background: var(--tag-ships-bg); color: var(--tag-ships-fg); }
+  .item-link {
+    font-size: 12px;
+    text-decoration: none;
+    border-bottom: 1px dotted var(--accent);
+  }
+  .item-note { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+  .combo-options {
+    display: flex;
+    gap: 14px;
+    margin: 2px 0 7px;
+    flex-wrap: wrap;
+  }
+  .combo-options label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .combo-options input[type="radio"] { accent-color: var(--accent); width: 14px; height: 14px; margin: 0; }
+  .combo-options input[type="radio"]:checked + span { color: var(--text); font-weight: 600; }
+
+  .info-row {
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .strike { text-decoration: line-through; }
+
+  footer {
+    margin-top: 20px;
+    padding: 14px 2px 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  footer table { width: 100%; border-collapse: collapse; margin: 10px 0; font-family: var(--font-mono); font-size: 12px; }
+  footer td { padding: 4px 0; }
+  footer td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  footer tr.total-row td { border-top: 1px solid var(--border); padding-top: 7px; font-weight: 700; color: var(--text); }
+  .reset-btn {
+    margin-top: 14px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="title-row">
+      <div class="brand">PURCHASE LIST <span class="brand-sub">/ ALMATY</span></div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch theme">🌙</button>
+    </div>
+    <div class="progress-row">
+      <span class="progress-count" id="progressCount">0 / 25 checked</span>
+      <span class="progress-remaining" id="progressRemaining">≈ 55,750 тг left</span>
+    </div>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressBarFill"></div></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="callout">
+    <strong>ChipDip.kz</strong> has a real Almaty office (пр. Абылай Хана, 18, н.п. 28 · Пн–Пт 9:00–18:00) —
+    <span class="tag tag-pickup">FREE PICKUP</span> on the sensor + motor, no shipping wait.
+    <strong>AmperMarket.kz</strong> only has pickup in Astana, so everything from them
+    <span class="tag tag-ships">KAZPOST</span> ships to Almaty instead — put every AmperMarket item in
+    <strong>one combined order</strong> (Kazpost bills 1,600 тг per shipment, not per item).
+    Checked 2026-07-25 — confirm prices before ordering.
+  </div>
+
+  <div class="section" id="section-electronics">
+    <p class="section-title"><span>Electronics</span></p>
+    <div class="card" id="card-electronics"></div>
+  </div>
+
+  <div class="section" id="section-shipping">
+    <p class="section-title"><span>Shipping</span></p>
+    <div class="card" id="card-shipping"></div>
+  </div>
+
+  <div class="section" id="section-prototyping">
+    <p class="section-title"><span>Prototyping (breadboard)</span></p>
+    <div class="card" id="card-prototyping"></div>
+  </div>
+
+  <div class="section" id="section-soldering">
+    <p class="section-title"><span>Soldering &amp; wiring</span></p>
+    <div class="card" id="card-soldering"></div>
+  </div>
+
+  <div class="section" id="section-enclosure">
+    <p class="section-title"><span>Enclosure assembly</span></p>
+    <div class="card" id="card-enclosure"></div>
+  </div>
+
+  <div class="section" id="section-safety">
+    <p class="section-title"><span>Safety</span></p>
+    <div class="card" id="card-safety"></div>
+  </div>
+
+  <footer>
+    <p>Full detail, store notes, and the power/switch caveat live in the repo's <code>PURCHASE_LIST.md</code>. This page mirrors it for shopping on a phone — check items off as you buy them; your progress is saved on this device.</p>
+    <table>
+      <tr><td>AmperMarket items (electronics + prototyping + soldering)</td><td>31,920 тг</td></tr>
+      <tr><td>+ Kazpost, one combined order</td><td>1,600 тг</td></tr>
+      <tr><td>ChipDip (VL53L1X + motor, Almaty pickup)</td><td>17,790 тг</td></tr>
+      <tr><td>Glue gun (Kaspi)</td><td>4,442 тг</td></tr>
+      <tr class="total-row"><td>Grand total (excl. calipers/strap/3D print/pouch)</td><td>≈ 55,750 тг</td></tr>
+    </table>
+    <button class="reset-btn" id="resetBtn" type="button">Reset all checkmarks</button>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "purchase-list-almaty-v1";
+  var THEME_KEY = "purchase-list-almaty-theme";
+
+  // qty*unit is computed at render time so combo items (Nano/cable) can
+  // react to the connector radio choice without duplicating rows.
+  var sections = {
+    electronics: [
+      {
+        id: "nano", name: "Arduino Nano clone (CH340)", combo: "connector",
+        options: {
+          "usb-c": { label: "USB-C", price: 2700, url: "https://ampermarket.kz/arduino/nano-ch340-type-c/" },
+          "mini-usb": { label: "Mini-USB", price: 3900, url: "https://ampermarket.kz/arduino/analog-arduino-nano-ch340/" }
+        },
+        default: "usb-c", qty: 1, store: "AmperMarket.kz", tag: "ships"
+      },
+      { id: "vl53l1x", name: "VL53L1X ToF sensor, 4m range", qty: 1, price: 17000, store: "ChipDip.kz",
+        url: "https://www.chipdip.kz/product/vl53l1x-distance-sensor-datchik-dalnosti-tof-waveshare-9000791743",
+        tag: "pickup", note: "16,200 тг each if buying 5+" },
+      { id: "motor", name: "Vibration motor, 10mm coin type", qty: 1, price: 790, store: "ChipDip.kz",
+        url: "https://www.chipdip.kz/product/mtr-vibrating", tag: "pickup", note: "bundle with the VL53L1X — same pickup trip" },
+      { id: "transistor", name: "2N2222A NPN transistor", qty: 3, unitPrice: 30, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/details/transistors/bipolar/2n2222a/", tag: "ships", note: "1 needed + 2 spares" },
+      { id: "diode", name: "1N4148 flyback diode", qty: 3, unitPrice: 10, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/details/diodes/1n4148/", tag: "ships", note: "1 needed + spares" },
+      { id: "resistor", name: "1k resistor", qty: 5, unitPrice: 40, approx: true, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/details/resistors/perm/resistors-1w-1/", tag: "ships", note: "1 needed + spares — price approximate" },
+      { id: "lipo", name: "LiPo battery, 3.7V 800mAh (802535)", qty: 1, price: 1350, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/supplies/acc/lipo-802535-800mah/", tag: "ships" },
+      { id: "tp4056", name: "TP4056 charge module, with protection", qty: 1, price: 350, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/supplies/chargers/tp4056-1a-li-ion-charger-protect/", tag: "ships" },
+      {
+        id: "cable", name: "USB cable (matching Nano connector)", combo: "connector",
+        options: {
+          "usb-c": { label: "USB-C", price: 450, url: "https://ampermarket.kz/cables/usb/usb-cable-a-type-c-x4/" },
+          "mini-usb": { label: "Mini-USB", price: 300, url: "https://ampermarket.kz/cables/usb/usb-cable-a-mini-30-cm/" }
+        },
+        default: "usb-c", qty: 1, store: "AmperMarket.kz", tag: "ships"
+      }
+    ],
+    shipping: [
+      { id: "kazpost", name: "Kazpost — combined AmperMarket order", qty: 1, price: 1600, store: "Kazpost",
+        tag: "ships", note: "pay once at checkout, not per item — 5-7 business days, +200 тг/kg past the first kg" }
+    ],
+    prototyping: [
+      { id: "breadboard", name: "Solderless breadboard, 830-point", qty: 1, price: 950, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/breadboards/solderless/breadboard-830-pin/", tag: "ships" },
+      { id: "jumper-mm", name: "Jumper wires, male-male (65 pcs)", qty: 1, price: 750, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/wires/65-wires-set/", tag: "ships" },
+      { id: "jumper-mf", name: "Jumper wires, male-female (10 pcs, 20cm)", qty: 1, price: 175, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/wires/mama-papa-20cm/", tag: "ships", note: "only need ~4, for the sensor's pins" }
+    ],
+    soldering: [
+      { id: "iron", name: "Soldering iron + multimeter bundle (830LN)", qty: 1, price: 13500, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/soldering/iron/soldering-kit-with-830ln/", tag: "ships" },
+      { id: "solder", name: "Solder wire, 0.6mm with flux (55g)", qty: 1, price: 2600, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/soldering/consumables/hx-t100-06mm-55g/", tag: "ships" },
+      { id: "stripper", name: "Wire stripper (mini knife-style)", qty: 1, price: 200, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/materials/instruments/portable-stripper/", tag: "ships" },
+      { id: "screwdriver", name: "Small screwdriver/repair tool set", qty: 1, price: 1900, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/materials/instruments/assist-repair-tool-kit/", tag: "ships" },
+      { id: "hookup", name: "Hookup wire, silicone 20AWG", qty: 2.5, unitPrice: 250, unitLabel: "m", store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/cables/mounting/silicon-wire-20awg/", tag: "ships", note: "~1m each of 2-3 colors" },
+      { id: "heatshrink", name: "Heat-shrink tubing kit (11 sizes, 580 pcs)", qty: 1, price: 2900, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/soldering/insulators/heat-shrink-tubing-kit/", tag: "ships" },
+      { id: "thirdhand", name: "“Third hand” soldering stand", qty: 1, price: 2900, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/soldering/equipment/third-hand/", tag: "ships" },
+      { id: "crocodile", name: "Crocodile clips, 28mm insulated", qty: 5, unitPrice: 50, store: "AmperMarket.kz",
+        url: "https://ampermarket.kz/plugs/alligator-connectors/crocodile-clip-28-mm/", tag: "ships" }
+    ],
+    enclosure: [
+      { id: "gluegun", name: "Hot glue gun (REXANT 200W)", qty: 1, price: 4442, approx: true, store: "Kaspi.kz",
+        url: "https://kaspi.kz/shop/p/rexant-pistolet-kleevoi-200-vt-11-mm-112244498/", tag: "ships",
+        note: "or browse the category for cheaper, from ~200 тг" },
+      { id: "calipers", name: "Calipers, vernier (basic plastic is fine)", qty: 1, price: null, store: "Kaspi.kz",
+        url: "https://kaspi.kz/shop/c/calipers/", tag: "ships" },
+      { id: "strap", name: "Wristband/watch strap, ~20mm", qty: 1, price: null, store: "Kaspi.kz",
+        url: "https://kaspi.kz/shop/c/watch%20straps%20and%20bracelets/", tag: "ships",
+        note: "match strap_width/strap_thickness in enclosure.scad" },
+      { id: "print", name: "3D printing (base + lid + clip)", qty: 1, price: null, store: "—",
+        note: "check a school makerspace first, or search “3D печать Алматы”" }
+    ],
+    safety: [
+      { id: "pouch", name: "Fireproof LiPo charging pouch", qty: 1, price: null, store: "—",
+        note: "not confirmed available locally — search Kaspi.kz, or an RC-hobby store. Until sourced: charge on a non-flammable surface, supervised, never unattended" }
+    ]
+  };
+
+  var infoRows = {
+    electronics: ['<div class="info-row"><span class="strike">Genuine Arduino-brand Nano — 26,500 тг</span> — skip it, the CH340 clone above works identically for this project.</div>']
+  };
+
+  var state = { checked: {}, connector: "usb-c" };
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if (saved.checked) state.checked = saved.checked;
+    if (saved.connector) state.connector = saved.connector;
+  } catch (e) { /* storage unavailable - start fresh */ }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* non-fatal */ }
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString("en-US").replace(/,/g, " "); }
+
+  function lineTotal(item) {
+    if (item.combo) {
+      var opt = item.options[state.connector];
+      return opt.price * item.qty;
+    }
+    if (item.price == null && item.unitPrice == null) return null;
+    var unit = item.unitPrice != null ? item.unitPrice : item.price;
+    return unit * item.qty;
+  }
+
+  function renderItem(item) {
+    var row = document.createElement("div");
+    row.className = "item";
+    var total = lineTotal(item);
+    var checked = !!state.checked[item.id];
+    if (checked) row.classList.add("checked");
+
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = checked;
+    cb.setAttribute("aria-label", item.name);
+    cb.addEventListener("change", function () {
+      state.checked[item.id] = cb.checked;
+      row.classList.toggle("checked", cb.checked);
+      save();
+      renderProgress();
+    });
+    row.appendChild(cb);
+
+    var body = document.createElement("div");
+    body.className = "item-body";
+
+    var top = document.createElement("div");
+    top.className = "item-top";
+    var nameWrap = document.createElement("div");
+    var name = document.createElement("span");
+    name.className = "item-name";
+    name.textContent = item.name;
+    nameWrap.appendChild(name);
+    if (item.qty && item.qty !== 1) {
+      var qty = document.createElement("span");
+      qty.className = "item-qty";
+      qty.textContent = "  ×" + item.qty + (item.unitLabel ? item.unitLabel : "");
+      nameWrap.appendChild(qty);
+    }
+    top.appendChild(nameWrap);
+
+    var price = document.createElement("span");
+    price.className = "item-price";
+    price.textContent = total == null ? "varies" : (item.approx ? "~" : "") + fmt(total) + " тг";
+    top.appendChild(price);
+    body.appendChild(top);
+
+    if (item.combo) {
+      var optsWrap = document.createElement("div");
+      optsWrap.className = "combo-options";
+      Object.keys(item.options).forEach(function (key) {
+        var opt = item.options[key];
+        var label = document.createElement("label");
+        var radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "connector-choice";
+        radio.value = key;
+        radio.checked = state.connector === key;
+        radio.addEventListener("change", function () {
+          state.connector = key;
+          save();
+          renderAll();
+        });
+        var span = document.createElement("span");
+        span.textContent = opt.label + " — " + fmt(opt.price) + " тг";
+        label.appendChild(radio);
+        label.appendChild(span);
+        optsWrap.appendChild(label);
+      });
+      body.appendChild(optsWrap);
+    }
+
+    var meta = document.createElement("div");
+    meta.className = "item-meta";
+    var tag = document.createElement("span");
+    tag.className = "tag " + (item.tag === "pickup" ? "tag-pickup" : "tag-ships");
+    tag.textContent = item.tag === "pickup" ? "PICKUP · " + item.store : (item.store === "Kaspi.kz" ? "KASPI" : "KAZPOST") ;
+    meta.appendChild(tag);
+
+    var url = item.combo ? item.options[state.connector].url : item.url;
+    if (url) {
+      var link = document.createElement("a");
+      link.className = "item-link";
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "open ↗";
+      meta.appendChild(link);
+    }
+    body.appendChild(meta);
+
+    if (item.note) {
+      var note = document.createElement("div");
+      note.className = "item-note";
+      note.textContent = item.note;
+      body.appendChild(note);
+    }
+
+    row.appendChild(body);
+    return row;
+  }
+
+  function renderSection(key) {
+    var card = document.getElementById("card-" + key);
+    card.innerHTML = "";
+    if (infoRows[key]) {
+      infoRows[key].forEach(function (html) {
+        var div = document.createElement("div");
+        div.innerHTML = html;
+        card.appendChild(div.firstChild);
+      });
+    }
+    sections[key].forEach(function (item) { card.appendChild(renderItem(item)); });
+  }
+
+  function allItems() {
+    var all = [];
+    Object.keys(sections).forEach(function (k) { all = all.concat(sections[k]); });
+    return all;
+  }
+
+  function renderProgress() {
+    var items = allItems();
+    var total = items.length;
+    var doneCount = 0;
+    var remaining = 0;
+    items.forEach(function (item) {
+      var t = lineTotal(item);
+      if (state.checked[item.id]) doneCount++;
+      else if (t != null) remaining += t;
+    });
+    document.getElementById("progressCount").textContent = doneCount + " / " + total + " checked";
+    document.getElementById("progressRemaining").textContent = "≈ " + fmt(remaining) + " тг left";
+    document.getElementById("progressBarFill").style.width = (doneCount / total * 100) + "%";
+  }
+
+  function renderAll() {
+    Object.keys(sections).forEach(renderSection);
+    renderProgress();
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    state.checked = {};
+    save();
+    renderAll();
+  });
+
+  /* Theme toggle */
+  var root = document.documentElement;
+  var themeToggle = document.getElementById("themeToggle");
+  function currentTheme() {
+    return root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+  function updateThemeIcon() {
+    var t = currentTheme();
+    themeToggle.textContent = t === "dark" ? "☀" : "🌙";
+  }
+  try {
+    var storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) root.setAttribute("data-theme", storedTheme);
+  } catch (e) { /* ignore */ }
+  updateThemeIcon();
+  themeToggle.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+    updateThemeIcon();
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
