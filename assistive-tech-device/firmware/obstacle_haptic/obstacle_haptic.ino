@@ -28,7 +28,7 @@
 //   VL53L0X  GND  -> Nano GND
 //   VL53L0X  SDA  -> Nano A4
 //   VL53L0X  SCL  -> Nano A5
-//   Motor driver transistor base -> Nano D9, through a 220ohm resistor
+//   Motor driver transistor base -> Nano D9, through a resistor (220ohm-1k, either works)
 //
 // Set DEBUG_SERIAL to 1 to print live distance/zone/motor readings at
 // 115200 baud while tuning HapticMapper's thresholds. Leave it at 0 for
