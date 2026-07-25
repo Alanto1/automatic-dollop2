@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Obstacle Haptic Simulator</title>
+<style>
+  /* ---------------------------------------------------------------
+     Tokens. Dark is the primary read (instrument-panel feel matches
+     a rangefinder/sonar tool); light is re-picked for contrast, not
+     a naive inversion. prefers-color-scheme sets the OS default;
+     [data-theme] (driven by the toggle button, persisted locally)
+     overrides it either direction.
+  ----------------------------------------------------------------*/
+  :root {
+    color-scheme: dark;
+    --bg: #10141b;
+    --bg-vignette: #161c26;
+    --surface: #171d27;
+    --surface-2: #1e2530;
+    --border: #2a3341;
+    --text: #e8ecf2;
+    --text-muted: #8b96a8;
+    --accent: #4fd8c4;
+    --zone-far: #4fd8c4;
+    --zone-medium: #f2c14e;
+    --zone-near: #f2924e;
+    --zone-critical: #f2554e;
+    --shadow: rgba(0, 0, 0, 0.45);
+
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #eef1f5;
+      --bg-vignette: #e4e9ef;
+      --surface: #ffffff;
+      --surface-2: #e7ecf1;
+      --border: #d3dae2;
+      --text: #131a24;
+      --text-muted: #5b6675;
+      --accent: #0e8c7a;
+      --zone-far: #0e8c7a;
+      --zone-medium: #9c6a0a;
+      --zone-near: #b3551a;
+      --zone-critical: #c43a32;
+      --shadow: rgba(30, 40, 60, 0.12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10141b;
+    --bg-vignette: #161c26;
+    --surface: #171d27;
+    --surface-2: #1e2530;
+    --border: #2a3341;
+    --text: #e8ecf2;
+    --text-muted: #8b96a8;
+    --accent: #4fd8c4;
+    --zone-far: #4fd8c4;
+    --zone-medium: #f2c14e;
+    --zone-near: #f2924e;
+    --zone-critical: #f2554e;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #eef1f5;
+    --bg-vignette: #e4e9ef;
+    --surface: #ffffff;
+    --surface-2: #e7ecf1;
+    --border: #d3dae2;
+    --text: #131a24;
+    --text-muted: #5b6675;
+    --accent: #0e8c7a;
+    --zone-far: #0e8c7a;
+    --zone-medium: #9c6a0a;
+    --zone-near: #b3551a;
+    --zone-critical: #c43a32;
+    --shadow: rgba(30, 40, 60, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, var(--bg-vignette), var(--bg) 60%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: clamp(20px, 5vw, 48px) clamp(16px, 4vw, 28px) 40px;
+  }
+
+  a { color: var(--accent); }
+
+  /* ---- Nameplate ---- */
+  .nameplate {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .brand-sub { color: var(--text-muted); }
+  .tagline {
+    margin: 6px 0 0;
+    max-width: 46ch;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+  .theme-toggle {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  /* ---- Panel shell shared by sections ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px -12px var(--shadow);
+    padding: 20px clamp(14px, 4vw, 24px);
+  }
+  .card + .card { margin-top: 14px; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+  }
+
+  /* ---- Rangefinder ---- */
+  .ruler-wrap { position: relative; }
+  .device-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .sensor-glyph {
+    position: relative;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+  }
+  .sensor-glyph::before,
+  .sensor-glyph::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    opacity: 0;
+    animation: ping 2.4s ease-out infinite;
+  }
+  .sensor-glyph::after { animation-delay: 1.2s; }
+  @keyframes ping {
+    0% { transform: scale(0.7); opacity: 0.55; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+  .device-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+
+  .ruler {
+    position: relative;
+    height: 30px;
+    margin: 6px 2px 0;
+  }
+  .zone-band {
+    position: absolute;
+    left: 0; right: 0; top: 10px;
+    height: 10px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px var(--shadow);
+  }
+  .ticks {
+    position: absolute;
+    left: 0; right: 0; top: 22px;
+    height: 16px;
+    pointer-events: none;
+  }
+  .tick {
+    position: absolute;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .tick::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    width: 1px;
+    height: 5px;
+    background: var(--border);
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+  }
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1.5px var(--border), 0 2px 6px var(--shadow);
+    cursor: grab;
+    margin-top: -4px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1.5px var(--border), 0 2px 6px var(--shadow);
+    cursor: grab;
+  }
+  input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; }
+
+  .distance-input {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    width: 100%;
+    height: 30px;
+  }
+  .distance-input::-webkit-slider-runnable-track { height: 10px; background: transparent; }
+  .distance-input::-moz-range-track { height: 10px; background: transparent; border: none; }
+
+  .small-range { width: 100%; height: 24px; }
+  .small-range::-webkit-slider-runnable-track { height: 6px; border-radius: 4px; background: var(--surface-2); }
+  .small-range::-moz-range-track { height: 6px; border-radius: 4px; background: var(--surface-2); border: none; }
+  .small-range::-webkit-slider-thumb { margin-top: -6px; width: 16px; height: 16px; }
+  .small-range::-moz-range-thumb { width: 16px; height: 16px; }
+
+  /* ---- Telemetry ---- */
+  .telemetry {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    gap: 10px;
+    align-items: stretch;
+  }
+  .tile {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+  .tile-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .tile-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile-value.zone-value { color: var(--zone-color, var(--text)); }
+  .duty-meter {
+    margin-top: 2px;
+    height: 4px;
+    border-radius: 3px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .duty-meter-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--zone-color, var(--accent));
+    transition: width 0.08s linear;
+  }
+
+  .motor-tile { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+  .motor-glyph {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.08s ease;
+  }
+  .motor-glyph.motor-on {
+    background: var(--zone-color, var(--accent));
+    box-shadow: 0 0 16px 2px var(--zone-color, var(--accent));
+    transform: scale(1.1);
+  }
+
+  /* ---- Controls ---- */
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  button {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+  .threshold-grid {
+    display: grid;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .threshold-row label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .threshold-row .row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .threshold-row output {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  details.advanced { margin-top: 16px; }
+  details.advanced summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+  details.advanced summary:hover { color: var(--text); }
+  .advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px 18px;
+    margin-top: 14px;
+  }
+
+  footer.help {
+    margin-top: 18px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+  footer.help code {
+    font-family: var(--font-mono);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sensor-glyph::before, .sensor-glyph::after { animation: none; opacity: 0; }
+    .motor-glyph { transition: background-color 0.08s ease; }
+    .motor-glyph.motor-on { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="nameplate">
+    <div>
+      <div class="brand">OBSTACLE HAPTIC <span class="brand-sub">/ SIM</span></div>
+      <p class="tagline">Drag the obstacle or run a sweep. Ports <code style="font-family:var(--font-mono)">HapticMapper.h</code>'s zone/pulse logic line-for-line — no hardware required.</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch theme">🌙</button>
+  </div>
+
+  <div class="card">
+    <p class="section-label">Rangefinder</p>
+    <div class="ruler-wrap">
+      <div class="device-row">
+        <div class="sensor-glyph" aria-hidden="true"></div>
+        <span class="device-label">SENSOR · 0mm</span>
+      </div>
+      <div class="ruler">
+        <div class="zone-band" id="zoneBand" aria-hidden="true"></div>
+        <div class="ticks" id="ticks" aria-hidden="true"></div>
+        <input type="range" class="distance-input" id="distanceRange" min="0" max="2500" step="10" value="2200" aria-label="Obstacle distance in millimeters">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="section-label">Telemetry</p>
+    <div class="telemetry" aria-live="polite">
+      <div class="tile">
+        <span class="tile-label">Distance</span>
+        <span class="tile-value" id="distanceReadout">— mm</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">Zone</span>
+        <span class="tile-value zone-value" id="zoneReadout">FAR</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">PWM duty</span>
+        <span class="tile-value" id="dutyReadout">000</span>
+        <div class="duty-meter"><div class="duty-meter-fill" id="dutyMeterFill"></div></div>
+      </div>
+      <div class="tile motor-tile">
+        <div>
+          <span class="tile-label">Motor</span>
+          <span class="tile-value" id="motorReadout">OFF</span>
+        </div>
+        <div class="motor-glyph" id="motorGlyph" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="section-label">Controls</p>
+    <div class="buttons">
+      <button type="button" class="primary" id="sweepBtn">▶ Simulate approach</button>
+      <button type="button" id="soundBtn" aria-pressed="false">🔈 Sound: off</button>
+      <button type="button" id="resetBtn">↺ Reset to defaults</button>
+    </div>
+
+    <div class="threshold-grid">
+      <div class="threshold-row">
+        <div class="row-head"><label for="nearThreshold">Near threshold</label><output id="nearThresholdOut">400 mm</output></div>
+        <input type="range" class="small-range" id="nearThreshold" min="20" max="2450" step="10" value="400">
+      </div>
+      <div class="threshold-row">
+        <div class="row-head"><label for="mediumThreshold">Medium threshold</label><output id="mediumThresholdOut">1000 mm</output></div>
+        <input type="range" class="small-range" id="mediumThreshold" min="70" max="2470" step="10" value="1000">
+      </div>
+      <div class="threshold-row">
+        <div class="row-head"><label for="farThreshold">Far threshold</label><output id="farThresholdOut">2000 mm</output></div>
+        <input type="range" class="small-range" id="farThreshold" min="120" max="2500" step="10" value="2000">
+      </div>
+    </div>
+
+    <details class="advanced">
+      <summary>Advanced: pulse timing &amp; duty per zone</summary>
+      <div class="advanced-grid">
+        <div class="threshold-row">
+          <div class="row-head"><label for="medOnMs">Medium on-time</label><output id="medOnMsOut">120 ms</output></div>
+          <input type="range" class="small-range" id="medOnMs" min="20" max="500" step="10" value="120">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="medOffMs">Medium off-time</label><output id="medOffMsOut">400 ms</output></div>
+          <input type="range" class="small-range" id="medOffMs" min="20" max="800" step="10" value="400">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="nearOnMs">Near on-time</label><output id="nearOnMsOut">120 ms</output></div>
+          <input type="range" class="small-range" id="nearOnMs" min="20" max="500" step="10" value="120">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="nearOffMs">Near off-time</label><output id="nearOffMsOut">150 ms</output></div>
+          <input type="range" class="small-range" id="nearOffMs" min="20" max="800" step="10" value="150">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="medDuty">Medium duty</label><output id="medDutyOut">140</output></div>
+          <input type="range" class="small-range" id="medDuty" min="1" max="255" step="1" value="140">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="nearDuty">Near duty</label><output id="nearDutyOut">200</output></div>
+          <input type="range" class="small-range" id="nearDuty" min="1" max="255" step="1" value="200">
+        </div>
+        <div class="threshold-row">
+          <div class="row-head"><label for="critDuty">Critical duty</label><output id="critDutyOut">255</output></div>
+          <input type="range" class="small-range" id="critDuty" min="1" max="255" step="1" value="255">
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <footer class="help">
+    <p>Keyboard: focus the rangefinder slider and use arrow keys. Values tuned here don't write back to <code>HapticMapper.h</code> automatically — copy them over by hand if you land on something better than the defaults.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------
+     HapticMapper port. Mirrors firmware/obstacle_haptic/HapticMapper.h
+     zone-for-zone: classify() thresholds, update()'s zone-transition
+     phase reset, and the continuous-critical special case (offMs===0)
+     are all the same logic, just in JS.
+  -------------------------------------------------------------*/
+  const DEFAULTS = {
+    farThresholdMm: 2000,
+    mediumThresholdMm: 1000,
+    nearThresholdMm: 400,
+    minValidMm: 10,
+    mediumPulse: { onMs: 120, offMs: 400 },
+    nearPulse: { onMs: 120, offMs: 150 },
+    mediumDuty: 140,
+    nearDuty: 200,
+    criticalDuty: 255,
+  };
+
+  let cfg = JSON.parse(JSON.stringify(DEFAULTS));
+
+  function HapticMapper() {
+    this.lastZone = "Far";
+    this.zoneEnteredAtMs = 0;
+    this.hasEnteredZone = false;
+  }
+
+  HapticMapper.prototype.classify = function (distanceMm) {
+    if (distanceMm < cfg.minValidMm) return "Far";
+    if (distanceMm >= cfg.farThresholdMm) return "Far";
+    if (distanceMm >= cfg.mediumThresholdMm) return "Medium";
+    if (distanceMm >= cfg.nearThresholdMm) return "Near";
+    return "Critical";
+  };
+
+  HapticMapper.prototype.pulseFor = function (zone) {
+    if (zone === "Medium") return cfg.mediumPulse;
+    if (zone === "Near") return cfg.nearPulse;
+    if (zone === "Critical") return { onMs: 255, offMs: 0 };
+    return { onMs: 0, offMs: 0 };
+  };
+
+  HapticMapper.prototype.dutyFor = function (zone) {
+    if (zone === "Medium") return cfg.mediumDuty;
+    if (zone === "Near") return cfg.nearDuty;
+    if (zone === "Critical") return cfg.criticalDuty;
+    return 0;
+  };
+
+  HapticMapper.prototype.update = function (distanceMm, nowMs) {
+    const zone = this.classify(distanceMm);
+
+    if (!this.hasEnteredZone || zone !== this.lastZone) {
+      this.lastZone = zone;
+      this.zoneEnteredAtMs = nowMs;
+      this.hasEnteredZone = true;
+    }
+
+    if (zone === "Far") return { motorOn: false, pwmDuty: 0, zone: zone };
+
+    const timing = this.pulseFor(zone);
+    const duty = this.dutyFor(zone);
+
+    if (timing.offMs === 0) return { motorOn: true, pwmDuty: duty, zone: zone };
+
+    const elapsed = nowMs - this.zoneEnteredAtMs;
+    const cycleMs = timing.onMs + timing.offMs;
+    const phase = elapsed % cycleMs;
+    const on = phase < timing.onMs;
+
+    return { motorOn: on, pwmDuty: on ? duty : 0, zone: zone };
+  };
+
+  const mapper = new HapticMapper();
+
+  /* ------------------------------------------------------------
+     DOM wiring
+  -------------------------------------------------------------*/
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+  const MAX_RANGE_MM = 2500;
+  const MIN_GAP_MM = 50;
+
+  const distanceRange = $("distanceRange");
+  const distanceReadout = $("distanceReadout");
+  const zoneReadout = $("zoneReadout");
+  const motorReadout = $("motorReadout");
+  const dutyReadout = $("dutyReadout");
+  const dutyMeterFill = $("dutyMeterFill");
+  const motorGlyph = $("motorGlyph");
+  const zoneBand = $("zoneBand");
+  const ticks = $("ticks");
+  const sweepBtn = $("sweepBtn");
+  const soundBtn = $("soundBtn");
+  const resetBtn = $("resetBtn");
+
+  const ZONE_VAR = { Far: "--zone-far", Medium: "--zone-medium", Near: "--zone-near", Critical: "--zone-critical" };
+
+  function buildTicks() {
+    ticks.innerHTML = "";
+    for (let mm = 0; mm <= MAX_RANGE_MM; mm += 500) {
+      const tick = document.createElement("div");
+      tick.className = "tick";
+      tick.style.left = (mm / MAX_RANGE_MM) * 100 + "%";
+      tick.textContent = mm === 0 ? "0" : mm / 1000 + "m";
+      ticks.appendChild(tick);
+    }
+  }
+
+  function paintZoneBand() {
+    const pct = (mm) => (mm / MAX_RANGE_MM) * 100;
+    const nearPct = pct(cfg.nearThresholdMm);
+    const medPct = pct(cfg.mediumThresholdMm);
+    const farPct = pct(cfg.farThresholdMm);
+    zoneBand.style.background =
+      "linear-gradient(to right," +
+      " var(--zone-critical) 0%, var(--zone-critical) " + nearPct + "%," +
+      " var(--zone-near) " + nearPct + "%, var(--zone-near) " + medPct + "%," +
+      " var(--zone-medium) " + medPct + "%, var(--zone-medium) " + farPct + "%," +
+      " var(--zone-far) " + farPct + "%, var(--zone-far) 100%)";
+  }
+
+  /* ---- Threshold sliders ---- */
+  const nearSlider = $("nearThreshold"), medSlider = $("mediumThreshold"), farSlider = $("farThreshold");
+  const nearOut = $("nearThresholdOut"), medOut = $("mediumThresholdOut"), farOut = $("farThresholdOut");
+
+  function onThresholdChange() {
+    // Fixed resolution order so any drag always yields a valid
+    // near < medium < far ordering: near is free (within its own
+    // bounds), medium follows near, far follows medium. Dragging a
+    // lower slider up can push its neighbors up with it; dragging a
+    // higher one down just stops at the gap instead of pulling the
+    // others down. Simple, always-valid, occasionally asymmetric.
+    cfg.nearThresholdMm = clamp(Number(nearSlider.value), cfg.minValidMm + 1, MAX_RANGE_MM);
+    cfg.mediumThresholdMm = clamp(Number(medSlider.value), cfg.nearThresholdMm + MIN_GAP_MM, MAX_RANGE_MM);
+    cfg.farThresholdMm = clamp(Number(farSlider.value), cfg.mediumThresholdMm + MIN_GAP_MM, MAX_RANGE_MM);
+
+    nearSlider.value = cfg.nearThresholdMm;
+    medSlider.value = cfg.mediumThresholdMm;
+    farSlider.value = cfg.farThresholdMm;
+
+    nearOut.textContent = cfg.nearThresholdMm + " mm";
+    medOut.textContent = cfg.mediumThresholdMm + " mm";
+    farOut.textContent = cfg.farThresholdMm + " mm";
+
+    paintZoneBand();
+  }
+  [nearSlider, medSlider, farSlider].forEach((s) => s.addEventListener("input", onThresholdChange));
+
+  /* ---- Advanced timing/duty ---- */
+  function bindAdvanced(input, output, apply, suffix) {
+    input.addEventListener("input", () => {
+      apply(Number(input.value));
+      output.textContent = input.value + (suffix || "");
+    });
+  }
+  bindAdvanced($("medOnMs"), $("medOnMsOut"), (v) => (cfg.mediumPulse.onMs = v), " ms");
+  bindAdvanced($("medOffMs"), $("medOffMsOut"), (v) => (cfg.mediumPulse.offMs = v), " ms");
+  bindAdvanced($("nearOnMs"), $("nearOnMsOut"), (v) => (cfg.nearPulse.onMs = v), " ms");
+  bindAdvanced($("nearOffMs"), $("nearOffMsOut"), (v) => (cfg.nearPulse.offMs = v), " ms");
+  bindAdvanced($("medDuty"), $("medDutyOut"), (v) => (cfg.mediumDuty = v), "");
+  bindAdvanced($("nearDuty"), $("nearDutyOut"), (v) => (cfg.nearDuty = v), "");
+  bindAdvanced($("critDuty"), $("critDutyOut"), (v) => (cfg.criticalDuty = v), "");
+
+  function resetAll() {
+    cfg = JSON.parse(JSON.stringify(DEFAULTS));
+    nearSlider.value = cfg.nearThresholdMm;
+    medSlider.value = cfg.mediumThresholdMm;
+    farSlider.value = cfg.farThresholdMm;
+    nearOut.textContent = cfg.nearThresholdMm + " mm";
+    medOut.textContent = cfg.mediumThresholdMm + " mm";
+    farOut.textContent = cfg.farThresholdMm + " mm";
+
+    $("medOnMs").value = cfg.mediumPulse.onMs; $("medOnMsOut").textContent = cfg.mediumPulse.onMs + " ms";
+    $("medOffMs").value = cfg.mediumPulse.offMs; $("medOffMsOut").textContent = cfg.mediumPulse.offMs + " ms";
+    $("nearOnMs").value = cfg.nearPulse.onMs; $("nearOnMsOut").textContent = cfg.nearPulse.onMs + " ms";
+    $("nearOffMs").value = cfg.nearPulse.offMs; $("nearOffMsOut").textContent = cfg.nearPulse.offMs + " ms";
+    $("medDuty").value = cfg.mediumDuty; $("medDutyOut").textContent = cfg.mediumDuty;
+    $("nearDuty").value = cfg.nearDuty; $("nearDutyOut").textContent = cfg.nearDuty;
+    $("critDuty").value = cfg.criticalDuty; $("critDutyOut").textContent = cfg.criticalDuty;
+
+    paintZoneBand();
+  }
+  resetBtn.addEventListener("click", resetAll);
+
+  /* ---- Sweep animation ---- */
+  let sweeping = false, sweepStart = 0, sweepFrom = 0, sweepTo = 0;
+  const SWEEP_MS = 6000;
+
+  function startSweep() {
+    sweeping = true;
+    sweepFrom = MAX_RANGE_MM - 100;
+    sweepTo = 20;
+    sweepStart = performance.now();
+    distanceRange.value = String(sweepFrom);
+    sweepBtn.textContent = "■ Stop";
+    requestAnimationFrame(sweepStep);
+  }
+  function stopSweep() {
+    sweeping = false;
+    sweepBtn.textContent = "▶ Simulate approach";
+  }
+  function sweepStep(now) {
+    if (!sweeping) return;
+    const t = Math.min(1, (now - sweepStart) / SWEEP_MS);
+    distanceRange.value = String(Math.round(sweepFrom + (sweepTo - sweepFrom) * t));
+    if (t >= 1) { stopSweep(); return; }
+    requestAnimationFrame(sweepStep);
+  }
+  sweepBtn.addEventListener("click", () => (sweeping ? stopSweep() : startSweep()));
+  distanceRange.addEventListener("pointerdown", () => { if (sweeping) stopSweep(); });
+  distanceRange.addEventListener("keydown", () => { if (sweeping) stopSweep(); });
+
+  /* ---- Audio ---- */
+  let audioCtx = null, oscillator = null, gainNode = null, soundEnabled = false;
+
+  function ensureAudio() {
+    if (audioCtx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new Ctx();
+    oscillator = audioCtx.createOscillator();
+    oscillator.type = "triangle";
+    oscillator.frequency.value = 190;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0;
+    oscillator.connect(gainNode).connect(audioCtx.destination);
+    oscillator.start();
+  }
+
+  soundBtn.addEventListener("click", () => {
+    ensureAudio();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    soundEnabled = !soundEnabled;
+    if (!soundEnabled) gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.02);
+    soundBtn.textContent = soundEnabled ? "🔊 Sound: on" : "🔈 Sound: off";
+    soundBtn.setAttribute("aria-pressed", String(soundEnabled));
+  });
+
+  function applyMotorAudio(motorOn, duty) {
+    if (!soundEnabled || !gainNode) return;
+    const target = motorOn ? 0.05 + (duty / 255) * 0.12 : 0;
+    gainNode.gain.setTargetAtTime(target, audioCtx.currentTime, 0.02);
+  }
+
+  /* ---- Theme toggle (persisted; harmless if storage is blocked) ---- */
+  const root = document.documentElement;
+  const themeToggle = $("themeToggle");
+
+  function currentTheme() {
+    return root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+  function updateThemeIcon() {
+    const t = currentTheme();
+    themeToggle.textContent = t === "dark" ? "☀" : "🌙";
+    themeToggle.setAttribute("aria-label", t === "dark" ? "Switch to light theme" : "Switch to dark theme");
+  }
+  try {
+    const stored = localStorage.getItem("haptic-sim-theme");
+    if (stored) root.setAttribute("data-theme", stored);
+  } catch (e) { /* storage unavailable - fall back to prefers-color-scheme only */ }
+  updateThemeIcon();
+
+  themeToggle.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("haptic-sim-theme", next); } catch (e) { /* non-fatal */ }
+    updateThemeIcon();
+  });
+
+  /* ---- Render loop ---- */
+  function render(nowMs) {
+    const distanceMm = Number(distanceRange.value);
+    const cmd = mapper.update(distanceMm, nowMs);
+    const zoneVar = "var(" + ZONE_VAR[cmd.zone] + ")";
+
+    distanceReadout.textContent = String(distanceMm).padStart(4, "0") + " mm";
+    zoneReadout.textContent = cmd.zone.toUpperCase();
+    zoneReadout.style.setProperty("--zone-color", zoneVar);
+    motorReadout.textContent = cmd.motorOn ? "ON" : "OFF";
+    dutyReadout.textContent = String(cmd.pwmDuty).padStart(3, "0");
+    dutyReadout.style.setProperty("--zone-color", zoneVar);
+    dutyMeterFill.style.width = (cmd.pwmDuty / 255) * 100 + "%";
+    dutyMeterFill.style.setProperty("--zone-color", zoneVar);
+
+    motorGlyph.classList.toggle("motor-on", cmd.motorOn);
+    motorGlyph.style.setProperty("--zone-color", zoneVar);
+
+    applyMotorAudio(cmd.motorOn, cmd.pwmDuty);
+  }
+
+  function loop(now) {
+    render(now);
+    requestAnimationFrame(loop);
+  }
+
+  buildTicks();
+  paintZoneBand();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
