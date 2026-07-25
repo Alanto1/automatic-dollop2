@@ -1,0 +1,12 @@
+# Compiled test binaries (firmware/tests/run_tests.sh builds this locally - re-run it, don't commit the output)
+assistive-tech-device/firmware/tests/test_haptic_mapper
+assistive-tech-device/firmware/tests/*.exe
+assistive-tech-device/firmware/tests/*.o
+
+# OpenSCAD exports/backups
+assistive-tech-device/enclosure/*.stl
+assistive-tech-device/enclosure/*.scad.bak
+assistive-tech-device/enclosure/*~
+
+# OS/editor cruft
+.DS_Store

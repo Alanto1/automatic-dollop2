@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Purchase List — Almaty (walk-in)</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #10141b;
+    --surface: #171d27;
+    --surface-2: #1e2530;
+    --border: #2a3341;
+    --text: #e8ecf2;
+    --text-muted: #8b96a8;
+    --accent: #4fd8c4;
+    --tag-yes-bg: #123326;
+    --tag-yes-fg: #4ade80;
+    --tag-check-bg: #12233a;
+    --tag-check-fg: #6fa8f5;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f1ede6; --surface: #fffdfa; --surface-2: #ece6db; --border: #ddd4c2;
+      --text: #1d1a14; --text-muted: #6b6255; --accent: #0e8c7a;
+      --tag-yes-bg: #e2f4e8; --tag-yes-fg: #0f7a3d;
+      --tag-check-bg: #e4edf9; --tag-check-fg: #1d5fbf;
+      --shadow: rgba(60, 50, 30, 0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10141b; --surface: #171d27; --surface-2: #1e2530; --border: #2a3341;
+    --text: #e8ecf2; --text-muted: #8b96a8; --accent: #4fd8c4;
+    --tag-yes-bg: #123326; --tag-yes-fg: #4ade80;
+    --tag-check-bg: #12233a; --tag-check-fg: #6fa8f5;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f1ede6; --surface: #fffdfa; --surface-2: #ece6db; --border: #ddd4c2;
+    --text: #1d1a14; --text-muted: #6b6255; --accent: #0e8c7a;
+    --tag-yes-bg: #e2f4e8; --tag-yes-fg: #0f7a3d;
+    --tag-check-bg: #e4edf9; --tag-check-fg: #1d5fbf;
+    --shadow: rgba(60, 50, 30, 0.12);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 48px;
+  }
+  a { color: var(--accent); }
+  .page { max-width: 640px; margin: 0 auto; padding: 0 14px; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner { max-width: 640px; margin: 0 auto; }
+  .title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .brand-sub { color: var(--text-muted); font-weight: 500; }
+  .theme-toggle {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex: none;
+  }
+  .progress-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 10px; gap: 8px; }
+  .progress-count { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .progress-remaining { font-family: var(--font-mono); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .progress-bar { height: 5px; border-radius: 3px; background: var(--surface-2); margin-top: 8px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.2s ease; }
+
+  .callout {
+    margin: 14px 0; background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 10px; padding: 13px 14px;
+    font-size: 13px; line-height: 1.55;
+  }
+  .callout strong { color: var(--text); }
+
+  /* ---- Store cards ---- */
+  .stores { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+  .store-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 13px 14px;
+  }
+  .store-name-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .store-name { font-weight: 700; font-size: 14.5px; }
+  .store-role { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .store-addr { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .store-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .store-actions a {
+    font-family: var(--font-mono); font-size: 12px; text-decoration: none;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px;
+    padding: 5px 10px;
+  }
+
+  .section { margin: 18px 0; }
+  .section-title {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin: 0 2px 8px;
+  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+
+  .item { display: flex; gap: 11px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .item:last-child { border-bottom: none; }
+
+  input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none;
+    width: 22px; height: 22px; flex: none; margin: 1px 0 0;
+    border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface-2);
+    cursor: pointer; position: relative;
+  }
+  input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  input[type="checkbox"]:checked::after {
+    content: ""; position: absolute; left: 6px; top: 2px; width: 6px; height: 11px;
+    border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .item-body { flex: 1; min-width: 0; }
+  .item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .item-name { font-size: 14.5px; line-height: 1.4; }
+  .item-qty { color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+  .item-price { font-family: var(--font-mono); font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item.checked .item-name, .item.checked .item-price { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border); }
+
+  .item-meta { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.03em;
+    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+  }
+  .tag-yes { background: var(--tag-yes-bg); color: var(--tag-yes-fg); }
+  .tag-check { background: var(--tag-check-bg); color: var(--tag-check-fg); }
+  .store-chip { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+  .item-link { font-size: 12px; text-decoration: none; border-bottom: 1px dotted var(--accent); }
+  .item-note { font-size: 12px; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+  .info-row { padding: 10px 14px; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; border-bottom: 1px solid var(--border); }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .strike { text-decoration: line-through; }
+
+  footer { margin-top: 20px; padding: 14px 2px 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .reset-btn {
+    margin-top: 14px; font-family: var(--font-sans); font-size: 12px; color: var(--text-muted);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="title-row">
+      <div class="brand">PURCHASE LIST <span class="brand-sub">/ ALMATY, WALK-IN</span></div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch theme">🌙</button>
+    </div>
+    <div class="progress-row">
+      <span class="progress-count" id="progressCount">0 / 0 checked</span>
+      <span class="progress-remaining" id="progressRemaining">…</span>
+    </div>
+    <div class="progress-bar"><div class="progress-bar-fill" id="progressBarFill"></div></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="callout">
+    No shipping, no delivery. <span class="tag tag-yes">CONFIRMED</span> means verified in stock with a
+    real price online; <span class="tag tag-check">CHECK IN STORE</span> means the category is confirmed
+    but the specific item/price wasn't — normal for a physical component shop. AmperMarket (Astana-only
+    pickup) and ChipDip are deliberately not on this list. Checked 2026-07-25.
+  </div>
+
+  <div class="stores">
+    <div class="store-card">
+      <div class="store-name-row"><span class="store-name">Arduino Parts</span><span class="store-role">primary</span></div>
+      <div class="store-addr">ул. Толе би 189д (угол ул. Гагарина), 3 этаж, офис 310, Алматы</div>
+      <div class="store-actions">
+        <a href="tel:+77051745975">📞 call</a>
+        <a href="https://arduparts.kz" target="_blank" rel="noopener">catalog ↗</a>
+      </div>
+    </div>
+    <div class="store-card">
+      <div class="store-name-row"><span class="store-name">RadioBazar</span><span class="store-role">backup / compare</span></div>
+      <div class="store-addr">ТД Тастак, ул. Толе-би 266, бутик 37, этаж 2, павильон 3, Алматы · 4.6★ (47)</div>
+      <div class="store-actions">
+        <a href="tel:+77477212168">📞 call</a>
+        <a href="https://radiobazar.kz" target="_blank" rel="noopener">catalog ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="section-sensor">
+    <p class="section-title">Sensor — read this one first</p>
+    <div class="card" id="card-sensor"></div>
+  </div>
+
+  <div class="section" id="section-electronics">
+    <p class="section-title">Electronics</p>
+    <div class="card" id="card-electronics"></div>
+  </div>
+
+  <div class="section" id="section-prototyping">
+    <p class="section-title">Prototyping / soldering / tools</p>
+    <div class="card" id="card-prototyping"></div>
+  </div>
+
+  <div class="section" id="section-enclosure">
+    <p class="section-title">Enclosure assembly (general hardware, not this list's specialty stores)</p>
+    <div class="card" id="card-enclosure"></div>
+  </div>
+
+  <div class="section" id="section-safety">
+    <p class="section-title">Safety</p>
+    <div class="card" id="card-safety"></div>
+  </div>
+
+  <footer>
+    <p>Full detail — why the sensor choice changed the firmware's far threshold, the 18650-vs-flat-LiPo battery caveat, everything not confirmed here — lives in the repo's <code>PURCHASE_LIST.md</code>. This page mirrors it for use on a phone in the store. Progress is saved on this device.</p>
+    <button class="reset-btn" id="resetBtn" type="button">Reset all checkmarks</button>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "purchase-list-almaty-walkin-v1";
+  var THEME_KEY = "purchase-list-almaty-theme";
+
+  var sections = {
+    sensor: [
+      { id: "vl53l0x", name: "VL53L0X laser distance sensor (GY-53)", qty: 1, price: 2800, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: true,
+        note: "Firmware's far threshold was lowered to 1800mm to give real margin under this sensor's 2m ceiling — see HapticMapper.h" },
+      { id: "vl53ldk", name: "— cheaper alt to ask about: GY-530 / VL53LDK", qty: 0, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: false,
+        note: "2,000 тг listed — didn't confirm it's the same chip as the GY-53, ask in store", skipCount: true },
+      { id: "hcsr04", name: "— fallback: HC-SR04 ultrasonic", qty: 0, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: true,
+        note: "750 тг, confirmed in stock, but NOT a drop-in swap — wider beam, would need its own firmware look", skipCount: true }
+    ],
+    electronics: [
+      { id: "nano", name: "Arduino Nano clone (CH340, USB-C)", qty: 1, price: 2300, store: "Arduino Parts",
+        url: "https://arduparts.kz/p103784105-nano-v30-type.html", confirmed: true,
+        note: "cheaper Mini-USB option at RadioBazar, 2,000 тг, if the connector doesn't matter to you" },
+      { id: "motor", name: "Vibration motor, “tablet” 3V, 10×10×3mm", qty: 1, price: 250, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8411965-dvigateli", confirmed: true },
+      { id: "transistor", name: "2N2222A NPN transistor", qty: 3, unitPrice: 50, store: "Alash Electronics",
+        url: "https://alash-electronics.kz/product/tranzistor-2n2222", confirmed: true,
+        note: "1 needed + 2 spares — ask Arduino Parts/RadioBazar first, might save the extra stop" },
+      { id: "diode", name: "1N4148 flyback diode", qty: 3, price: null, store: "Arduino Parts",
+        confirmed: false, note: "component category confirmed, exact item/price not — nearly free either way" },
+      { id: "resistor", name: "Resistor, 220Ω-1k (either works)", qty: 5, price: null, store: "Arduino Parts",
+        confirmed: false, note: "component category confirmed, exact item/price not" },
+      { id: "battery", name: "Li-ion 18650, 3000mAh (LiitoKala HG2)", qty: 1, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/p112715575-akkumulyator-liitokala-hg2.html", confirmed: true,
+        note: "confirmed in stock, but it's a cylindrical cell, not the flat pouch the enclosure design assumes — read PURCHASE_LIST.md's battery note before buying" },
+      { id: "tp4056", name: "TP4056 charge module, with protection, Type-C", qty: 1, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/p114791182-modul-zaryada-ion.html", confirmed: true },
+      { id: "cable", name: "USB-C cable", qty: 1, price: null, store: "either store",
+        confirmed: false, note: "any electronics shop has these" }
+    ],
+    prototyping: [
+      { id: "breadboard", name: "Breadboard", qty: 1, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8771321-maketnye-platy", confirmed: false, note: "category confirmed" },
+      { id: "jumpers", name: "Jumper wires (M-M and M-F)", qty: 1, price: null, store: "either store",
+        confirmed: false, note: "universally stocked" },
+      { id: "iron", name: "Soldering iron (+ multimeter if bundled)", qty: 1, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8412071-vse-dlya-pajki", confirmed: false, note: "category confirmed at both stores — compare in person" },
+      { id: "solder", name: "Solder wire, stripper, screwdriver set, hookup wire, heat-shrink, “third hand”, crocodile clips", qty: 1, price: null, store: "Arduino Parts",
+        url: "https://arduparts.kz/g8412071-vse-dlya-pajki", confirmed: false, note: "“Всё для пайки” category at Arduino Parts, or RadioBazar's “паяльное оборудование”" }
+    ],
+    enclosure: [
+      { id: "gluegun", name: "Hot glue gun", qty: 1, price: null, store: "any hardware/craft store",
+        confirmed: false, note: "not researched this pass" },
+      { id: "calipers", name: "Calipers (basic plastic is fine)", qty: 1, price: null, store: "any hardware store",
+        confirmed: false, note: "or ask Arduino Parts/RadioBazar" },
+      { id: "strap", name: "Wristband/watch strap, ~20mm", qty: 1, price: null, store: "watch/accessories stall",
+        confirmed: false, note: "Tastak market has these too — match strap_width in enclosure.scad" },
+      { id: "print", name: "3D printing (base + lid + clip)", qty: 1, price: null, store: "—",
+        confirmed: false, note: "check a school makerspace first, or ask at either store" }
+    ],
+    safety: [
+      { id: "pouch", name: "Fireproof LiPo charging pouch", qty: 1, price: null, store: "—",
+        confirmed: false, note: "not confirmed available anywhere in this pass — charge on a non-flammable surface, supervised, never unattended" }
+    ]
+  };
+
+  var infoRows = {
+    electronics: ['<div class="info-row"><span class="strike">Genuine Arduino-brand Nano</span> — skip it, the CH340 clone above works identically.</div>']
+  };
+
+  var state = { checked: {} };
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    if (saved.checked) state.checked = saved.checked;
+  } catch (e) { /* storage unavailable - start fresh */ }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* non-fatal */ }
+  }
+
+  function fmt(n) { return Math.round(n).toLocaleString("en-US").replace(/,/g, " "); }
+
+  function lineTotal(item) {
+    if (item.price == null && item.unitPrice == null) return null;
+    var unit = item.unitPrice != null ? item.unitPrice : item.price;
+    return unit * item.qty;
+  }
+
+  function renderItem(item) {
+    var row = document.createElement("div");
+    row.className = "item";
+    var total = lineTotal(item);
+    var checked = !!state.checked[item.id];
+    if (checked) row.classList.add("checked");
+
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = checked;
+    cb.setAttribute("aria-label", item.name);
+    cb.addEventListener("change", function () {
+      state.checked[item.id] = cb.checked;
+      row.classList.toggle("checked", cb.checked);
+      save();
+      renderProgress();
+    });
+    row.appendChild(cb);
+
+    var body = document.createElement("div");
+    body.className = "item-body";
+
+    var top = document.createElement("div");
+    top.className = "item-top";
+    var nameWrap = document.createElement("div");
+    var name = document.createElement("span");
+    name.className = "item-name";
+    name.textContent = item.name;
+    nameWrap.appendChild(name);
+    if (item.qty && item.qty > 1) {
+      var qty = document.createElement("span");
+      qty.className = "item-qty";
+      qty.textContent = "  ×" + item.qty;
+      nameWrap.appendChild(qty);
+    }
+    top.appendChild(nameWrap);
+
+    var price = document.createElement("span");
+    price.className = "item-price";
+    price.textContent = total == null ? "—" : fmt(total) + " тг";
+    top.appendChild(price);
+    body.appendChild(top);
+
+    var meta = document.createElement("div");
+    meta.className = "item-meta";
+    var tag = document.createElement("span");
+    tag.className = "tag " + (item.confirmed ? "tag-yes" : "tag-check");
+    tag.textContent = item.confirmed ? "CONFIRMED" : "CHECK IN STORE";
+    meta.appendChild(tag);
+
+    var storeChip = document.createElement("span");
+    storeChip.className = "store-chip";
+    storeChip.textContent = item.store;
+    meta.appendChild(storeChip);
+
+    if (item.url) {
+      var link = document.createElement("a");
+      link.className = "item-link";
+      link.href = item.url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "open ↗";
+      meta.appendChild(link);
+    }
+    body.appendChild(meta);
+
+    if (item.note) {
+      var note = document.createElement("div");
+      note.className = "item-note";
+      note.textContent = item.note;
+      body.appendChild(note);
+    }
+
+    row.appendChild(body);
+    return row;
+  }
+
+  function renderSection(key) {
+    var card = document.getElementById("card-" + key);
+    card.innerHTML = "";
+    if (infoRows[key]) {
+      infoRows[key].forEach(function (html) {
+        var div = document.createElement("div");
+        div.innerHTML = html;
+        card.appendChild(div.firstChild);
+      });
+    }
+    sections[key].forEach(function (item) { card.appendChild(renderItem(item)); });
+  }
+
+  function countableItems() {
+    var all = [];
+    Object.keys(sections).forEach(function (k) {
+      sections[k].forEach(function (item) { if (!item.skipCount) all.push(item); });
+    });
+    return all;
+  }
+
+  function renderProgress() {
+    var items = countableItems();
+    var total = items.length;
+    var doneCount = 0;
+    var remaining = 0;
+    var hasUnknown = false;
+    items.forEach(function (item) {
+      var t = lineTotal(item);
+      if (state.checked[item.id]) doneCount++;
+      else if (t != null) remaining += t;
+      else if (!state.checked[item.id]) hasUnknown = true;
+    });
+    document.getElementById("progressCount").textContent = doneCount + " / " + total + " checked";
+    document.getElementById("progressRemaining").textContent =
+      (hasUnknown ? "≥ " : "≈ ") + fmt(remaining) + " тг left (priced items only)";
+    document.getElementById("progressBarFill").style.width = (doneCount / total * 100) + "%";
+  }
+
+  function renderAll() {
+    Object.keys(sections).forEach(renderSection);
+    renderProgress();
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    state.checked = {};
+    save();
+    renderAll();
+  });
+
+  var root = document.documentElement;
+  var themeToggle = document.getElementById("themeToggle");
+  function currentTheme() {
+    return root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+  function updateThemeIcon() {
+    var t = currentTheme();
+    themeToggle.textContent = t === "dark" ? "☀" : "🌙";
+  }
+  try {
+    var storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) root.setAttribute("data-theme", storedTheme);
+  } catch (e) { /* ignore */ }
+  updateThemeIcon();
+  themeToggle.addEventListener("click", function () {
+    var next = currentTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+    updateThemeIcon();
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
