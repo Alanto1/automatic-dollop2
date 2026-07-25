@@ -131,7 +131,7 @@ VL53L0X          Arduino Nano
   SCL  -------------- A5
 
 Motor circuit (D9 is PWM-capable):
-  Nano D9 --[220ohm]--> transistor base (2N2222)
+  Nano D9 --[220ohm-1k, either works]--> transistor base (2N2222)
   Motor(+) -------------------------------- 5V / battery+
   Motor(-) -------------------------------- transistor collector
   transistor emitter ----------------------- GND

@@ -5,6 +5,30 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-25, follow-up 3: build tutorial
+
+Fourth pass, same day: the user supplied a full draft build tutorial
+(phases 0-10, board bring-up through final assembly) and asked for it to
+be written to `tutorial.md` and reconciled with the project's actual
+current state. It referenced two hardware bring-up sketches that didn't
+exist yet (`firmware/hardware_tests/01_sensor_only/`,
+`.../02_motor_only/`) - written for real this pass, not just described.
+Corrections made against the draft while writing it up: VL53L1X → VL53L0X
+throughout (per the prior session's sensor swap), the actual zone
+thresholds (1800/1000/400mm, not the draft's rounder 2m/0.5m guesses),
+battery wiring goes to the board's **5V pin** not VIN (VIN's onboard
+regulator needs more voltage than a single-cell battery provides - this
+project deliberately skips a boost converter, see README's power note),
+and the 18650-vs-flat-LiPo battery caveat carried through to the 3D-print
+phase. `enclosure.scad`'s part-selector variable is near the **top** of
+the file (the draft said "near the bottom"), and its actual variable
+names are `fit_clearance` and `lid_lip_height`/`lid_lip_clearance` (the
+draft used placeholder names `FIT_GAP`/`LID_LIP` that don't exist in the
+file) - `lid_lip_clearance` specifically needed a direction correction
+too: **increasing** it loosens the lid fit (shrinks the lip), which is
+the opposite of what the draft's "smaller if it won't go on" guidance
+said. Verified by re-reading `lid()`'s actual geometry math, not guessed.
+
 ## Session log — 2026-07-25, follow-up 2: walk-in only, sensor swap
 
 Same day, third pass: the user rejected the shipping-based Almaty list
@@ -162,6 +186,11 @@ assistive-tech-device/
 ├── PURCHASE_LIST_almaty.html          same list, mobile-first standalone checklist (tap to check off, live
 │                                      running total, localStorage-persisted, works offline once opened).
 │                                      Published: https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42
+├── tutorial.md                        phase-by-phase build/bring-up tutorial (board alone -> sensor -> motor
+│                                      -> combined firmware -> power -> solder -> enclosure -> assembly ->
+│                                      blindfolded test -> outreach reminder). Read this alongside
+│                                      firmware/hardware_tests/ - the tutorial's Phase 2/3 reference those
+│                                      sketches directly.
 ├── outreach/
 │   ├── outreach_email_verband.md      draft email to a local Blinden- und Sehbehindertenverband chapter
 │   └── outreach_email_schule.md       draft email to a school accessibility/inclusion coordinator (parallel path)
@@ -176,6 +205,11 @@ assistive-tech-device/
 │   │                                  Needs the "VL53L0X" Arduino library by Pololu (not VL53L1X - see
 │   │                                  the second follow-up session log entry above for why). NOT YET
 │   │                                  COMPILED OR FLASHED — no Arduino toolchain in this environment.
+│   ├── hardware_tests/                 disposable bring-up sketches for tutorial.md's Phase 2/3 - each
+│   │   ├── 01_sensor_only/             isolates one subsystem so a wiring mistake shows up without the
+│   │   │   └── 01_sensor_only.ino      rest of the circuit as a confounder. Not part of the final device -
+│   │   └── 02_motor_only/              obstacle_haptic.ino (below) is what actually ships. NOT YET
+│   │       └── 02_motor_only.ino       COMPILED OR FLASHED, same as everything else firmware-side.
 │   ├── tests/
 │   │   ├── test_haptic_mapper.cpp     14 desktop unit tests for HapticMapper (zone boundaries, pulse timing)
 │   │   └── run_tests.sh               g++ build+run script (bash) — actually run in this session, 14/14
@@ -263,17 +297,14 @@ assistive-tech-device/
 ## Natural next steps
 
 1. Send the outreach emails (`outreach/`) — still the most time-sensitive
-   open item.
+   open item, ideally in parallel with the steps below, not after.
 2. Work through `PURCHASE_LIST.md` and actually buy the parts (Arduino
    Parts in person - see the store info there). While there, ask about a
    flat LiPo pouch cell before settling for the 18650 - see the battery
    note.
-3. Once parts are in hand: measure them, update `enclosure.scad`'s
-   placeholder dimensions, re-render, then breadboard the circuit per the
-   wiring diagram in `README.md`. If it's the 18650 battery, the
-   enclosure's battery cavity needs an actual redesign first (cylindrical,
-   not the current rectangular pouch bay).
-4. Flash `obstacle_haptic.ino` (needs the Pololu **VL53L0X** Arduino
-   library - not VL53L1X), tune thresholds using the breadboard +
-   `haptic_simulator.html` side by side, then run the blindfolded course
-   test with a sighted spotter.
+3. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
+   board bring-up, sensor, motor, combined firmware, power, soldering,
+   the enclosure fit-and-reprint loop, final assembly, and the blindfolded
+   test, in the order that makes problems easiest to isolate. Don't skip
+   ahead to soldering or printing before the corresponding breadboard
+   phase actually passes.
