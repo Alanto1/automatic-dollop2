@@ -5,6 +5,42 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-25, follow-up 2: walk-in only, sensor swap
+
+Same day, third pass: the user rejected the shipping-based Almaty list
+outright ("ampermarket ships things too long... an actual technology
+store", "chipdip is kind of bad") and asked for real walk-in Almaty stores
+only. Research found **no walk-in Almaty store stocks a VL53L1X** (4m) -
+the whole premise of every earlier version of this project. What's
+actually on shelves is the VL53L0X (2m). Rather than leave the shopping
+list and the firmware disagreeing with each other, this pass changed both
+together:
+
+- `HapticMapper.h`'s `kFarThresholdMm` moved from 2000 to **1800mm** (real
+  margin under the VL53L0X's 2m ceiling instead of sitting exactly at it).
+  Tests re-run, still 14/14 - they reference the constant symbolically, not
+  as a hardcoded literal, so nothing else needed to change there.
+- `obstacle_haptic.ino` was rewritten for the Pololu **VL53L0X** library,
+  not VL53L1X - different chip, meaningfully different API (no distance
+  modes; the continuous-read call blocks instead of offering a separate
+  non-blocking check), so this wasn't a find-and-replace, the polling loop
+  logic actually changed shape.
+- `firmware/simulator/haptic_simulator.html`'s JS mirror updated to match
+  (1800mm default), re-verified in headless Chromium.
+- New primary sourcing: **Arduino Parts** (ул. Толе би 189д, офис 310,
+  Алматы, +7 705 174-59-75) - real walk-in component shop, confirmed
+  in-stock: VL53L0X (GY-53, 2,800 тг), Nano CH340 USB-C (2,300 тг),
+  vibration motor (250 тг), TP4056, an 18650 Li-ion cell. **RadioBazar**
+  (ТД Тастак market, ул. Толе-би 266) as backup/price-comparison. Both
+  verified as real physical locations via multiple independent sources
+  (2GIS, Yandex Maps, review sites), not just a store's own claims.
+- **Battery form-factor gap surfaced, not resolved**: the only battery
+  confirmed walk-in is an 18650 cylindrical cell, not the flat LiPo pouch
+  `enclosure.scad` was designed around. Flagged in three places
+  (PURCHASE_LIST.md, README.md, enclosure.scad's battery comment) rather
+  than silently redesigning the enclosure to match - that's real remaining
+  work, not done here.
+
 ## Session log — 2026-07-25, follow-up: Almaty purchase list + mobile checklist
 
 A later session that day replaced `PURCHASE_LIST.md` with a more detailed
@@ -121,8 +157,8 @@ assistive-tech-device/
 ├── README.md                          project overview, BOM, wiring, roadmap, failure modes
 ├── BUILD_CHECKLIST.md                 checklist of every part/tool needed, by build phase
 ├── PURCHASE_LIST.md                   the checklist above, but with real store links, prices, quantities -
-│                                      currently the Almaty edition, see its own header before trusting it
-│                                      for a different city
+│                                      currently the Almaty walk-in edition (real physical shops, no
+│                                      shipping), see its own header before trusting it for a different city
 ├── PURCHASE_LIST_almaty.html          same list, mobile-first standalone checklist (tap to check off, live
 │                                      running total, localStorage-persisted, works offline once opened).
 │                                      Published: https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42
@@ -135,9 +171,10 @@ assistive-tech-device/
 │   │   │                              dependencies — this is deliberate, so it's unit-testable on a desktop
 │   │   │                              compiler and reusable by the browser simulator. This is the file to
 │   │   │                              read/edit if the mapping behavior needs to change.
-│   │   └── obstacle_haptic.ino        thin hardware glue: polls VL53L1X over I2C at ~16Hz, hands the
-│   │                                  reading to HapticMapper, drives the PWM pin. DEBUG_SERIAL flag for
-│   │                                  tuning. Needs the "VL53L1X" Arduino library by Pololu. NOT YET
+│   │   └── obstacle_haptic.ino        thin hardware glue: polls VL53L0X over I2C, hands the reading to
+│   │                                  HapticMapper, drives the PWM pin. DEBUG_SERIAL flag for tuning.
+│   │                                  Needs the "VL53L0X" Arduino library by Pololu (not VL53L1X - see
+│   │                                  the second follow-up session log entry above for why). NOT YET
 │   │                                  COMPILED OR FLASHED — no Arduino toolchain in this environment.
 │   ├── tests/
 │   │   ├── test_haptic_mapper.cpp     14 desktop unit tests for HapticMapper (zone boundaries, pulse timing)
@@ -167,14 +204,16 @@ assistive-tech-device/
 
 ## Key decisions and gotchas from this session (don't rediscover these)
 
-- **VL53L1X vs VL53L0X**: AmperMarket.kz (the main local Astana store) only
-  stocks the VL53L0X (2m max range), not the VL53L1X (4m) the firmware
-  assumes. Since `HapticMapper.h`'s far threshold is exactly 2m, a 2m-max
-  sensor has zero margin. Recommendation given: order the real VL53L1X from
-  ChipDip.kz instead (ships to Astana via courier/Kazpost/CDEK; in-store
-  pickup is Almaty-only), rather than substitute. **Confirmed still
-  accurate via a live pricing check on 2026-07-25** — see
-  `PURCHASE_LIST.md`.
+- **VL53L1X vs VL53L0X**: originally the plan here was "order the real
+  VL53L1X online since a 2m-max VL53L0X has zero margin against
+  `HapticMapper.h`'s far threshold." **Superseded later the same day** -
+  see the second follow-up session log entry near the top of this file.
+  Once "no shipping at all" became the actual constraint, no walk-in
+  Almaty store turned out to stock a VL53L1X anyway, so the project now
+  targets the VL53L0X on purpose, with the firmware's margin problem
+  solved by lowering the threshold (1800mm) instead of by sourcing a
+  bigger sensor. Left the original reasoning here for the record, but
+  don't act on "order a VL53L1X" - that's the stale part.
 - **Arduino Nano — buy the clone, not genuine**: AmperMarket sells a
   genuine Arduino-brand Nano for 26,500 тг (confirmed 2026-07-25 — also
   currently out of stock) vs a CH340 clone for 2,700-3,900 тг depending on
@@ -225,10 +264,16 @@ assistive-tech-device/
 
 1. Send the outreach emails (`outreach/`) — still the most time-sensitive
    open item.
-2. Work through `PURCHASE_LIST.md` and actually order parts.
-3. Once parts arrive: measure them, update `enclosure.scad`'s placeholder
-   dimensions, re-render, then breadboard the circuit per the wiring
-   diagram in `README.md`.
-4. Flash `obstacle_haptic.ino` (needs the Pololu VL53L1X Arduino library),
-   tune thresholds using the breadboard + `haptic_simulator.html` side by
-   side, then run the blindfolded course test with a sighted spotter.
+2. Work through `PURCHASE_LIST.md` and actually buy the parts (Arduino
+   Parts in person - see the store info there). While there, ask about a
+   flat LiPo pouch cell before settling for the 18650 - see the battery
+   note.
+3. Once parts are in hand: measure them, update `enclosure.scad`'s
+   placeholder dimensions, re-render, then breadboard the circuit per the
+   wiring diagram in `README.md`. If it's the 18650 battery, the
+   enclosure's battery cavity needs an actual redesign first (cylindrical,
+   not the current rectangular pouch bay).
+4. Flash `obstacle_haptic.ino` (needs the Pololu **VL53L0X** Arduino
+   library - not VL53L1X), tune thresholds using the breadboard +
+   `haptic_simulator.html` side by side, then run the blindfolded course
+   test with a sighted spotter.

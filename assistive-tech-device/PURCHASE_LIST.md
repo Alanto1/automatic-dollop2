@@ -1,128 +1,143 @@
-# Purchase list — Almaty edition
+# Purchase list — Almaty, walk-in only
 
-Links, prices, quantities, pickup/delivery — checked **2026-07-25** in KZT
-(тг). **Confirm on the product page before ordering**, prices and stock
-change. Quantities below are for building **one** v1 prototype, with cheap
-parts bought a couple spares deep since they're easy to fry while learning
-to solder.
+No shipping, no delivery, no ChipDip. Real physical stores you can walk
+into today, checked **2026-07-25**. Prices in KZT (тг) are what each
+store's own website lists — **confirm in person**, since a physical
+component shop's shelf stock and a website catalog don't always agree,
+and small parts (resistors, diodes) often aren't priced online at all.
 
-## The Almaty-specific thing to know before ordering anything
+## Where to go
 
-The two stores in this list have **opposite** fulfillment shapes here:
+**Primary: Arduino Parts** — ул. Толе би 189д (угол ул. Гагарина), 3 этаж,
+офис 310, Алматы · +7 (705) 174-59-75 · catalog: arduparts.kz (browse
+before going, don't order online). A real Arduino/component shop, not a
+general electronics chain — carries the sensor, motor, batteries, basic
+components, breadboards, and soldering supplies. This covers almost the
+whole list in one trip.
 
-- **ChipDip.kz has a real office in Almaty** (проспект Абылай Хана, 18,
-  н.п. 28, Пн–Пт 9:00–18:00, +7 727 338-33-53) with **free pickup** — no
-  shipping cost or wait at all for the two ChipDip items below.
-- **AmperMarket.kz's only physical pickup point is in Astana** (проспект
-  Абая, 95) — there's no Almaty pickup point. Everything from AmperMarket
-  ships to Almaty via **Kazpost**: 1,600 тг for the first kg, +200 тг per
-  additional kg, 5–7 business days to the nearest Almaty post office
-  (2,000 тг instead if you want cash-on-delivery).
+**Backup / price check: RadioBazar** — ТД Тастак (Tastak trade center),
+ул. Толе-би 266, бутик 37, этаж 2, павильон 3, Алматы · +7 (747) 721-21-68
+· 4.6/5 from 47 reviews. Also on Толе би, a few blocks from Arduino Parts
+(house numbers 189 vs 266 — same street, haven't confirmed exact walking
+distance). Has its own Nano clone cheaper than Arduino Parts, and stocks
+overlapping categories (soldering gear, motors, sensors, batteries, tools)
+worth comparing if Arduino Parts is out of something.
 
-Kazpost charges **per shipment, not per item** — so put every AmperMarket
-row below into **one checkout**, not three separate orders across
-build phases. That alone is the difference between paying 1,600 тг once
-and 4,800 тг three times.
+**Tertiary: Alash Electronics** — ул. Кыз Жибек 104/1, Алматы, self-pickup
+confirmed. Mentioned here mainly for one specific item below (cheapest
+2N2222 found) — not a first stop.
+
+**Why not the other two stores from the last list**: AmperMarket.kz has no
+Almaty pickup point at all (Astana-only) — every item ships, which is the
+thing you asked to avoid. ChipDip.kz does have a real Almaty office, but
+you've said it's not a good fit either way, so it's dropped regardless of
+that.
+
+## The sensor situation (this changes the firmware, not just the list)
+
+**No store above stocks a VL53L1X (4m range)** — that part appears to be
+online-order-only in Kazakhstan right now. What's actually on shelves in
+Almaty is the VL53L0X (2m range). Rather than block on a part nobody
+walk-in sells, `HapticMapper.h`'s far-zone threshold has been lowered from
+2000mm to **1800mm** (see the code comment there) — that gives 200mm of
+real margin under the VL53L0X's 2m ceiling instead of sitting exactly at
+it, where a reading is indistinguishable from "no data." Tests
+re-run and still pass (14/14); the browser simulator was updated to match.
+If a VL53L1X shows up locally later, that threshold can move back up.
+
+| Item | Qty | Store & link | Price | Confidence |
+|---|---|---|---|---|
+| VL53L0X laser distance sensor (GY-53) | 1 | [Arduino Parts](https://arduparts.kz/g8559329-datchiki-prostranstva) | 2,800 тг | **Confirmed in stock** |
+| — cheaper alternative, ask about this one too | 1 | Arduino Parts, same page (GY-530 / VL53LDK) | 2,000 тг | Confirmed listed, didn't confirm it's the same chip as GY-53 - ask in store |
+| — fallback if neither is in stock: ultrasonic | 1 | Arduino Parts, same page (HC-SR04) | 750 тг | Confirmed in stock, but **not a drop-in swap** - wider ~15° beam and different read behavior than a laser spot would need its own look at `HapticMapper.h`'s thresholds, not covered by this pass |
 
 ## Electronics (BOM)
 
-| Item | Qty | Store & link | Price | Fulfillment |
+| Item | Qty | Store & link | Price | Confidence |
 |---|---|---|---|---|
-| Arduino Nano clone (CH340, **Mini-USB**, pins soldered) | 1 | [AmperMarket.kz](https://ampermarket.kz/arduino/analog-arduino-nano-ch340/) | 3,900 тг | Kazpost to Almaty (combine order — see above) |
-| — **if you want USB-C instead**, buy this one instead of the row above | 1 | [AmperMarket.kz](https://ampermarket.kz/arduino/nano-ch340-type-c/) | 2,700 тг (cheaper, too) | Kazpost to Almaty |
-| — **skip this one**: genuine Arduino-brand Nano | — | [AmperMarket.kz](https://ampermarket.kz/boards/arduino/original-arduino-nano/) | 26,500 тг | Not worth it for a hobby build — the clone works identically |
-| VL53L1X ToF sensor (4m range — what the firmware assumes) | 1 | [ChipDip.kz](https://www.chipdip.kz/product/vl53l1x-distance-sensor-datchik-dalnosti-tof-waveshare-9000791743) | 17,000 тг (16,200 тг for 5+) | **Free pickup at ChipDip's Almaty office** |
-| Vibration motor, 10mm flat coin type | 1 | [ChipDip.kz](https://www.chipdip.kz/product/mtr-vibrating) | 790 тг (640 тг for 5+) | **Free pickup, same Almaty office** — bundle with the VL53L1X so it's one trip |
-| NPN transistor 2N2222A | 3 (1 needed + 2 spares — cheap insurance against frying one) | [AmperMarket.kz](https://ampermarket.kz/details/transistors/bipolar/2n2222a/) | 30 тг each | Kazpost to Almaty |
-| Flyback diode 1N4148 | 3 (1 needed + spares) | [AmperMarket.kz](https://ampermarket.kz/details/diodes/1n4148/) | 10 тг each | Kazpost to Almaty |
-| 1k resistor | 5 (1 needed + spares — they're nearly free) | [AmperMarket.kz](https://ampermarket.kz/details/resistors/perm/resistors-1w-1/) | ~40 тг each (approx — exact SKU/value variant not pinned down) | Kazpost to Almaty |
-| LiPo battery, 3.7V 800mAh (802535) | 1 | [AmperMarket.kz](https://ampermarket.kz/supplies/acc/lipo-802535-800mah/) | 1,350 тг | Kazpost to Almaty |
-| TP4056 charge module **with protection** | 1 | [AmperMarket.kz](https://ampermarket.kz/supplies/chargers/tp4056-1a-li-ion-charger-protect/) | 350 тг | Kazpost to Almaty |
-| USB cable, **Mini-USB** (only if you bought the Mini-USB Nano above) | 1 | [AmperMarket.kz](https://ampermarket.kz/cables/usb/usb-cable-a-mini-30-cm/) | 300 тг | Kazpost to Almaty |
-| USB cable, **USB-C** (only if you bought the USB-C Nano above) | 1 | [AmperMarket.kz](https://ampermarket.kz/cables/usb/usb-cable-a-type-c-x4/) | 450 тг | Kazpost to Almaty |
+| Arduino Nano clone (CH340, **USB-C**) | 1 | [Arduino Parts](https://arduparts.kz/p103784105-nano-v30-type.html) | 2,300 тг | Confirmed in stock |
+| — cheaper, but **Mini-USB not USB-C** | 1 | [RadioBazar](https://radiobazar.kz/g7735493-arduino-moduli-datchiki) | 2,000 тг | Confirmed in stock |
+| VL53L0X sensor | — | see sensor table above | 2,800 тг | Confirmed |
+| Vibration motor, "tablet" style, 3V, 10×10×3mm | 1 | [Arduino Parts](https://arduparts.kz/g8411965-dvigateli) | 250 тг | **Confirmed in stock** |
+| 2N2222 NPN transistor | 3 (1 needed + spares) | [Alash Electronics](https://alash-electronics.kz/product/tranzistor-2n2222) | 50 тг each | Confirmed listed - Arduino Parts/RadioBazar likely carry it too, worth asking first since it's a one-stop convenience if so |
+| 1N4148 flyback diode | 3 (1 needed + spares) | Arduino Parts (electronic components section) | not pinned down | Category confirmed, exact item/price not - nearly free either way |
+| Resistor, 220Ω-1k (either works) | 5 (1 needed + spares) | Arduino Parts (electronic components section) | not pinned down | Category confirmed, exact item/price not |
+| Li-ion battery, 18650, 3000mAh (LiitoKala HG2) | 1 | [Arduino Parts](https://arduparts.kz/p112715575-akkumulyator-liitokala-hg2.html) | not pinned down | **Confirmed in stock - but read the battery note below before buying this** |
+| TP4056 charge module, with protection, Type-C | 1 | [Arduino Parts](https://arduparts.kz/p114791182-modul-zaryada-ion.html) | not pinned down | Confirmed in stock |
+| USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
 
-**On the USB-C swap**: the USB-C Nano clone is actually 1,200 тг *cheaper*
-than the Mini-USB one (2,700 vs 3,900 тг), so there's no downside — buy
-that row instead, and get the USB-C cable instead of the Mini-USB one. The
-firmware and wiring are identical either way; only the connector on the
-board (and the cable you plug into it) changes.
+### Battery note — read before buying
 
-**Flag**: AmperMarket only stocks the VL53L0X (2m max range), not the VL53L1X
-(4m) the firmware is built around — since the "far" threshold in
-`HapticMapper.h` is exactly 2m, a 2m-max sensor would be right at its own
-limit with no margin. As an Almaty buyer this is an even easier call than
-it looks in most write-ups of this project: the real VL53L1X ships free
-from ChipDip's own Almaty office, so there's no shipping-cost tradeoff
-weighing against it — just order the real sensor.
+The only battery **confirmed in stock** at a walk-in Almaty store is an
+**18650 cylindrical cell** (LiitoKala HG2, 3000mAh) - not the flat LiPo
+pouch cell the original design assumed. This matters for more than just
+capacity:
 
-**Power note (worth a second look, not in scope of this pass to redesign)**:
-this list wires the LiPo/TP4056 straight to the Nano's 5V pin with no
-boost converter in between. That's a common shortcut for battery-powered
-Nano clones and usually works, but it means running the board's 16MHz
-crystal below the ~4.5V Atmel's datasheet recommends for that speed, and
-there's no on/off switch in this list either (disconnect the battery to
-power down). Neither is a defect in this list specifically — just flagging
-both in case either turns into flaky behavior on the breadboard. A 5V
-boost module and a slide switch are both cheap (AmperMarket, a few hundred
-тг each) if you want to add them back.
+- **It's a different shape.** 18650 is a tube, roughly 18mm diameter ×
+  65mm long. `enclosure/enclosure.scad`'s placeholder battery dimensions
+  (25×20×6mm) assume a flat pouch cell sitting beside the other
+  components. An 18650 won't fit that cavity - the enclosure would need a
+  cylindrical battery bay, which is a real design change, not done in this
+  pass.
+- **No built-in protection circuit.** Pouch LiPos sometimes ship with a
+  protection PCB attached; this 18650 explicitly doesn't. Charging it
+  through the TP4056-with-protection module above covers over-charge/
+  over-discharge during charging, but double check the cell's own
+  discharge behavior before wiring it in.
+- **Worth asking anyway**: ask Arduino Parts or RadioBazar in person
+  whether they carry a flat pouch LiPo (search terms didn't surface one
+  online, which doesn't mean the shelf doesn't have one - physical
+  component shops often stock more than their website lists). If they do,
+  prefer it - it'll actually fit the current enclosure design.
 
-## Prototyping (breadboard phase)
+## Prototyping, soldering & wiring, tools
 
-| Item | Qty | Store & link | Price | Fulfillment |
-|---|---|---|---|---|
-| Breadboard, 830-point | 1 | [AmperMarket.kz](https://ampermarket.kz/breadboards/solderless/breadboard-830-pin/) | 950 тг | Kazpost to Almaty |
-| Jumper wires, male-male (65 pcs/pack) | 1 pack | [AmperMarket.kz](https://ampermarket.kz/wires/65-wires-set/) | 750 тг | Kazpost to Almaty |
-| Jumper wires, male-female (10 pcs/pack, 20cm) | 1 pack (only need ~4, for the sensor's VCC/GND/SDA/SCL pins) | [AmperMarket.kz](https://ampermarket.kz/wires/mama-papa-20cm/) | 175 тг | Kazpost to Almaty |
+Categories are confirmed at both Arduino Parts and RadioBazar; specific
+items/prices mostly weren't pinned down online (normal for a physical
+component shop - ask when you're there):
 
-## Soldering & wiring (permanent build)
-
-| Item | Qty | Store & link | Price | Fulfillment |
-|---|---|---|---|---|
-| Soldering iron + multimeter bundle (830LN) | 1 | [AmperMarket.kz](https://ampermarket.kz/soldering/iron/soldering-kit-with-830ln/) | 13,500 тг | Kazpost to Almaty |
-| Solder wire, 0.6mm with flux (55g) | 1 spool (lasts many projects) | [AmperMarket.kz](https://ampermarket.kz/soldering/consumables/hx-t100-06mm-55g/) | 2,600 тг | Kazpost to Almaty |
-| Wire stripper (mini knife-style) | 1 | [AmperMarket.kz](https://ampermarket.kz/materials/instruments/portable-stripper/) | 200 тг | Kazpost to Almaty |
-| Small screwdriver/repair tool set | 1 | [AmperMarket.kz](https://ampermarket.kz/materials/instruments/assist-repair-tool-kit/) | 1,900 тг | Kazpost to Almaty |
-| Hookup wire, silicone 20AWG | 2-3m total (e.g. 1m each of 2-3 colors, for motor + battery leads) | [AmperMarket.kz](https://ampermarket.kz/cables/mounting/silicon-wire-20awg/) | 250 тг/m | Kazpost to Almaty |
-| Heat-shrink tubing, assorted diameters (11 sizes, 580 pcs) | 1 kit | [AmperMarket.kz](https://ampermarket.kz/soldering/insulators/heat-shrink-tubing-kit/) | 2,900 тг | Kazpost to Almaty — the assortment avoids guessing a single diameter; you mainly want the 2-3mm sizes for the motor leads and 20AWG hookup wire, with a couple larger ones on hand for bulkier splices |
-| "Third hand" soldering stand (arm + 2 crocodile clips + lens) | 1 | [AmperMarket.kz](https://ampermarket.kz/soldering/equipment/third-hand/) | 2,900 тг | Kazpost to Almaty — holds a board or wires steady while you solder with both hands |
-| Loose crocodile clips (for multimeter testing, or as a heatsink on heat-sensitive leads while soldering) | 4-5 | [AmperMarket.kz — 28mm insulated](https://ampermarket.kz/plugs/alligator-connectors/crocodile-clip-28-mm/) | 50 тг each | Kazpost to Almaty |
-
-Everything in **Electronics + Prototyping + Soldering & wiring** is the
-same store (AmperMarket) — put it all in one cart. See the callout at the
-top: Kazpost bills per shipment, so one combined order is meaningfully
-cheaper than checking out per section.
+| Item | Qty | Where | Confidence |
+|---|---|---|---|
+| Breadboard | 1 | [Arduino Parts](https://arduparts.kz/g8771321-maketnye-platy) | Category confirmed |
+| Jumper wires (M-M and M-F) | a few packs | Either store | Universally stocked, not pinned down |
+| Soldering iron (+ multimeter if bundled) | 1 | [Arduino Parts](https://arduparts.kz/g8412071-vse-dlya-pajki) or [RadioBazar](https://radiobazar.kz/g7735489-izmeritelnye-pribory) | Category confirmed at both - compare in person |
+| Solder wire, wire stripper, screwdriver set, hookup wire, heat-shrink, "third hand" stand, crocodile clips | 1 each | Arduino Parts ("Всё для пайки") or RadioBazar ("паяльное оборудование") | Categories confirmed, individual items not itemized |
 
 ## Enclosure assembly
 
-| Item | Qty | Store & link | Price | Fulfillment |
-|---|---|---|---|---|
-| Hot glue gun | 1 | [Kaspi.kz — REXANT 200W](https://kaspi.kz/shop/p/rexant-pistolet-kleevoi-200-vt-11-mm-112244498/) | ~4,442 тг | Kaspi delivery/pickup in Almaty (varies by seller) — or the [full category](https://kaspi.kz/shop/c/glue%20guns/) for cheaper options (basic ones start ~200 тг) |
-| Calipers | 1 | [Kaspi.kz calipers category](https://kaspi.kz/shop/c/calipers/) | varies | Kaspi listings here already default to Almaty — basic plastic ones are fine |
-| 20mm wristband/watch strap | 1 | [Kaspi.kz watch straps category](https://kaspi.kz/shop/c/watch%20straps%20and%20bracelets/) | varies | Search "ремешок для часов 20мм" if the category link doesn't filter well |
-| 3D printing (base + lid + clip, one print job) | 1 job | Check your school's makerspace first | — | Otherwise search "3D печать Алматы" on Kaspi.kz or 2GIS |
+Not researched this pass - these are general hardware/craft items, not
+specialty electronics, so "an actual technology store" doesn't
+particularly apply to them. Any hardware store, craft shop, or the Tastak
+market itself (which has more than just electronics stalls) should carry:
+
+| Item | Qty | Where |
+|---|---|---|
+| Hot glue gun | 1 | Any hardware/craft store |
+| Calipers | 1 | Any hardware store or Arduino Parts/RadioBazar (electronics shops sometimes stock basic measuring tools) |
+| 20mm wristband/watch strap | 1 | A watch/accessories stall - Tastak has these too |
+| 3D printing (base + lid + clip) | 1 job | Check a school makerspace first, or ask at Arduino Parts/RadioBazar - shops like these sometimes know a local printing contact |
 
 ## Safety
 
-| Item | Qty | Store & link | Price | Fulfillment |
-|---|---|---|---|---|
-| Fireproof LiPo charging pouch | 1 | **Not confirmed available locally** — search "сумка для зарядки LiPo аккумуляторов" on Kaspi.kz, or an RC-hobby specialty store | — | If you can't source one in time: charge on a non-flammable surface, away from anything flammable, never unattended |
+Same open gap as before: no fireproof LiPo charging pouch confirmed
+available anywhere in this pass. Until sourced, charge on a non-flammable
+surface, supervised, never unattended - this matters somewhat less with
+the 18650 cell (no bare pouch to puncture) but the charging precaution
+still applies.
 
-## Totals
+## What this list can't give you that the online version could
 
-Math shown so you can check it yourself — nothing here is a single opaque
-number.
-
-| Group | Subtotal |
-|---|---|
-| Electronics (USB-C Nano, qty as listed, excl. the two skip/optional rows) | 5,170 тг |
-| Prototyping | 1,875 тг |
-| Soldering & wiring | 24,875 тг |
-| **AmperMarket items subtotal** | **31,920 тг** |
-| + Kazpost shipping, one combined order | +1,600 тг (up to +1,800 тг if the iron kit's weight tips the package into the 2nd kg) |
-| ChipDip items (VL53L1X + motor), Almaty pickup | 17,790 тг (free pickup, no shipping) |
-| Glue gun (Kaspi) | 4,442 тг |
-| **Grand total** (excl. calipers/strap/3D-print/LiPo-pouch — all "varies") | **≈ 55,750–55,950 тг** (~$104-110 USD equivalent, order of magnitude — convert at the current rate) |
-
-If you already own basic soldering tools and only need the electronics +
-prototyping + ChipDip parts: **≈ 26,435 тг** (5,170 + 1,875 + 1,600 Kazpost
-+ 17,790 ChipDip).
+Exact, verified prices for every line item. Physical component shops
+don't always publish per-part pricing for things like individual
+resistors and diodes, and this pass didn't call either store to ask.
+**Confirmed core total** (Nano + VL53L0X + motor + transistor, the four
+prices actually pinned down): **5,400 тг**. Everything else - the
+remaining electronics, prototyping supplies, soldering tools - is real and
+available at these stores based on their confirmed catalog categories, but
+budget loosely rather than trusting a single grand-total number this time.
+If you want one anyway as a rough sanity check: comparable parts ran
+about **31,900 тг** for electronics+prototyping+soldering in the
+online/AmperMarket version of this list - walk-in prices at Arduino
+Parts/RadioBazar look similar or slightly cheaper where compared directly
+(Nano: 2,300 vs 2,700 тг; motor: 250 тг both places; VL53L0X: 2,800 тг
+both places), so that's a reasonable ballpark, not a promise.

@@ -505,8 +505,8 @@
         <input type="range" class="small-range" id="mediumThreshold" min="70" max="2470" step="10" value="1000">
       </div>
       <div class="threshold-row">
-        <div class="row-head"><label for="farThreshold">Far threshold</label><output id="farThresholdOut">2000 mm</output></div>
-        <input type="range" class="small-range" id="farThreshold" min="120" max="2500" step="10" value="2000">
+        <div class="row-head"><label for="farThreshold">Far threshold</label><output id="farThresholdOut">1800 mm</output></div>
+        <input type="range" class="small-range" id="farThreshold" min="120" max="2500" step="10" value="1800">
       </div>
     </div>
 
@@ -562,7 +562,7 @@
      are all the same logic, just in JS.
   -------------------------------------------------------------*/
   const DEFAULTS = {
-    farThresholdMm: 2000,
+    farThresholdMm: 1800,
     mediumThresholdMm: 1000,
     nearThresholdMm: 400,
     minValidMm: 10,

@@ -42,14 +42,21 @@ nano_length       = 45;  // Arduino Nano clone, long edge
 nano_width        = 18;  // short edge
 nano_stack_height = 8;   // PCB + header pins + USB-C connector, stacked
 
-tof_length       = 14;  // VL53L1X breakout board
-tof_width        = 8;
-tof_stack_height = 4;
+tof_length       = 14;  // VL53L0X breakout board (e.g. GY-53) - see
+tof_width        = 8;   // PURCHASE_LIST.md, no walk-in Almaty store had a
+tof_stack_height = 4;   // VL53L1X in stock as of this writing
 tof_window_dia   = 5;   // clear aperture needed in front of the sensor lens
 
 motor_dia       = 10;  // vibration motor (10x3mm "pancake" type)
 motor_thickness = 3;
 
+// LiPo POUCH cell dimensions - NOT YET RECONCILED with the battery
+// actually confirmed available walk-in (an 18650 cylindrical cell, see
+// PURCHASE_LIST.md's battery note). An 18650 (18mm dia x 65mm long) is a
+// different shape entirely and won't fit this rectangular cavity - if
+// that's the battery in hand, this section needs a real redesign (a
+// cylindrical bay), not just new numbers. Left as a flat-pouch placeholder
+// pending confirmation of which battery is actually being used.
 battery_length    = 25;  // LiPo pouch cell
 battery_width     = 20;
 battery_thickness = 6;

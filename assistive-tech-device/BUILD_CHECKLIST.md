@@ -19,7 +19,9 @@ for real store links, prices, and quantities (2026-07-25 snapshot).
 Parts:
 - [ ] Arduino Nano (CH340 clone, USB-C)
 - [ ] USB-C cable (data-capable, not charge-only)
-- [ ] VL53L1X time-of-flight sensor breakout
+- [ ] VL53L0X time-of-flight sensor breakout (GY-53 or similar - no
+      walk-in Almaty store stocks a VL53L1X as of this writing, see
+      PURCHASE_LIST.md)
 - [ ] Vibration motor (10×3mm "pancake" type)
 - [ ] 2N2222 NPN transistor
 - [ ] 1N4148 diode (flyback protection)
@@ -35,7 +37,8 @@ Parts:
 
 Tools/software:
 - [ ] Computer with Arduino IDE (or arduino-cli) installed
-- [ ] "VL53L1X" Arduino library by Pololu, installed via Library Manager
+- [ ] "VL53L0X" Arduino library by Pololu, installed via Library Manager
+      (not the VL53L1X one - different chip, different library)
 - [ ] A C++ compiler for desktop unit tests - `g++` is enough
       (`firmware/tests/run_tests.sh` expects it on PATH)
 
@@ -65,7 +68,10 @@ Tools:
 - [ ] Access to a 3D printer (own, school, library, print service)
 
 Steps:
-- [ ] Measure Nano, VL53L1X breakout, motor, and battery with calipers
+- [ ] Measure Nano, VL53L0X breakout, motor, and battery with calipers -
+      if the battery ended up being an 18650 cell (see PURCHASE_LIST.md's
+      battery note), enclosure.scad's battery cavity needs reshaping, not
+      just re-measuring
 - [ ] Update the "[MEASURE YOUR PARTS]" block at the top of
       `enclosure/enclosure.scad` with real numbers
 - [ ] Re-render in OpenSCAD (F5 preview, then F6 for a full render) and

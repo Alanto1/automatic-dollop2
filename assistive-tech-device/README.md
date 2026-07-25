@@ -25,7 +25,7 @@ consent before naming or showing any test user.
 ## How it works
 
 ```
-VL53L1X (ToF sensor, I2C) --distance_mm--> HapticMapper --zone+PWM--> vibration motor
+VL53L0X (ToF sensor, I2C) --distance_mm--> HapticMapper --zone+PWM--> vibration motor
 ```
 
 `HapticMapper` (see `firmware/obstacle_haptic/HapticMapper.h`) buckets the
@@ -34,8 +34,8 @@ on/off + PWM-duty pattern:
 
 | Zone | Distance | Motor behavior | Duty |
 |---|---|---|---|
-| Far | ≥ 2000mm (or an invalid/near-zero reading) | off | — |
-| Medium | 1000–1999mm | slow pulse (120ms on / 400ms off) | 140/255 |
+| Far | ≥ 1800mm (or an invalid/near-zero reading) | off | — |
+| Medium | 1000–1799mm | slow pulse (120ms on / 400ms off) | 140/255 |
 | Near | 400–999mm | faster pulse (120ms on / 150ms off) | 200/255 |
 | Critical | 10–399mm | continuous | 255/255 |
 
@@ -73,45 +73,58 @@ forward as true just because an earlier note said so.
 ## Bill of materials
 
 Full sourcing with real, live-checked store links and prices is in
-[`PURCHASE_LIST.md`](PURCHASE_LIST.md) (currently the **Almaty edition** —
-re-check that file's header if building from a different city, since pickup
-vs. shipping flips between stores depending on where you are). For shopping
-on a phone, [`PURCHASE_LIST_almaty.html`](PURCHASE_LIST_almaty.html) is the
-same list as a self-contained, offline-capable checklist — tap to check
-items off, live running total, no server needed (open the file directly, or
-https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42 for a
-link instead of a download). Summary:
+[`PURCHASE_LIST.md`](PURCHASE_LIST.md) — currently the **Almaty, walk-in
+edition**: real physical component shops, no shipping/delivery, re-checked
+2026-07-25 after the shipping-based version turned out not to fit (see that
+file's own history for why it changed twice in one day). For shopping on a
+phone, [`PURCHASE_LIST_almaty.html`](PURCHASE_LIST_almaty.html) is the same
+list as a self-contained, offline-capable checklist — tap to check items
+off, live running total, tap-to-call links for the two stores (open the
+file directly, or https://claude.ai/code/artifact/38b6a57a-ecb2-4fa0-bc9a-2c3fd3c63a42
+for a link instead of a download). Summary:
 
 | Part | Purpose |
 |---|---|
 | Arduino Nano (CH340 clone, USB-C) | microcontroller |
-| VL53L1X time-of-flight sensor | forward-facing distance sensing (up to ~4m) |
+| VL53L0X time-of-flight sensor | forward-facing distance sensing (up to ~2m — see sensor note below) |
 | Vibration motor (10mm coin type) | haptic output |
 | 2N2222 NPN transistor + 1N4148 flyback diode + resistor (220Ω-1k both work) | motor driver (a GPIO pin can't source a motor's current directly) |
-| LiPo battery (~380-800mAh) + TP4056 charge module | power |
+| 18650 Li-ion cell + TP4056 charge module | power (see battery note below - not the flat pouch cell earlier revisions assumed) |
 | Wristband strap | mounting |
 | Breadboard + jumper wires | prototyping (breadboard phase only) |
 
 `PURCHASE_LIST.md`'s current parts list skips a 5V boost converter and a
-power switch (wires the LiPo straight to 5V, disconnect the battery to turn
-off) to keep cost/complexity down - a common enough shortcut for
-battery-powered Nano clones, flagged there as worth watching for flaky
-behavior rather than treated as wrong. Add both back (a few hundred тг
-each) if the breadboard prototype turns out to need them.
+power switch (wires the battery straight to 5V, disconnect it to turn off)
+to keep cost/complexity down - a common enough shortcut for battery-powered
+Nano clones, flagged there as worth watching for flaky behavior rather than
+treated as wrong. Add both back if the breadboard prototype turns out to
+need them.
 
-### Sensor substitution warning
+### Sensor note
 
-`HapticMapper.h`'s far threshold is exactly 2000mm. The commonly-stocked
-VL53L0X (2m max range) has **zero margin** at that threshold — a reading
-right at the sensor's ceiling is indistinguishable from "no data." Use a
-real VL53L1X (4m range) instead; see `PURCHASE_LIST.md` for where to get
-one. If a VL53L0X ends up on the board anyway, lower `kFarThresholdMm`
-well below 2000 first.
+No walk-in Almaty store stocks a VL53L1X (4m range) as of this pass - only
+the VL53L0X (2m range) is actually on shelves, so that's what this project
+now targets. A reading right at a sensor's own max range is
+indistinguishable from "no data," so rather than run the far threshold
+exactly at the VL53L0X's 2000mm ceiling, `HapticMapper.h`'s
+`kFarThresholdMm` is set to **1800mm** - 200mm of real margin. If a
+VL53L1X becomes available later, that threshold can move back up (see the
+constant's comment for how).
+
+### Battery note
+
+The battery confirmed available at a walk-in store is a cylindrical 18650
+cell, not the flat pouch cell earlier revisions of this BOM assumed.
+`enclosure/enclosure.scad`'s placeholder battery cavity (25×20×6mm) is
+sized for a flat pouch and won't fit an 18650 (18mm dia. × 65mm) - that's a
+real enclosure change, not yet made. See `PURCHASE_LIST.md`'s battery note
+for the full reasoning, including why it's still worth asking in-store for
+a flat LiPo before committing to the 18650.
 
 ## Wiring
 
 ```
-VL53L1X          Arduino Nano
+VL53L0X          Arduino Nano
   VIN  -------------- 5V
   GND  -------------- GND
   SDA  -------------- A4
@@ -149,7 +162,7 @@ assistive-tech-device/
 ├── firmware/
 │   ├── obstacle_haptic/
 │   │   ├── HapticMapper.h             distance -> vibration logic (pure C++, no Arduino deps)
-│   │   └── obstacle_haptic.ino        hardware glue: VL53L1X polling + motor PWM
+│   │   └── obstacle_haptic.ino        hardware glue: VL53L0X polling + motor PWM
 │   ├── tests/                         desktop unit tests for HapticMapper.h
 │   └── simulator/
 │       └── haptic_simulator.html      browser tool - tune thresholds without hardware
@@ -200,7 +213,7 @@ flat.
   sourcing (see `PURCHASE_LIST.md`). Fallback practice until one is
   sourced: charge on a non-flammable surface, supervised, never
   unattended overnight.
-- **Sensor failure mode:** if the VL53L1X fails to init or times out, the
+- **Sensor failure mode:** if the VL53L0X fails to init or times out, the
   firmware fails toward *no vibration*, not a false alarm (see
   `obstacle_haptic.ino` and `HapticMapper.h` comments). That is a
   deliberate tradeoff, not a safety guarantee — a wristband that goes
@@ -223,8 +236,8 @@ flat.
 3. Once parts arrive: measure them with calipers, update
    `enclosure.scad`'s placeholder dimensions, re-render, then breadboard
    the circuit per the wiring diagram above.
-4. Flash `obstacle_haptic.ino` (needs the Pololu VL53L1X Arduino library),
-   tune thresholds using the breadboard + `haptic_simulator.html` side by
-   side, then run a blindfolded course test with a sighted spotter as a
-   first-pass sanity check - not a substitute for real low-vision user
+4. Flash `obstacle_haptic.ino` (needs the Pololu **VL53L0X** Arduino
+   library), tune thresholds using the breadboard + `haptic_simulator.html`
+   side by side, then run a blindfolded course test with a sighted spotter
+   as a first-pass sanity check - not a substitute for real low-vision user
    feedback.

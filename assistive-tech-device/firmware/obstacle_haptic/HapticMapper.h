@@ -8,7 +8,7 @@
 // a desktop (see firmware/tests/) and ported line-for-line to JS for the
 // browser simulator (firmware/simulator/haptic_simulator.html).
 //
-// obstacle_haptic.ino owns everything hardware-shaped: reading the VL53L1X,
+// obstacle_haptic.ino owns everything hardware-shaped: reading the VL53L0X,
 // deciding what distance to hand in on a sensor error/timeout, and turning
 // update()'s MotorCommand into an analogWrite() call. This class just
 // answers "given a distance and a clock reading, should the motor be on
@@ -33,11 +33,15 @@ public:
     };
 
     // --- Distance thresholds (millimeters) ---
-    // A reading >= kFarThresholdMm is treated as "no obstacle". This sits
-    // at the VL53L0X's 2000mm ceiling, not just inside the VL53L1X's
-    // 4000mm one - see README.md's sensor-substitution note for why that
-    // matters if a VL53L0X ever ends up on the board instead.
-    static constexpr uint16_t kFarThresholdMm = 2000;
+    // A reading >= kFarThresholdMm is treated as "no obstacle". Deliberately
+    // set below the VL53L0X's 2000mm ceiling (not the VL53L1X's 4000mm) -
+    // no walk-in Almaty store stocks a VL53L1X as of this writing (see
+    // PURCHASE_LIST.md), so v1 assumes the 2m sensor. A reading right at a
+    // sensor's own max range is indistinguishable from "no data", so this
+    // sits 200mm under that ceiling rather than exactly at it - see
+    // README.md's sensor section for the full reasoning. If a VL53L1X does
+    // end up on the board later, this can safely move back up.
+    static constexpr uint16_t kFarThresholdMm = 1800;
     static constexpr uint16_t kMediumThresholdMm = 1000;
     static constexpr uint16_t kNearThresholdMm = 400;
 
