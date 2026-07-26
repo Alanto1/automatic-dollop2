@@ -107,6 +107,8 @@
     background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px;
     padding: 5px 10px;
   }
+  .store-card.closed { opacity: 0.6; }
+  .store-card.closed .store-role { color: var(--tag-check-fg); }
 
   .section { margin: 18px 0; }
   .section-title {
@@ -183,24 +185,33 @@
     No shipping, no delivery. <span class="tag tag-yes">CONFIRMED</span> means verified in stock with a
     real price online; <span class="tag tag-check">CHECK IN STORE</span> means the category is confirmed
     but the specific item/price wasn't — normal for a physical component shop. AmperMarket (Astana-only
-    pickup) and ChipDip are deliberately not on this list. Checked 2026-07-25.
+    pickup) and ChipDip are deliberately not on this list. Arduino Parts (the original primary) is
+    temporarily closed — Alash Electronics replaces it below. Checked 2026-07-25.
   </div>
 
   <div class="stores">
     <div class="store-card">
-      <div class="store-name-row"><span class="store-name">Arduino Parts</span><span class="store-role">primary</span></div>
-      <div class="store-addr">ул. Толе би 189д (угол ул. Гагарина), 3 этаж, офис 310, Алматы</div>
+      <div class="store-name-row"><span class="store-name">Alash Electronics</span><span class="store-role">primary</span></div>
+      <div class="store-addr">ул. Кыз Жибек 104/1, Алматы · self-pickup Пн-Сб 12:00-20:00</div>
       <div class="store-actions">
-        <a href="tel:+77051745975">📞 call</a>
-        <a href="https://arduparts.kz" target="_blank" rel="noopener">catalog ↗</a>
+        <a href="tel:+77009001790">📞 call</a>
+        <a href="https://alash-electronics.kz" target="_blank" rel="noopener">catalog ↗</a>
       </div>
     </div>
     <div class="store-card">
-      <div class="store-name-row"><span class="store-name">RadioBazar</span><span class="store-role">backup / compare</span></div>
+      <div class="store-name-row"><span class="store-name">RadioBazar</span><span class="store-role">secondary / compare</span></div>
       <div class="store-addr">ТД Тастак, ул. Толе-би 266, бутик 37, этаж 2, павильон 3, Алматы · 4.6★ (47)</div>
       <div class="store-actions">
         <a href="tel:+77477212168">📞 call</a>
         <a href="https://radiobazar.kz" target="_blank" rel="noopener">catalog ↗</a>
+      </div>
+    </div>
+    <div class="store-card closed">
+      <div class="store-name-row"><span class="store-name">Arduino Parts</span><span class="store-role">temporarily closed</span></div>
+      <div class="store-addr">ул. Толе би 189д, офис 310, Алматы — kept for reference / in case it reopens</div>
+      <div class="store-actions">
+        <a href="tel:+77051745975">📞 call</a>
+        <a href="https://arduparts.kz" target="_blank" rel="noopener">catalog ↗</a>
       </div>
     </div>
   </div>
@@ -246,52 +257,53 @@
 
   var sections = {
     sensor: [
-      { id: "vl53l0x", name: "VL53L0X laser distance sensor (GY-53)", qty: 1, price: 2800, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: true,
+      { id: "vl53l0x", name: "VL53L0X laser distance sensor (GY-53)", qty: 1, price: 2750, store: "Alash Electronics",
+        url: "https://alash-electronics.kz/product/lazernyy-datchik-rasstoyaniya-gy-53-na-vl53l0x", confirmed: true,
         note: "Firmware's far threshold was lowered to 1800mm to give real margin under this sensor's 2m ceiling — see HapticMapper.h" },
-      { id: "vl53ldk", name: "— cheaper alt to ask about: GY-530 / VL53LDK", qty: 0, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: false,
-        note: "2,000 тг listed — didn't confirm it's the same chip as the GY-53, ask in store", skipCount: true },
-      { id: "hcsr04", name: "— fallback: HC-SR04 ultrasonic", qty: 0, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8559329-datchiki-prostranstva", confirmed: true,
-        note: "750 тг, confirmed in stock, but NOT a drop-in swap — wider beam, would need its own firmware look", skipCount: true }
+      { id: "wcmcu531", name: "— alt to ask about: WCMCU-531", qty: 0, price: null, store: "Alash Electronics",
+        confirmed: false,
+        note: "3,000 тг listed — a different breakout for the same/similar sensor, ask in store which is easier to wire", skipCount: true },
+      { id: "hcsr04", name: "— fallback: HC-SR04 ultrasonic", qty: 0, price: null, store: "either store",
+        confirmed: false,
+        note: "not confirmed in stock at either store this pass, and NOT a drop-in swap either way — wider beam, would need its own firmware look", skipCount: true }
     ],
     electronics: [
-      { id: "nano", name: "Arduino Nano clone (CH340, USB-C)", qty: 1, price: 2300, store: "Arduino Parts",
-        url: "https://arduparts.kz/p103784105-nano-v30-type.html", confirmed: true,
-        note: "cheaper Mini-USB option at RadioBazar, 2,000 тг, if the connector doesn't matter to you" },
-      { id: "motor", name: "Vibration motor, “tablet” 3V, 10×10×3mm", qty: 1, price: 250, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8411965-dvigateli", confirmed: true },
+      { id: "nano", name: "Arduino Nano clone (CH340, Type-C)", qty: 1, price: 2250, store: "Alash Electronics",
+        url: "https://alash-electronics.satu.kz/p122739713-arduino-nano-v30.html", confirmed: true,
+        note: "23 units in stock as of this check. Cheaper Mini-USB option at RadioBazar, 2,000 тг, if the connector doesn't matter to you" },
+      { id: "motor", name: "Vibration motor, “tablet” 3V, 10×3mm", qty: 1, price: 250, store: "Alash Electronics",
+        url: "https://alash-electronics.kz/product/mikro-dc-vibratsionnyy-dvigatel-ploskiy", confirmed: false,
+        note: "OUT OF STOCK as of this check (pre-order only) — call ahead, or try a phone-repair stall (same part as a phone's vibration motor)" },
       { id: "transistor", name: "2N2222A NPN transistor", qty: 3, unitPrice: 50, store: "Alash Electronics",
         url: "https://alash-electronics.kz/product/tranzistor-2n2222", confirmed: true,
-        note: "1 needed + 2 spares — ask Arduino Parts/RadioBazar first, might save the extra stop" },
-      { id: "diode", name: "1N4148 flyback diode", qty: 3, price: null, store: "Arduino Parts",
+        note: "1 needed + 2 spares" },
+      { id: "diode", name: "1N4148 flyback diode", qty: 3, price: null, store: "Alash Electronics",
         confirmed: false, note: "component category confirmed, exact item/price not — nearly free either way" },
-      { id: "resistor", name: "Resistor, 220Ω-1k (either works)", qty: 5, price: null, store: "Arduino Parts",
+      { id: "resistor", name: "Resistor, 220Ω-1k (either works)", qty: 5, price: null, store: "Alash Electronics",
         confirmed: false, note: "component category confirmed, exact item/price not" },
-      { id: "battery", name: "Li-ion 18650, 3000mAh (LiitoKala HG2)", qty: 1, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/p112715575-akkumulyator-liitokala-hg2.html", confirmed: true,
+      { id: "battery", name: "Li-ion 18650, 3400mAh (LiitoKala)", qty: 1, price: 2500, store: "Alash Electronics",
+        url: "https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv", confirmed: true,
         note: "confirmed in stock, but it's a cylindrical cell, not the flat pouch the enclosure design assumes — read PURCHASE_LIST.md's battery note before buying" },
-      { id: "tp4056", name: "TP4056 charge module, with protection, Type-C", qty: 1, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/p114791182-modul-zaryada-ion.html", confirmed: true },
+      { id: "tp4056", name: "TP4056 charge module, with protection, Type-C", qty: 1, price: 200, store: "Alash Electronics",
+        url: "https://alash-electronics.kz/collection/zaryadnye-ustroystva/product/modul-zaryadki-li-ion-akkumulyatorov-na-tp4056-1-a-type-c", confirmed: true },
       { id: "cable", name: "USB-C cable", qty: 1, price: null, store: "either store",
         confirmed: false, note: "any electronics shop has these" }
     ],
     prototyping: [
-      { id: "breadboard", name: "Breadboard", qty: 1, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8771321-maketnye-platy", confirmed: false, note: "category confirmed" },
+      { id: "breadboard", name: "Breadboard", qty: 1, price: null, store: "Alash Electronics or RadioBazar",
+        confirmed: false, note: "not re-confirmed this pass — was confirmed at Arduino Parts before it closed" },
       { id: "jumpers", name: "Jumper wires (M-M and M-F)", qty: 1, price: null, store: "either store",
         confirmed: false, note: "universally stocked" },
-      { id: "iron", name: "Soldering iron (+ multimeter if bundled)", qty: 1, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8412071-vse-dlya-pajki", confirmed: false, note: "category confirmed at both stores — compare in person" },
-      { id: "solder", name: "Solder wire, stripper, screwdriver set, hookup wire, heat-shrink, “third hand”, crocodile clips", qty: 1, price: null, store: "Arduino Parts",
-        url: "https://arduparts.kz/g8412071-vse-dlya-pajki", confirmed: false, note: "“Всё для пайки” category at Arduino Parts, or RadioBazar's “паяльное оборудование”" }
+      { id: "iron", name: "Soldering iron (+ multimeter if bundled)", qty: 1, price: null, store: "RadioBazar",
+        url: "https://radiobazar.kz/g7735489-izmeritelnye-pribory", confirmed: false, note: "“паяльное оборудование” category confirmed at RadioBazar; check Alash Electronics too" },
+      { id: "solder", name: "Solder wire, stripper, screwdriver set, hookup wire, heat-shrink, “third hand”, crocodile clips", qty: 1, price: null, store: "RadioBazar",
+        url: "https://radiobazar.kz/g7735489-izmeritelnye-pribory", confirmed: false, note: "“паяльное оборудование” category at RadioBazar, individual items not itemized" }
     ],
     enclosure: [
       { id: "gluegun", name: "Hot glue gun", qty: 1, price: null, store: "any hardware/craft store",
         confirmed: false, note: "not researched this pass" },
       { id: "calipers", name: "Calipers (basic plastic is fine)", qty: 1, price: null, store: "any hardware store",
-        confirmed: false, note: "or ask Arduino Parts/RadioBazar" },
+        confirmed: false, note: "or ask Alash Electronics/RadioBazar" },
       { id: "strap", name: "Wristband/watch strap, ~20mm", qty: 1, price: null, store: "watch/accessories stall",
         confirmed: false, note: "Tastak market has these too — match strap_width in enclosure.scad" },
       { id: "print", name: "3D printing (base + lid + clip)", qty: 1, price: null, store: "—",
