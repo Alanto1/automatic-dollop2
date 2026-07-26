@@ -5,6 +5,88 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-25, follow-up 4: Arduino Parts closed, PR workflow note
+
+Fifth pass, same day. Two unrelated threads:
+
+**PR workflow**: the PR opened at the end of the tutorial pass (#2) was
+merged by the repo owner within a minute of opening. When new work
+started after that, `claude/follow-this-yo7wgl` had to be treated as a
+fresh branch per this project's git instructions (never stack new commits
+on already-merged history) - but since GitHub hadn't deleted the branch
+and nothing else had merged to `main` in between, the branch's content
+was already identical to `main`, so continuing to commit on it directly
+and pushing normally (no force, no reset) landed the same result a
+from-scratch branch reset would have. A literal `git checkout -B ... origin/main`
+was attempted first and got blocked by the environment's permission
+classifier (looked destructive); the content-equivalence check via
+`git diff origin/main origin/claude/follow-this-yo7wgl` is what confirmed
+the simpler path was safe. Worth knowing for next time: check for
+divergence before assuming a reset is required.
+
+**Arduino Parts (the primary store from the previous pass) is now
+temporarily closed** (per the user, who would know - not something this
+session could verify remotely). Re-researched walk-in options:
+
+- **Alash Electronics** (ул. Кыз Жибек 104/1, Алматы, self-pickup
+  Пн-Сб 12:00-20:00, +7 700 900 17 90) is the new primary - confirmed
+  in stock: VL53L0X/GY-53 sensor (2,750 тг, cheaper than Arduino Parts'
+  2,800), a Type-C Nano clone (2,250 тг, 23 units), TP4056 (200 тг,
+  cheapest found anywhere in this project), an 18650 LiitoKala cell
+  (3400mAh, 2,500 тг), 2N2222 transistor (50 тг, already known from an
+  earlier pass).
+- **Gap found, not papered over**: the specific vibration motor
+  (10×3mm "tablet" type) is out of stock at Alash Electronics
+  (pre-order only) and wasn't found listed at RadioBazar either -
+  currently the one part without a confirmed in-stock walk-in source.
+  `PURCHASE_LIST.md` suggests calling ahead and, as a genuine
+  alternative, checking a phone-repair stall (Tastak has several) -
+  this exact motor type is what's inside most phones.
+- RadioBazar's own "Arduino modules, sensors" category was checked
+  directly this pass (not just assumed from its category name) and
+  currently lists only a Nano and an ESP32 - no distance sensor. Keeping
+  it as secondary specifically for its cheap Nano (2,000 тг, Mini-USB)
+  and general soldering/tools categories, not for the sensor.
+- Arduino Parts' info was kept in both `PURCHASE_LIST.md` and
+  `PURCHASE_LIST_almaty.html` at the end of this pass, marked closed
+  rather than deleted. **Superseded the same day** - see the next entry
+  below: the user asked for it to be removed entirely rather than kept as
+  a reference, so it's now fully gone from both files.
+
+## Session log — 2026-07-25, follow-up 5: Arduino Parts fully removed, third store added
+
+Sixth pass, same day. The user wanted Arduino Parts gone completely (not
+just marked closed) and asked for additional store options beyond Alash
+Electronics/RadioBazar, given the previous pass had already turned up one
+supply gap (the vibration motor) that neither of those two could fill.
+
+- **All Arduino Parts references removed** from `PURCHASE_LIST.md` and
+  `PURCHASE_LIST_almaty.html` - no address, phone, links, or pricing data
+  remains in either file. (It's still mentioned in this CLAUDE.md's
+  session log, as history of why the primary store changed - that's a
+  changelog, not a current recommendation, so it stays factual rather
+  than scrubbed.)
+- **Ba3ar.kz added as a third store** - genuinely convenient find: it's
+  in the exact same building as RadioBazar (ТД Тастак, ул. Толе-би 266,
+  2 этаж), just a different boutique (22 vs RadioBazar's 37), so visiting
+  both costs no extra travel. Confirmed in stock: TP4056 with protection,
+  Type-C (300 тг, 454 units - a real backup to Alash's 200 тг one). Its
+  own VL53L0X listing (2,600 тг, cheapest found) is out of stock,
+  pre-order only - same gap pattern as Alash's motor, not this pass's
+  fault, just genuinely tight local stock on a couple of specific parts
+  right now. Also carries a GP2Y0A21YK0F analog IR distance sensor as a
+  different-technology option, flagged as not a drop-in (would need
+  `HapticMapper.h`/`obstacle_haptic.ino` changes to read an analog signal
+  instead of I2C).
+- **iArduino.kz checked and ruled out** - despite the name suggesting an
+  Arduino-focused KZ store, it's based in Pavlodar, a different city
+  entirely. Not included anywhere.
+- Net effect on the sensor situation: of three stores now checked for
+  VL53L0X specifically, only Alash Electronics has one in stock (2,750
+  тг). Worth knowing if Alash is ever out too - Ba3ar.kz's pre-order and
+  the analog IR alternative are the fallback paths documented in
+  `PURCHASE_LIST.md`.
+
 ## Session log — 2026-07-25, follow-up 3: build tutorial
 
 Fourth pass, same day: the user supplied a full draft build tutorial
