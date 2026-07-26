@@ -47,9 +47,45 @@ session could verify remotely). Re-researched walk-in options:
   currently lists only a Nano and an ESP32 - no distance sensor. Keeping
   it as secondary specifically for its cheap Nano (2,000 тг, Mini-USB)
   and general soldering/tools categories, not for the sensor.
-- Arduino Parts' info is kept in both `PURCHASE_LIST.md` and
-  `PURCHASE_LIST_almaty.html`, marked closed, rather than deleted - it
-  has good confirmed pricing data and may reopen.
+- Arduino Parts' info was kept in both `PURCHASE_LIST.md` and
+  `PURCHASE_LIST_almaty.html` at the end of this pass, marked closed
+  rather than deleted. **Superseded the same day** - see the next entry
+  below: the user asked for it to be removed entirely rather than kept as
+  a reference, so it's now fully gone from both files.
+
+## Session log — 2026-07-25, follow-up 5: Arduino Parts fully removed, third store added
+
+Sixth pass, same day. The user wanted Arduino Parts gone completely (not
+just marked closed) and asked for additional store options beyond Alash
+Electronics/RadioBazar, given the previous pass had already turned up one
+supply gap (the vibration motor) that neither of those two could fill.
+
+- **All Arduino Parts references removed** from `PURCHASE_LIST.md` and
+  `PURCHASE_LIST_almaty.html` - no address, phone, links, or pricing data
+  remains in either file. (It's still mentioned in this CLAUDE.md's
+  session log, as history of why the primary store changed - that's a
+  changelog, not a current recommendation, so it stays factual rather
+  than scrubbed.)
+- **Ba3ar.kz added as a third store** - genuinely convenient find: it's
+  in the exact same building as RadioBazar (ТД Тастак, ул. Толе-би 266,
+  2 этаж), just a different boutique (22 vs RadioBazar's 37), so visiting
+  both costs no extra travel. Confirmed in stock: TP4056 with protection,
+  Type-C (300 тг, 454 units - a real backup to Alash's 200 тг one). Its
+  own VL53L0X listing (2,600 тг, cheapest found) is out of stock,
+  pre-order only - same gap pattern as Alash's motor, not this pass's
+  fault, just genuinely tight local stock on a couple of specific parts
+  right now. Also carries a GP2Y0A21YK0F analog IR distance sensor as a
+  different-technology option, flagged as not a drop-in (would need
+  `HapticMapper.h`/`obstacle_haptic.ino` changes to read an analog signal
+  instead of I2C).
+- **iArduino.kz checked and ruled out** - despite the name suggesting an
+  Arduino-focused KZ store, it's based in Pavlodar, a different city
+  entirely. Not included anywhere.
+- Net effect on the sensor situation: of three stores now checked for
+  VL53L0X specifically, only Alash Electronics has one in stock (2,750
+  тг). Worth knowing if Alash is ever out too - Ba3ar.kz's pre-order and
+  the analog IR alternative are the fallback paths documented in
+  `PURCHASE_LIST.md`.
 
 ## Session log — 2026-07-25, follow-up 3: build tutorial
 
