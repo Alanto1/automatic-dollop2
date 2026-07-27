@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Purchase List — Almaty (walk-in)</title>
+<title>Purchase List — Almaty (walk-in-first)</title>
 <style>
   :root {
     color-scheme: dark;
@@ -166,7 +166,7 @@
 <div class="topbar">
   <div class="topbar-inner">
     <div class="title-row">
-      <div class="brand">PURCHASE LIST <span class="brand-sub">/ ALMATY, WALK-IN</span></div>
+      <div class="brand">PURCHASE LIST <span class="brand-sub">/ ALMATY, WALK-IN-FIRST</span></div>
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch theme">🌙</button>
     </div>
     <div class="progress-row">
@@ -180,10 +180,12 @@
 <div class="page">
 
   <div class="callout">
-    No shipping, no delivery. <span class="tag tag-yes">CONFIRMED</span> means verified in stock with a
-    real price online; <span class="tag tag-check">CHECK IN STORE</span> means the category is confirmed
-    but the specific item/price wasn't — normal for a physical component shop. AmperMarket (Astana-only
-    pickup) and ChipDip are deliberately not on this list. Checked 2026-07-25.
+    Almaty, walk-in-first — most items are real physical stores, no shipping wait.
+    <span class="tag tag-yes">CONFIRMED</span> means verified in stock (with a real price online,
+    except Kaspi.kz links — prices render client-side, open the link to check);
+    <span class="tag tag-check">CHECK IN STORE</span> means the category is confirmed but the specific
+    item/price wasn't — normal for a physical component shop. AmperMarket (Astana-only pickup) and
+    ChipDip are deliberately not on this list. Checked 2026-07-25, Kaspi additions 2026-07-27.
   </div>
 
   <div class="stores">
@@ -257,6 +259,9 @@
       { id: "vl53l0x", name: "VL53L0X laser distance sensor (GY-53)", qty: 1, price: 2750, store: "Alash Electronics",
         url: "https://alash-electronics.kz/product/lazernyy-datchik-rasstoyaniya-gy-53-na-vl53l0x", confirmed: true,
         note: "Firmware's far threshold was lowered to 1800mm to give real margin under this sensor's 2m ceiling — see HapticMapper.h" },
+      { id: "vl53l0x-kaspi", name: "— online option, no walk-in needed", qty: 0, price: null, store: "Kaspi.kz",
+        url: "https://kaspi.kz/shop/p/datchik-rasstojanija-arduparts-kz-lazernyi-vl53l0x-gy-53-3024--130877379/", confirmed: true,
+        note: "same VL53L0X/GY-53 module confirmed listed (I2C, TTL, PWM output) — price renders client-side, check page. Worth bundling with the flat LiPo battery below if ordering via Kaspi anyway", skipCount: true },
       { id: "wcmcu531", name: "— alt to ask about: WCMCU-531", qty: 0, price: null, store: "Alash Electronics",
         confirmed: false,
         note: "3,000 тг listed — a different breakout for the same/similar sensor, ask in store which is easier to wire", skipCount: true },
@@ -286,7 +291,10 @@
         confirmed: false, note: "component category confirmed, exact item/price not" },
       { id: "battery", name: "Li-ion 18650, 3400mAh (LiitoKala)", qty: 1, price: 2500, store: "Alash Electronics",
         url: "https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv", confirmed: true,
-        note: "confirmed in stock, but it's a cylindrical cell, not the flat pouch the enclosure design assumes — read PURCHASE_LIST.md's battery note before buying" },
+        note: "confirmed in stock, walk-in — but it's a cylindrical cell (18mm dia x 65mm); the enclosure cavity is now sized for the flat pouch below instead, so this one needs a real redesign (cylindrical bay) to fit" },
+      { id: "battery-kaspi", name: "— alternative: flat LiPo pouch, 502030 (3.7V, 250mAh)", qty: 0, price: null, store: "Kaspi.kz",
+        url: "https://kaspi.kz/shop/p/akkumuljator-502030-1-sht-117959645/", confirmed: true,
+        note: "confirmed listed (price renders client-side, check page) — nominal 5×20×30mm, fits the enclosure cavity as-is, no redesign needed. Modest 250mAh vs. the 18650's 3400mAh", skipCount: true },
       { id: "tp4056", name: "TP4056 charge module, with protection, Type-C", qty: 1, price: 200, store: "Alash Electronics",
         url: "https://alash-electronics.kz/collection/zaryadnye-ustroystva/product/modul-zaryadki-li-ion-akkumulyatorov-na-tp4056-1-a-type-c", confirmed: true,
         note: "backup: Ba3ar.kz has it too, 300 тг, confirmed in stock (454 units)" },

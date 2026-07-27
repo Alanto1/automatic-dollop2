@@ -5,6 +5,44 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-27: flat LiPo 502030 found, Kaspi.kz added as a sourcing option
+
+Seventh pass. The user asked specifically "what about the flat lipo" -
+prior passes had repeatedly claimed no flat pouch cell was available
+anywhere, based on searches that only tried generic terms ("18650",
+"battery"). Searching by the actual size-code convention pouch cells use
+("502030", "601148") turned up real listings this time - the earlier
+claim was corrected, not silently changed:
+
+- **Confirmed: a flat 502030 LiPo pouch (3.7V, 250mAh, nominal
+  5x20x30mm) on Kaspi.kz** - Li-Pol chemistry, built-in
+  overcharge/overcurrent protection, 2-pin connector. Re-verified live
+  via WebFetch this pass (not just carried over from an earlier search).
+  This is a close match for `enclosure.scad`'s original flat-pouch
+  cavity, so the cavity's placeholder dimensions were updated to
+  30x20x5mm (was 25x20x6mm) to track this specific part, with the
+  comment rewritten to say so - still flagged as needing real caliper
+  confirmation once the part is in hand, not treated as final.
+- **VL53L0X also confirmed listed on Kaspi.kz** (same GY-53 module
+  already sourced at Alash Electronics) - added as an alternative
+  sourcing option, not a replacement for the walk-in listing.
+- **Kaspi.kz added to `PURCHASE_LIST.md` and `PURCHASE_LIST_almaty.html`**
+  as a named online option specifically for these two parts, alongside
+  the existing walk-in-only framing (Alash/RadioBazar/Ba3ar.kz stay
+  primary for everything else) - this is *not* a full switch to
+  Kaspi-first sourcing, just folding in the two parts the user asked
+  about. Kaspi prices render client-side and can't be fetched
+  programmatically, so listings are linked without a pinned price, same
+  handling as everywhere else in this project when that's come up.
+- **README.md's battery note rewritten** to present the 502030 pouch and
+  the 18650 as two real, current options (capacity vs. enclosure-fit
+  tradeoff) instead of stating the 18650 as the only one available.
+- Files touched: `PURCHASE_LIST.md`, `PURCHASE_LIST_almaty.html`
+  (re-tested in headless Chromium after edits), `README.md`,
+  `enclosure/enclosure.scad`, this file. `HapticMapper.h` and the
+  firmware were not touched - this pass is sourcing/docs only, sensor
+  choice and thresholds are unchanged.
+
 ## Session log — 2026-07-25, follow-up 4: Arduino Parts closed, PR workflow note
 
 Fifth pass, same day. Two unrelated threads:
@@ -380,10 +418,9 @@ assistive-tech-device/
 
 1. Send the outreach emails (`outreach/`) — still the most time-sensitive
    open item, ideally in parallel with the steps below, not after.
-2. Work through `PURCHASE_LIST.md` and actually buy the parts (Arduino
-   Parts in person - see the store info there). While there, ask about a
-   flat LiPo pouch cell before settling for the 18650 - see the battery
-   note.
+2. Work through `PURCHASE_LIST.md` and actually buy the parts - either
+   the flat 502030 LiPo pouch via Kaspi.kz or an 18650 in person at Alash
+   Electronics, see the battery note for the tradeoff.
 3. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
    board bring-up, sensor, motor, combined firmware, power, soldering,
    the enclosure fit-and-reprint loop, final assembly, and the blindfolded

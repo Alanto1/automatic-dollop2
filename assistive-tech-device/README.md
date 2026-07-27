@@ -89,7 +89,7 @@ for a link instead of a download). Summary:
 | VL53L0X time-of-flight sensor | forward-facing distance sensing (up to ~2m — see sensor note below) |
 | Vibration motor (10mm coin type) | haptic output |
 | 2N2222 NPN transistor + 1N4148 flyback diode + resistor (220Ω-1k both work) | motor driver (a GPIO pin can't source a motor's current directly) |
-| 18650 Li-ion cell + TP4056 charge module | power (see battery note below - not the flat pouch cell earlier revisions assumed) |
+| Li-ion cell (flat 502030 pouch or 18650) + TP4056 charge module | power (see battery note below - a flat pouch option is confirmed again, via Kaspi.kz) |
 | Wristband strap | mounting |
 | Breadboard + jumper wires | prototyping (breadboard phase only) |
 
@@ -109,17 +109,28 @@ indistinguishable from "no data," so rather than run the far threshold
 exactly at the VL53L0X's 2000mm ceiling, `HapticMapper.h`'s
 `kFarThresholdMm` is set to **1800mm** - 200mm of real margin. If a
 VL53L1X becomes available later, that threshold can move back up (see the
-constant's comment for how).
+constant's comment for how). The same VL53L0X/GY-53 module is also
+confirmed listed on Kaspi.kz, as an alternative to the walk-in stores -
+see `PURCHASE_LIST.md`'s sensor table for the link.
 
 ### Battery note
 
-The battery confirmed available at a walk-in store is a cylindrical 18650
-cell, not the flat pouch cell earlier revisions of this BOM assumed.
-`enclosure/enclosure.scad`'s placeholder battery cavity (25×20×6mm) is
-sized for a flat pouch and won't fit an 18650 (18mm dia. × 65mm) - that's a
-real enclosure change, not yet made. See `PURCHASE_LIST.md`'s battery note
-for the full reasoning, including why it's still worth asking in-store for
-a flat LiPo before committing to the 18650.
+Two real options now, not just the 18650:
+
+- **Flat LiPo pouch, 502030 (3.7V, 250mAh, nominal 5×20×30mm)** -
+  confirmed on Kaspi.kz, Li-Pol chemistry with built-in
+  overcharge/overcurrent protection. `enclosure/enclosure.scad`'s battery
+  cavity is now sized for this cell - no enclosure redesign needed if
+  it's the one you use. 250mAh is modest; expect shorter runtime than the
+  18650 below.
+- **Cylindrical 18650, 3400mAh (LiitoKala)** - confirmed in stock at Alash
+  Electronics, walk-in. About 13x the capacity of the 502030, but it's a
+  tube (18mm dia. × 65mm long) - `enclosure/enclosure.scad` would need a
+  cylindrical battery bay to fit this one instead, a real design change
+  not made in this pass.
+
+See `PURCHASE_LIST.md`'s battery note for links, prices, and the full
+reasoning either way.
 
 ## Wiring
 

@@ -1,10 +1,14 @@
-# Purchase list — Almaty, walk-in only
+# Purchase list — Almaty, walk-in-first
 
-No shipping, no delivery. Real physical stores you can walk into today,
-checked **2026-07-25**. Prices in KZT (тг) are what each store's own
-website lists — **confirm in person**, since a physical component shop's
-shelf stock and a website catalog don't always agree, and small parts
-(resistors, diodes) often aren't priced online at all.
+Real physical stores you can walk into today, checked **2026-07-25**.
+Prices in KZT (тг) are what each store's own website lists — **confirm in
+person**, since a physical component shop's shelf stock and a website
+catalog don't always agree, and small parts (resistors, diodes) often
+aren't priced online at all. Two parts are also confirmed on **Kaspi.kz**
+(checked **2026-07-27**) as a genuine online alternative, called out where
+relevant below: the VL53L0X sensor and a flat 502030 LiPo battery. Kaspi
+itself renders prices client-side, so its listings here don't carry a
+pinned price - open the link to check current price/delivery time.
 
 ## Where to go
 
@@ -33,6 +37,13 @@ GP2Y0A21YK0F infrared distance sensor (2,500 тг) as a different-technology
 option - analog output, not I2C, so it's not a drop-in for the current
 firmware without code changes.
 
+**Also: Kaspi.kz** — no walk-in trip needed for two specific parts:
+the VL53L0X sensor and a flat 502030 LiPo battery are both confirmed
+listed (see the sensor table and battery note below for links). Useful if
+you're doing a hybrid order - buy what's on Kaspi online, walk in for the
+rest. Delivery takes days, not a same-day pickup, so plan around that if
+you're on a deadline.
+
 ## The sensor situation (this changes the firmware, not just the list)
 
 **No store checked stocks a VL53L1X (4m range)** — that part appears to be
@@ -50,6 +61,7 @@ threshold can move back up.
 |---|---|---|---|---|
 | VL53L0X laser distance sensor (GY-53) | 1 | [Alash Electronics](https://alash-electronics.kz/product/lazernyy-datchik-rasstoyaniya-gy-53-na-vl53l0x) | 2,750 тг | **Confirmed in stock** |
 | — alternative to ask about | 1 | Alash Electronics (WCMCU-531) | 3,000 тг | Confirmed listed, a different breakout for the same/similar sensor - ask in store which is easier to wire |
+| — online option, no walk-in needed | 1 | [Kaspi.kz](https://kaspi.kz/shop/p/datchik-rasstojanija-arduparts-kz-lazernyi-vl53l0x-gy-53-3024--130877379/) | renders client-side - check the page | Confirmed listed - same VL53L0X/GY-53 module (I2C, TTL and PWM output all confirmed on the listing). Worth bundling into the same order as the flat LiPo below if buying via Kaspi anyway |
 | — same part, currently unavailable | 1 | [Ba3ar.kz](https://ba3ar.kz/product/vl53l0x-miniatyurnyj-modul-datchika-rasstoyaniya-i-raspoznavaniya-zhestov/) | 2,600 тг | Out of stock, pre-order only - cheapest price found if it comes back |
 | — different tech, not a drop-in | 1 | Ba3ar.kz (GP2Y0A21YK0F, infrared) | 2,500 тг | Confirmed listed; analog output, would need `HapticMapper.h`/`obstacle_haptic.ino` changes to use |
 | — fallback if nothing else is in stock: ultrasonic | 1 | check any of the three stores for HC-SR04 | ~750 тг range | Not confirmed at any store this pass, and **not a drop-in swap** either way - wider beam, would need its own look at `HapticMapper.h`'s thresholds |
@@ -93,24 +105,28 @@ or Ba3ar.kz either. Before making a special trip for just this part:
 
 ### Battery note — read before buying
 
-The only battery confirmed in stock anywhere in this project's research is
-a cylindrical **18650 cell**, not the flat LiPo pouch cell the original
-enclosure design assumed. This matters for more than just capacity:
+Two real options now - pick based on what you're building:
 
-- **It's a different shape.** 18650 is a tube, roughly 18mm diameter ×
-  65mm long. `enclosure/enclosure.scad`'s placeholder battery dimensions
-  (25×20×6mm) assume a flat pouch cell - an 18650 won't fit that cavity,
-  the enclosure would need a cylindrical battery bay, which is a real
-  design change, not done in this pass.
-- **No built-in protection circuit** on the bare cell - charging it
-  through a TP4056-with-protection module (Alash or Ba3ar.kz, both
-  confirmed above) covers over-charge/over-discharge during charging, but
-  double check the cell's own discharge behavior before wiring it in.
-- **Still worth asking in person** whether any of the three stores has a
-  flat pouch LiPo instead - every store checked across this project's
-  research has only turned up 18650s online, which is decent evidence
-  it's genuinely the more available format locally, not just a
-  search-indexing gap.
+| Item | Qty | Store & link | Price | Confidence |
+|---|---|---|---|---|
+| Flat LiPo pouch, 502030 (3.7V, 250mAh, 5×20×30mm) | 1 | [Kaspi.kz](https://kaspi.kz/shop/p/akkumuljator-502030-1-sht-117959645/) | renders client-side - check the page | Confirmed listed - Li-Pol, built-in overcharge/overcurrent protection, 2-pin connector |
+| Li-ion 18650, 3400mAh (LiitoKala) | 1 | [Alash Electronics](https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv) | 2,500 тг | **Confirmed in stock**, walk-in |
+
+- **Flat 502030 pouch** - fits `enclosure/enclosure.scad`'s battery cavity
+  as-is (the cavity is now sized for this exact part - see the file's
+  comment). 250mAh is modest capacity; expect shorter runtime and more
+  frequent charging than the 18650 below. Only available via Kaspi in
+  this research pass, not confirmed at any walk-in store.
+- **18650 cylindrical, 3400mAh** - confirmed in stock at Alash
+  Electronics, no waiting on delivery. About 13x the 502030's capacity,
+  but it's a tube (18mm diameter × 65mm long) - `enclosure/enclosure.scad`
+  would need a real redesign (a cylindrical battery bay) to fit this one
+  instead of the pouch cavity.
+- **Either way**, the bare cell's own protection (the 502030 lists its
+  own overcharge/overcurrent protection; double-check the 18650 listing
+  for the same) is separate from charging safety - route charging through
+  a TP4056-with-protection module (Alash or Ba3ar.kz, both confirmed
+  above) regardless of which cell you pick.
 
 ## Prototyping, soldering & wiring, tools
 
