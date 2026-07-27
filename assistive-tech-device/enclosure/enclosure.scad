@@ -50,16 +50,19 @@ tof_window_dia   = 5;   // clear aperture needed in front of the sensor lens
 motor_dia       = 10;  // vibration motor (10x3mm "pancake" type)
 motor_thickness = 3;
 
-// LiPo POUCH cell dimensions - NOT YET RECONCILED with the battery
-// actually confirmed available walk-in (an 18650 cylindrical cell, see
-// PURCHASE_LIST.md's battery note). An 18650 (18mm dia x 65mm long) is a
-// different shape entirely and won't fit this rectangular cavity - if
-// that's the battery in hand, this section needs a real redesign (a
-// cylindrical bay), not just new numbers. Left as a flat-pouch placeholder
-// pending confirmation of which battery is actually being used.
-battery_length    = 25;  // LiPo pouch cell
+// LiPo pouch cell dimensions - sized for the 502030 flat pouch cell
+// confirmed on Kaspi.kz (3.7V, 250mAh, nominal 5x20x30mm size code =
+// thickness x width x length; see PURCHASE_LIST.md's battery note for the
+// link). The walk-in-confirmed alternative, an 18650 cylindrical cell
+// (18mm dia x 65mm long), is a different shape entirely and won't fit
+// this rectangular cavity - that battery needs a real redesign (a
+// cylindrical bay), not just new numbers here. Still confirm with real
+// calipers once a part is in hand - pouch cells commonly run a little
+// oversize versus their nominal code, and the connector/leads need their
+// own clearance beyond this cavity.
+battery_length    = 30;  // LiPo pouch cell (502030: 5x20x30mm nominal)
 battery_width     = 20;
-battery_thickness = 6;
+battery_thickness = 5;
 
 strap_width     = 20;  // wristband strap
 strap_thickness = 3;
