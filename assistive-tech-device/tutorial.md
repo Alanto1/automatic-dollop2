@@ -48,23 +48,55 @@ wired anything else in, so if something's wrong later, it's not this.
 
 ## Phase 2 — add the sensor
 
-**Have ready**: VL53L0X breakout (e.g. a GY-53 board), breadboard, 4
-male-female jumper wires.
+**Have ready**: VL53L0X breakout (e.g. a GY-53 board), breadboard, 5
+jumper wires.
+
+> **Read this before wiring if you have a GY-53.** A GY-53 is not a bare
+> VL53L0X breakout - you can spot the difference instantly by its extra
+> pins: `TX`, `RX`, `PWM`, `PS`. Those exist because the board carries its
+> own onboard microcontroller sitting between you and the sensor chip, and
+> the `PS` pin decides which of two mutually exclusive modes that MCU runs
+> in:
+>
+> | PS pin | What the module does |
+> |---|---|
+> | **high (pulled up on-board - the factory default)** | UART/serial mode. The onboard MCU owns the sensor and streams distance over TX/RX + PWM. **I2C is completely dead.** |
+> | **tied to GND** | I2C mode. The MCU steps back; you address the VL53L0X chip directly - what this project's firmware expects. |
+>
+> So **`PS → GND` is a required wire**, not an optional extra. Skip it and
+> the sketch below reports "Failed to detect" forever, no matter how
+> perfect the other four wires are.
 
 1. Wire the sensor to the board (no soldering yet - breadboard only):
    - VL53L0X VIN → board 5V (or 3V3, check your breakout's rating)
    - VL53L0X GND → board GND
    - VL53L0X SDA → board A4 (Nano) / SDA pin
    - VL53L0X SCL → board A5 (Nano) / SCL pin
+   - VL53L0X PS → GND (**GY-53 only**, see the box above - either GND pin
+     on the module works, they're the same net, and the one on the same
+     side as PS is the shortest jumper)
 2. Open `firmware/hardware_tests/01_sensor_only/01_sensor_only.ino` and
    upload it.
 3. Open Tools → Serial Monitor, set the baud rate to 115200.
 
 **Success looks like**: a stream of `distance_mm=...` numbers that go up
 when you move your hand away from the sensor and down when you move it
-closer. If instead you see "Failed to detect VL53L0X sensor", double-check
-the 4 wires - this is almost always a wiring or loose-breadboard issue,
-not a code issue.
+closer.
+
+**If you see "Failed to detect VL53L0X sensor"**, work through these in
+order - the first one is by far the most likely and the least obvious:
+
+1. **`PS` isn't tied to GND** (GY-53 only). See the box above. This looks
+   identical to a wiring fault from every angle, which is exactly what
+   makes it expensive: an I2C bus scan finds nothing at any address, and
+   probing SDA/SCL shows them flickering seemingly at random. That
+   flickering is not a loose wire - it's the onboard MCU running its own
+   I2C traffic to the sensor chip while in UART mode.
+2. **SDA and SCL swapped.** A4 is SDA, A5 is SCL, not the other way round.
+3. **A wire that isn't actually in the row you think it is.** Trace each
+   one physically, pin to pin, rather than by eye from above.
+4. **A cold solder joint** on the module's header - connected-looking but
+   electrically open. Reflow anything that looks dull or balled-up.
 
 ## Phase 3 — add the motor driver (separately, sensor still connected)
 

@@ -16,6 +16,15 @@
 //   VL53L0X GND -> board GND
 //   VL53L0X SDA -> board A4 (Nano) / SDA
 //   VL53L0X SCL -> board A5 (Nano) / SCL
+//   VL53L0X PS  -> GND   <-- REQUIRED if your board is a GY-53
+//
+// The PS pin is not optional on a GY-53. That module has its own onboard
+// MCU, and PS selects its mode: pulled high (the factory default) puts it
+// in UART/serial mode where I2C is completely disabled, so this sketch
+// will report "Failed to detect" forever even with perfect VIN/GND/SDA/SCL
+// wiring. Tying PS to GND switches it to I2C mode, where you address the
+// VL53L0X chip directly. Either GND pin on the module works - both are the
+// same net. See obstacle_haptic.ino's header for the full explanation.
 //
 // After uploading: Tools -> Serial Monitor, 115200 baud.
 
