@@ -102,7 +102,29 @@ order - the first one is by far the most likely and the least obvious:
 
 **Have ready**: vibration motor, NPN transistor (2N2222A), a resistor
 (220Ω-1k both work as the base resistor), 1N4148 diode, a few more jumper
-wires.
+wires. Plus, for the motor: one spare jumper wire to cut up, heat-shrink,
+and the soldering iron - see the box below, and do that step *first*.
+
+> **The motor's leads are too thin for a breadboard. Fix this before
+> wiring anything else.** Coin vibration motors ship with hair-fine leads,
+> far thinner than a jumper wire. A breadboard hole grips by pinching
+> something stiff and roughly 0.6mm thick, and these leads slide straight
+> past that clip without ever being held.
+>
+> The symptom is genuinely confusing, because it is *intermittent* rather
+> than dead: the motor buzzes when a lead is angled so its bare tip
+> scrapes the side of the hole, and goes silent the moment you push it
+> properly all the way in. Pressing the bare wires against 5V and GND by
+> hand works every time. It reads exactly like a broken transistor
+> circuit, a dead motor, or a failing wire, and it can burn hours.
+>
+> **Fix:** solder each motor lead to something the breadboard can grip.
+> Cut one male-male jumper wire in half - that yields two pieces, each
+> with a usable pin - strip a few mm off the cut ends, and solder one
+> motor lead to each. Slide the heat-shrink on *before* soldering. Add a
+> dab of hot glue over the finished joints: the leads are fragile where
+> they enter the motor body and will fatigue and snap if they take any
+> repeated bending.
 
 1. Leave the sensor wired as-is. Add the motor circuit on the breadboard:
    - Board pin 9 → resistor → transistor base
