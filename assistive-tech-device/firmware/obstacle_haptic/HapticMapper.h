@@ -1,6 +1,12 @@
 #pragma once
 
-#include <cstdint>
+// <stdint.h>, NOT <cstdint>. Desktop g++ ships both, but AVR-GCC (what the
+// Arduino IDE uses for the Nano's ATmega328P) only has the C header - so
+// <cstdint> compiles fine for firmware/tests/ and then fails with "fatal
+// error: cstdint: No such file or directory" the moment you build for the
+// board. The unqualified uint8_t/uint16_t/uint32_t names used below work
+// with this header on both toolchains. Don't "modernize" this back.
+#include <stdint.h>
 
 // Pure distance -> haptic feedback mapping logic for the obstacle-detection
 // wristband. No Arduino, no sensor library, no hardware dependency at all -
@@ -112,11 +118,20 @@ public:
     }
 
 private:
+    // Each case rebuilds a PulseTiming from the constants' individual
+    // fields rather than returning the constant object itself. This is
+    // defensive, not a fix for an observed failure: returning `kMediumPulse`
+    // directly copies the object, which can ODR-use it, and pre-C++17 that
+    // needs an out-of-class definition the header doesn't provide. In
+    // practice desktop g++ links it fine even at -std=c++11 (checked), so
+    // this may be unnecessary on AVR too - it's just cheap insurance in the
+    // form that's guaranteed portable, since reading `.onMs`/`.offMs` as
+    // constant expressions is never an ODR-use.
     PulseTiming pulseForZone(Zone zone) const {
         switch (zone) {
-            case Zone::Medium: return kMediumPulse;
-            case Zone::Near: return kNearPulse;
-            case Zone::Critical: return kCriticalPulse;
+            case Zone::Medium: return PulseTiming{kMediumPulse.onMs, kMediumPulse.offMs};
+            case Zone::Near: return PulseTiming{kNearPulse.onMs, kNearPulse.offMs};
+            case Zone::Critical: return PulseTiming{kCriticalPulse.onMs, kCriticalPulse.offMs};
             default: return PulseTiming{0, 0};
         }
     }
