@@ -28,7 +28,28 @@
 //   VL53L0X  GND  -> Nano GND
 //   VL53L0X  SDA  -> Nano A4
 //   VL53L0X  SCL  -> Nano A5
+//   VL53L0X  PS   -> GND       <-- REQUIRED on a GY-53. Read the note below.
 //   Motor driver transistor base -> Nano D9, through a resistor (220ohm-1k, either works)
+//
+// *** THE GY-53 IS NOT A BARE VL53L0X BREAKOUT. ***
+// It carries its own onboard MCU between you and the sensor chip, and its
+// PS pin picks which of two mutually exclusive modes that MCU runs in:
+//   PS = 1 (pulled high on-board, the FACTORY DEFAULT)
+//       UART/serial mode. The onboard MCU owns the sensor chip and streams
+//       distance over TX/RX + PWM. I2C DOES NOT WORK AT ALL in this mode -
+//       this library will never find the sensor, no matter how correct
+//       VIN/GND/SDA/SCL are.
+//   PS = 0 (wired to GND)
+//       I2C mode. The onboard MCU steps back and you address the VL53L0X
+//       chip directly, which is what this library expects.
+// So PS -> GND is a required connection, not an optional extra pin.
+// Confirmed against the GY-53 manual, which states the module "defaults to
+// serial port mode... PS port is pulled high". This cost a full debugging
+// session to find, because every symptom (init() failing, an I2C scan
+// finding nothing at any address, SDA/SCL flickering seemingly at random)
+// looks exactly like a wiring fault. The "random" SDA/SCL activity is in
+// fact the onboard MCU doing its OWN I2C traffic to the sensor chip while
+// in UART mode - real traffic, just not yours.
 //
 // Set DEBUG_SERIAL to 1 to print live distance/zone/motor readings at
 // 115200 baud while tuning HapticMapper's thresholds. Leave it at 0 for
@@ -80,6 +101,24 @@ void setup() {
         while (true) {
         }
     }
+
+    // Long-range configuration - NOT optional for this project. The
+    // VL53L0X's default profile reliably reaches only ~1.2m, but
+    // HapticMapper's far threshold sits at 1800mm, so on defaults the
+    // entire medium zone (1000-1799mm) would sit at or past the sensor's
+    // usable range and read as "far / nothing there". These three settings
+    // are the Pololu library's documented long-range preset: a lower
+    // return-signal-rate limit plus longer laser pulse periods, trading
+    // noise immunity for reach.
+    //
+    // The tradeoff is real and worth watching on a wrist: a more sensitive
+    // sensor is likelier to latch onto a reflection off something other
+    // than the thing actually in front of you, and it performs best in
+    // dim light. If readings look jumpy at distance during tuning, this
+    // block is the first thing to revisit - not HapticMapper's thresholds.
+    sensor.setSignalRateLimit(0.1);
+    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
+    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
 
     sensor.startContinuous(kSensorPeriodMs);
 }

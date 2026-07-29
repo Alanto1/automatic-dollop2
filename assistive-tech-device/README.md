@@ -50,10 +50,13 @@ before trusting them on a wrist.
 - [ ] **Week 0 — outreach.** Drafted (`outreach/`), not sent.
 - [~] **Weeks 1-2 — breadboard prototype.** Firmware logic is written and
   desktop-unit-tested (14/14 passing, see `firmware/tests/` — actually run
-  in this environment, not just claimed). Hardware has not been purchased
-  or assembled. `obstacle_haptic.ino` has been reviewed but **not
-  compiled or flashed** — there's no Arduino toolchain/board in this
-  environment. Treat first flash as a fresh bring-up.
+  in this environment, not just claimed). **Parts are bought and the
+  sensor is alive**: as of 2026-07-28 the Nano flashes, and
+  `01_sensor_only.ino` returns live distance readings over I2C — that's
+  `tutorial.md`'s Phase 2 passing on real hardware (getting there required
+  finding the GY-53 `PS` pin gotcha, see the sensor note below). Phase 3
+  onward — motor driver, combined firmware, battery — is not started, and
+  `obstacle_haptic.ino` itself has still never been flashed.
 - [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
   cleanly (headless OpenSCAD, base/lid/belt-clip all export as valid
   manifold geometry — see the file header for how that was checked). Every
@@ -113,6 +116,32 @@ constant's comment for how). The same VL53L0X/GY-53 module is also
 confirmed listed on Kaspi.kz, as an alternative to the walk-in stores -
 see `PURCHASE_LIST.md`'s sensor table for the link.
 
+**If your board is a GY-53, `PS` must be wired to GND.** A GY-53 is not a
+bare VL53L0X breakout - the giveaway is its extra `TX` / `RX` / `PWM` /
+`PS` pins, which exist because it carries its own onboard microcontroller
+between you and the sensor chip. `PS` selects that MCU's mode: pulled high
+(the factory default) is UART/serial mode, in which **I2C is entirely
+disabled** and no amount of correct VIN/GND/SDA/SCL wiring will let the
+Pololu library find the sensor. Tying `PS` to GND switches it to I2C mode,
+where the MCU steps back and you address the VL53L0X directly. Either GND
+pin on the module works - they're the same net.
+
+This one is worth knowing about in advance because every symptom of
+getting it wrong impersonates a wiring fault: `init()` fails, an I2C bus
+scan reports no devices at any address, and probing SDA/SCL shows them
+flickering apparently at random. That flicker is not a loose connection -
+it's the onboard MCU running its own I2C conversation with the sensor
+chip. Confirmed against the GY-53 manual, which states the module
+"defaults to serial port mode... PS port is pulled high".
+
+**Range configuration.** The VL53L0X's default profile reliably reaches
+only about 1.2m, which is short of this project's 1800mm far threshold -
+the whole medium zone would read as empty. `obstacle_haptic.ino`
+therefore applies the Pololu library's long-range preset (lower signal
+rate limit, longer VCSEL pulse periods) in `setup()`. That buys reach at
+the cost of noise immunity, so it's the first thing to revisit if
+readings look jumpy at distance.
+
 ### Battery note
 
 Two real options now, not just the 18650:
@@ -140,6 +169,7 @@ VL53L0X          Arduino Nano
   GND  -------------- GND
   SDA  -------------- A4
   SCL  -------------- A5
+  PS   -------------- GND      <-- REQUIRED on a GY-53, see sensor note
 
 Motor circuit (D9 is PWM-capable):
   Nano D9 --[220ohm-1k, either works]--> transistor base (2N2222)

@@ -5,6 +5,61 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-28: FIRST REAL HARDWARE BRING-UP. GY-53 PS pin gotcha found.
+
+Eighth pass, and the first one with the physical hardware actually in the
+builder's hands. Phase 2 (sensor bring-up) is **working** - the sensor now
+returns live distance readings. Getting there took most of a session, and
+the reason is worth recording carefully, because it was a documentation
+failure on this project's part, not a build mistake by the builder.
+
+**Root cause: the GY-53 is not a bare VL53L0X breakout.** It carries an
+onboard MCU between the user and the sensor chip, and its `PS` pin selects
+that MCU's mode:
+- `PS = 1` (pulled high on-board, **factory default**): UART/serial mode.
+  The MCU owns the chip and streams distance over TX/RX + PWM. **I2C is
+  entirely disabled.**
+- `PS = 0` (tied to GND): I2C mode. The MCU steps back and the VL53L0X is
+  addressable directly, which is what the Pololu library expects.
+
+Confirmed against the GY-53 manual ("the module defaults to serial port
+mode... PS port is pulled high"), not inferred. `PS -> GND` is therefore a
+**required** connection, and every wiring doc in this repo previously
+described a 4-wire hookup that cannot work with this module. Now fixed in
+`tutorial.md` (Phase 2, with a callout box + reordered troubleshooting
+list), `README.md` (wiring block + expanded sensor note),
+`obstacle_haptic.ino` and `01_sensor_only.ino` (header comments).
+
+**Why this burned so much time - the diagnostic trap.** Every symptom of
+an un-grounded PS pin impersonates a wiring fault:
+- `init()` / `begin()` fails, or hangs outright mid-`setup()`.
+- An I2C bus scan finds nothing at *any* address, not just 0x29.
+- Probing SDA/SCL with `INPUT_PULLUP` shows them flickering seemingly at
+  random - which reads as an intermittent connection.
+
+That last one is the cruellest: the flickering is **real I2C traffic**,
+just not yours. It's the onboard MCU polling the sensor chip ~20x/second
+while in UART mode. Earlier in the session this was misread as a loose
+wire and sent the debugging down a long dead end of re-seating jumpers,
+swapping wires, testing breadboard rows for continuity, and eventually
+suspecting a dead sensor. **Lesson for a future session: when a module has
+pins that a bare breakout wouldn't (TX/RX/PWM/PS/mode-select), identify
+the actual board and read its manual before diagnosing anything as a
+wiring fault.** Cheap "sensor" modules with onboard MCUs are common, and
+they do not behave like the chip they're named after.
+
+**Second fix, same pass: long-range configuration.** The VL53L0X's default
+profile reliably reaches only ~1.2m, but `kFarThresholdMm` is 1800mm - so
+on defaults the entire medium zone (1000-1799mm) sits at or beyond usable
+range and reads as "nothing there". `obstacle_haptic.ino`'s `setup()` now
+applies the Pololu long-range preset (`setSignalRateLimit(0.1)`, VCSEL
+pre-range 18 / final-range 14). Tradeoff documented inline: more reach,
+less noise immunity, best in dim light - revisit this before touching
+HapticMapper's thresholds if distant readings look jumpy.
+
+Firmware logic (`HapticMapper.h`) untouched this pass; its 14/14 desktop
+tests still pass. Phases 3+ (motor driver onward) are still not started.
+
 ## Session log — 2026-07-27: flat LiPo 502030 found, Kaspi.kz added as a sourcing option
 
 Seventh pass. The user asked specifically "what about the flat lipo" -
@@ -368,6 +423,12 @@ assistive-tech-device/
   solved by lowering the threshold (1800mm) instead of by sourcing a
   bigger sensor. Left the original reasoning here for the record, but
   don't act on "order a VL53L1X" - that's the stale part.
+- **GY-53 `PS` pin must be tied to GND** - the single most expensive gotcha
+  found so far, see the 2026-07-28 session log at the top for the full
+  story. Short version: the GY-53 has an onboard MCU, defaults to UART
+  mode with I2C disabled, and `PS -> GND` is what switches it into I2C
+  mode. Its failure mode perfectly mimics a wiring fault. If a future
+  session is handed "the sensor isn't detected", check this **first**.
 - **Arduino Nano — buy the clone, not genuine**: AmperMarket sells a
   genuine Arduino-brand Nano for 26,500 тг (confirmed 2026-07-25 — also
   currently out of stock) vs a CH340 clone for 2,700-3,900 тг depending on
