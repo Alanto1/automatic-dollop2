@@ -34,10 +34,10 @@ on/off + PWM-duty pattern:
 
 | Zone | Distance | Motor behavior | Duty |
 |---|---|---|---|
-| Far | ≥ 1800mm (or an invalid/near-zero reading) | off | — |
-| Medium | 1000–1799mm | slow pulse (120ms on / 400ms off) | 140/255 |
-| Near | 400–999mm | faster pulse (120ms on / 150ms off) | 200/255 |
-| Critical | 10–399mm | continuous | 255/255 |
+| Far | ≥ 1000mm (or an invalid/near-zero reading) | off | — |
+| Medium | 600–999mm | slow pulse (120ms on / 400ms off) | 140/255 |
+| Near | 250–599mm | faster pulse (120ms on / 150ms off) | 200/255 |
+| Critical | 10–249mm | continuous | 255/255 |
 
 Those thresholds and timings are starting points, not measured-good
 values — tune them with `firmware/simulator/haptic_simulator.html` (or the
@@ -107,12 +107,13 @@ need them.
 
 No walk-in Almaty store stocks a VL53L1X (4m range) as of this pass - only
 the VL53L0X (2m range) is actually on shelves, so that's what this project
-now targets. A reading right at a sensor's own max range is
-indistinguishable from "no data," so rather than run the far threshold
-exactly at the VL53L0X's 2000mm ceiling, `HapticMapper.h`'s
-`kFarThresholdMm` is set to **1800mm** - 200mm of real margin. If a
-VL53L1X becomes available later, that threshold can move back up (see the
-constant's comment for how). The same VL53L0X/GY-53 module is also
+now targets. `HapticMapper.h`'s `kFarThresholdMm` is set to **1000mm**,
+well inside that sensor's capability. It was originally 1800mm, chosen to
+leave margin under the VL53L0X's 2000mm ceiling; it's since been tightened
+further so the wristband stays silent until something is within about
+arm's reach, rather than reacting to the far end of a corridor.
+`kFarThresholdMm` is the knob to turn if you want it to react earlier or
+later - see that constant's comment. The same VL53L0X/GY-53 module is also
 confirmed listed on Kaspi.kz, as an alternative to the walk-in stores -
 see `PURCHASE_LIST.md`'s sensor table for the link.
 
@@ -134,13 +135,20 @@ it's the onboard MCU running its own I2C conversation with the sensor
 chip. Confirmed against the GY-53 manual, which states the module
 "defaults to serial port mode... PS port is pulled high".
 
-**Range configuration.** The VL53L0X's default profile reliably reaches
-only about 1.2m, which is short of this project's 1800mm far threshold -
-the whole medium zone would read as empty. `obstacle_haptic.ino`
-therefore applies the Pololu library's long-range preset (lower signal
-rate limit, longer VCSEL pulse periods) in `setup()`. That buys reach at
-the cost of noise immunity, so it's the first thing to revisit if
-readings look jumpy at distance.
+**Range configuration.** The sensor runs on its **default** measurement
+profile, which reliably reaches about 1.2m - comfortably past the 1000mm
+far threshold, with margin. The default is also the more accurate and
+noise-immune profile, which is what you want on a wrist.
+
+An earlier revision enabled the Pololu long-range preset here, because
+the far threshold was then 1800mm and the default profile simply couldn't
+see that far - the medium zone would have read as empty. Now that the
+thresholds are tighter, that preset would buy reach nobody needs in
+exchange for more spurious readings, so it's gone. **If
+`kFarThresholdMm` ever goes back above ~1100mm, restore it** - sensor
+config and thresholds have to move together, or the far zone quietly
+becomes "the sensor can't see that far" rather than "nothing is there".
+See `obstacle_haptic.ino`'s `setup()` for the exact calls.
 
 ### Battery note
 

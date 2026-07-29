@@ -102,24 +102,22 @@ void setup() {
         }
     }
 
-    // Long-range configuration - NOT optional for this project. The
-    // VL53L0X's default profile reliably reaches only ~1.2m, but
-    // HapticMapper's far threshold sits at 1800mm, so on defaults the
-    // entire medium zone (1000-1799mm) would sit at or past the sensor's
-    // usable range and read as "far / nothing there". These three settings
-    // are the Pololu library's documented long-range preset: a lower
-    // return-signal-rate limit plus longer laser pulse periods, trading
-    // noise immunity for reach.
+    // Sensor left on its DEFAULT measurement profile deliberately.
     //
-    // The tradeoff is real and worth watching on a wrist: a more sensitive
-    // sensor is likelier to latch onto a reflection off something other
-    // than the thing actually in front of you, and it performs best in
-    // dim light. If readings look jumpy at distance during tuning, this
-    // block is the first thing to revisit - not HapticMapper's thresholds.
-    sensor.setSignalRateLimit(0.1);
-    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
-    sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
-
+    // The default reliably reaches roughly 1.2m, and HapticMapper's far
+    // threshold is now 1000mm, so the entire useful range sits inside it
+    // with margin to spare. The default profile is also the more accurate
+    // and noise-immune of the two, which is what you want on a wrist.
+    //
+    // An earlier revision enabled the Pololu long-range preset here
+    // (setSignalRateLimit(0.1) plus longer VCSEL pre-range/final-range
+    // periods) because the far threshold was 1800mm and the default
+    // profile couldn't see that far. Those thresholds have since been
+    // tightened, so that preset now buys reach nobody needs at the cost of
+    // more spurious readings. If kFarThresholdMm ever goes back above
+    // ~1100mm, restore it - the sensor config and the thresholds have to
+    // move together, or the far zone silently becomes "sensor can't see
+    // that far" rather than "nothing is there".
     sensor.startContinuous(kSensorPeriodMs);
 }
 

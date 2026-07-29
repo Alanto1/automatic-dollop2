@@ -39,17 +39,28 @@ public:
     };
 
     // --- Distance thresholds (millimeters) ---
-    // A reading >= kFarThresholdMm is treated as "no obstacle". Deliberately
-    // set below the VL53L0X's 2000mm ceiling (not the VL53L1X's 4000mm) -
-    // no walk-in Almaty store stocks a VL53L1X as of this writing (see
-    // PURCHASE_LIST.md), so v1 assumes the 2m sensor. A reading right at a
-    // sensor's own max range is indistinguishable from "no data", so this
-    // sits 200mm under that ceiling rather than exactly at it - see
-    // README.md's sensor section for the full reasoning. If a VL53L1X does
-    // end up on the board later, this can safely move back up.
-    static constexpr uint16_t kFarThresholdMm = 1800;
-    static constexpr uint16_t kMediumThresholdMm = 1000;
-    static constexpr uint16_t kNearThresholdMm = 400;
+    // A reading >= kFarThresholdMm is treated as "no obstacle", so that
+    // constant is the main knob for "how close does something have to be
+    // before the wristband reacts at all". Lower it to make the device
+    // quieter and more local; raise it to react earlier.
+    //
+    // These were deliberately tightened from an earlier 1800/1000/400 set,
+    // which reacted to almost anything down a corridor and buzzed close to
+    // constantly indoors. At 1000mm the device stays silent until something
+    // is within about arm's reach.
+    //
+    // A useful side effect of staying at/below 1000mm: it's comfortably
+    // inside the VL53L0X's *default* measurement profile (good to roughly
+    // 1.2m), so obstacle_haptic.ino no longer needs the long-range sensor
+    // preset, which bought reach at the cost of noise immunity. If these
+    // ever go back above ~1100mm, re-read that note in the .ino - the
+    // sensor config has to move with them.
+    //
+    // Keep them strictly descending; the simulator enforces the same
+    // ordering, and classify() below assumes it.
+    static constexpr uint16_t kFarThresholdMm = 1000;
+    static constexpr uint16_t kMediumThresholdMm = 600;
+    static constexpr uint16_t kNearThresholdMm = 250;
 
     // Readings below this are treated as sensor noise/error rather than
     // "an obstacle is touching the sensor" (a real obstacle can't produce
