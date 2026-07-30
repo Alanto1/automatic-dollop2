@@ -5,6 +5,45 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-30: Phases 2-3 working, battery in hand, open safety item
+
+Ninth pass. Substantial real-hardware progress.
+
+**Working on real hardware now:**
+- **Phase 2 (sensor)** - live distance readings, since the GY-53 `PS` fix.
+- **Phase 3 (motor driver)** - the motor buzzes under firmware control.
+  The long debugging detour is written up in `tutorial.md`'s Phase 3
+  callout: the motor's leads are far too thin for a breadboard to grip,
+  making contact only when a lead is angled so its tip scrapes the side
+  of a hole. Intermittent, and a convincing impersonation of a broken
+  transistor circuit. Fix is soldering each lead to a cut-in-half jumper.
+- **Parts acquired**: the 10×3mm vibration motor (previously the one
+  part with no confirmed in-stock source) and the flat **502030** LiPo,
+  actual markings `YS 502030 3.7V 250mAh 0.925Wh`. Battery is soldered to
+  a TP4056 (`B+`/`B−`, polarity verified from the silkscreen) and charging
+  is confirmed working.
+
+**OPEN SAFETY ITEM - carry this forward:** the TP4056 is stock, meaning
+`R3` = 1.2kΩ = **1000mA** charge current into a **250mAh** cell, roughly
+4C. Manufacturer guidance for these pouches is 0.5C normal / 1C ceiling.
+`R3` needs replacing with ~10kΩ (~120mA). Documented in full in
+`PURCHASE_LIST.md`'s battery note. Until then: charge supervised only.
+**This is the highest-priority open item in the project.**
+
+**Power switch promoted to required** (see the previous session log entry
+and `PURCHASE_LIST.md`). Sourcing checked this pass: Alash has rocker
+switches in stock (KCD1 21×15mm at 100 тг, KCD11 round at 450 тг) but
+**no slide switch listed online anywhere** - not Alash, RadioBazar,
+Ba3ar.kz, or Kaspi. A tiny SS-12D00 slide switch is the better fit for a
+wrist pod; it's a generic uncatalogued part, so it has to be asked for in
+person. Don't repeat this search from scratch - the finding is that it
+isn't online, not that it doesn't exist.
+
+**Still not started:** Phase 4 (combined firmware on hardware), Phase 5
+(running off battery), and all enclosure work. `enclosure.scad` still has
+no switch cutout and every dimension is still an unmeasured placeholder,
+though the parts to measure now physically exist.
+
 ## Session log — 2026-07-28: FIRST REAL HARDWARE BRING-UP. GY-53 PS pin gotcha found.
 
 Eighth pass, and the first one with the physical hardware actually in the

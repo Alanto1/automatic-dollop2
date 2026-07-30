@@ -73,14 +73,16 @@ threshold can move back up.
 | Arduino Nano clone (CH340, **Type-C**) | 1 | [Alash Electronics](https://alash-electronics.satu.kz/p122739713-arduino-nano-v30.html) | 2,250 тг | **Confirmed in stock (23 units)** |
 | — cheaper, but **Mini-USB not Type-C** | 1 | [RadioBazar](https://radiobazar.kz/g7735493-arduino-moduli-datchiki) | 2,000 тг | Confirmed in stock |
 | VL53L0X sensor | — | see sensor table above | 2,750 тг | Confirmed (at Alash) |
-| Vibration motor, "tablet" style, 3V, 10×3mm | 1 | [Alash Electronics](https://alash-electronics.kz/product/mikro-dc-vibratsionnyy-dvigatel-ploskiy) | 250 тг | **Currently OUT OF STOCK (pre-order only)** - see note below |
+| Vibration motor, "tablet" style, 3V, 10×3mm | 1 | [Alash Electronics](https://alash-electronics.kz/product/mikro-dc-vibratsionnyy-dvigatel-ploskiy) | 250 тг | **ACQUIRED 2026-07-30** - the builder has this part in hand and working. The listing showed out-of-stock/pre-order during earlier research; that gap is closed |
 | 2N2222 NPN transistor | 3 (1 needed + spares) | [Alash Electronics](https://alash-electronics.kz/product/tranzistor-2n2222) | 50 тг each | Confirmed listed |
 | 1N4148 flyback diode | 3 (1 needed + spares) | Alash Electronics (electronic components section) | not pinned down | Category confirmed, nearly free either way |
 | Resistor, 220Ω-1k (either works) | 5 (1 needed + spares) | [Alash Electronics](https://alash-electronics.kz/collection/rezistory) | not pinned down | Category confirmed |
 | Li-ion battery, 18650, 3400mAh (LiitoKala) | 1 | [Alash Electronics](https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv) | 2,500 тг | **Confirmed in stock** - still an 18650 cylindrical cell, see the battery note below |
 | TP4056 charge module, with protection, Type-C | 1 | [Alash Electronics](https://alash-electronics.kz/collection/zaryadnye-ustroystva/product/modul-zaryadki-li-ion-akkumulyatorov-na-tp4056-1-a-type-c) | 200 тг | **Confirmed in stock**. Backup: [Ba3ar.kz](https://ba3ar.kz/product/modul-zaryadki-liio-lipo-s-zashhitoj-tp4056-type-c/), 300 тг, confirmed in stock (454 units) |
 | USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
-| **Slide switch, SPST** (SS-12D00 / SS12D00G3 type) | 1 | Any of the three stores | not pinned down | **Needed, not optional** - see the power-switch note below. Trivially cheap, universally stocked; a phone-repair stall will have them too |
+| **Power switch** (latching, any small SPST) | 1 | [Alash Electronics, KCD1 21×15mm, 2 contacts](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta) | 100 тг | **Confirmed in stock.** Simplest option electrically - 2 contacts is a plain on/off. But 21×15mm is chunky for a wristband; read the note below before buying |
+| — smaller alternative | 1 | [Alash Electronics, KCD11 round rocker, 3 contacts](https://alash-electronics.kz/product/kcd11-3-kontakta-chernyy-o1) | 450 тг | Confirmed in stock. Round rocker, smaller footprint than the KCD1 |
+| — **best fit, but ask in person** | 1 | Alash / RadioBazar / Ba3ar.kz, or a phone-repair stall | ~50-150 тг expected | A tiny **slide switch (SS-12D00 / SS12D00G3, ~8.5×3.7mm)** is the right part for a wrist-worn pod. **Not listed online at any of the three stores or on Kaspi** as of 2026-07-30 - small generic parts often aren't catalogued. Ask at the counter for «переключатель ползунковый на 2 положения, SS-12D00» |
 
 ### Power switch — needed once the battery is soldered in
 
@@ -90,11 +92,20 @@ for a breadboard prototype and stops holding the moment the battery is
 soldered to the TP4056 for a permanent build - at that point "off" would
 mean desoldering, which is not an off button.
 
-- **What to get:** any small **SPST** (single-pole, single-throw) slide or
-  toggle switch. Electrically this is undemanding - the whole device draws
-  well under 200mA, far below what even the smallest switch handles - so
-  choose on physical size and how it'll sit in the enclosure, not on
-  ratings. The tiny SS-12D00 / SS12D00G3 slide switch is the usual pick.
+- **What to get:** any small **latching** switch (slide, rocker, or
+  toggle - anything that stays where you put it; a tactile pushbutton is
+  momentary and will not work as a power switch). Electrically this is
+  undemanding - the whole device draws well under 200mA, far below what
+  even the smallest switch handles - so **choose on physical size**, not
+  on ratings.
+- **Size is the real constraint.** The switches actually confirmed in
+  stock at Alash are rocker types at 21×15mm (KCD1) and a round KCD11 -
+  both usable, but bulky on a wrist. A slide switch (SS-12D00, roughly
+  8.5×3.7mm) is a much better fit and costs less, but wasn't listed
+  online anywhere in this pass. It's a generic part every component shop
+  keeps in a drawer without cataloguing it, so ask at the counter before
+  settling for a rocker: «переключатель ползунковый на 2 положения,
+  SS-12D00». Phone-repair stalls at Tastak are a good bet too.
 - **Where it goes:** in series on the **OUT+** line, between the TP4056's
   `OUT+` pad and the Nano's `5V` pin. Switching off then disconnects the
   load while leaving the charging path intact, so the battery still
@@ -103,12 +114,23 @@ mean desoldering, which is not an off button.
   no switch cutout, and no dimensions for one. Add that before printing a
   final shell, or the switch ends up unreachable inside a sealed pod.
 
-### Vibration motor gap — the one part actually hard to get right now
+### Vibration motor — RESOLVED, gap closed
 
-The exact part used throughout this project (3V, 10×3mm "tablet" vibration
-motor) shows **out of stock** at Alash Electronics as of this check
-(pre-order available, no ETA given), and wasn't found listed at RadioBazar
-or Ba3ar.kz either. Before making a special trip for just this part:
+**The builder acquired the 10×3mm motor and it is confirmed working on the
+breadboard as of 2026-07-30.** This section is kept as history of what the
+sourcing looked like when the part was hard to find; it is no longer an
+open problem.
+
+One practical thing learned from actually using it, worth knowing before
+you wire one up: **the motor's leads are far too thin for a breadboard to
+grip.** See `tutorial.md`'s Phase 3 callout - solder each lead to a
+cut-in-half jumper wire first, or you get an intermittent connection that
+convincingly imitates a broken transistor circuit.
+
+The original sourcing notes follow. The exact part showed **out of stock**
+at Alash Electronics during earlier research (pre-order, no ETA), and
+wasn't found listed at RadioBazar or Ba3ar.kz either. If you ever need a
+replacement:
 
 - **Call Alash Electronics first** (+7 700 900 17 90) - online "out of
   stock" at small component shops doesn't always match what's actually on
@@ -131,7 +153,7 @@ Two real options now - pick based on what you're building:
 
 | Item | Qty | Store & link | Price | Confidence |
 |---|---|---|---|---|
-| Flat LiPo pouch, 502030 (3.7V, 250mAh, 5×20×30mm) | 1 | [Kaspi.kz](https://kaspi.kz/shop/p/akkumuljator-502030-1-sht-117959645/) | renders client-side - check the page | Confirmed listed - Li-Pol, built-in overcharge/overcurrent protection, 2-pin connector |
+| Flat LiPo pouch, 502030 (3.7V, 250mAh, 5×20×30mm) | 1 | [Kaspi.kz](https://kaspi.kz/shop/p/akkumuljator-502030-1-sht-117959645/) | renders client-side - check the page | **ACQUIRED 2026-07-30.** Actual cell markings: `YS 502030 3.7V 250mAh 0.925Wh`. Soldered to a TP4056 and charging confirmed. **Read the charge-current warning below before charging it again** |
 | Li-ion 18650, 3400mAh (LiitoKala) | 1 | [Alash Electronics](https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv) | 2,500 тг | **Confirmed in stock**, walk-in |
 
 - **Flat 502030 pouch** - fits `enclosure/enclosure.scad`'s battery cavity
@@ -149,6 +171,36 @@ Two real options now - pick based on what you're building:
   for the same) is separate from charging safety - route charging through
   a TP4056-with-protection module (Alash or Ba3ar.kz, both confirmed
   above) regardless of which cell you pick.
+
+#### Charge current — a stock TP4056 is set far too high for the 502030
+
+**This is the one open safety item in the project.** A stock TP4056
+module is configured for **1000mA** charge current, set by the small
+surface-mount resistor marked `R3` (usually printed `122`, meaning
+1.2kΩ). The chip's relationship is:
+
+> charge current (A) = 1200 ÷ R3 (Ω)
+
+For a **250mAh** cell that stock 1A works out to roughly **4C**. Typical
+manufacturer guidance for pouch cells like this is 0.5C for normal
+charging and 1C as the absolute ceiling - so 125mA normal, 250mA maximum.
+The stock setting is about four times past the ceiling. It will charge
+without complaining, which is exactly what makes it easy to leave alone.
+
+Target roughly **10kΩ** (marked `103`) for ~120mA, or 5kΩ for ~240mA if
+you want 1C. Options, easiest first:
+
+1. **Ask the shop to swap it** - Alash and the Tastak stalls do
+   surface-mount rework routinely and have the right tools.
+2. **Remove R3 and bridge an ordinary through-hole resistor across its
+   pads** - you don't have to place a new SMD part.
+3. **Buy a second TP4056** and have that one modified, keeping the
+   original as a spare.
+
+Until it's changed: charge supervised, on a non-flammable surface, and
+stop immediately if the pouch warms up or stops being perfectly flat.
+Swelling means stop permanently. At 1A a 250mAh cell fills in roughly
+15-20 minutes, so supervising it is not a big ask.
 
 ## Prototyping, soldering & wiring, tools
 

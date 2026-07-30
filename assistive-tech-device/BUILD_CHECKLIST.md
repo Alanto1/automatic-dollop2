@@ -22,12 +22,20 @@ Parts:
 - [ ] VL53L0X time-of-flight sensor breakout (GY-53 or similar - no
       walk-in Almaty store stocks a VL53L1X as of this writing, see
       PURCHASE_LIST.md)
-- [ ] Vibration motor (10×3mm "pancake" type)
+- [x] Vibration motor (10×3mm "pancake" type) - ACQUIRED, working. Its
+      leads are too thin for a breadboard; solder each to a cut-in-half
+      jumper wire first (see tutorial.md Phase 3)
 - [ ] 2N2222 NPN transistor
 - [ ] 1N4148 diode (flyback protection)
 - [ ] Resistor, 220Ω-1k (either works as the transistor base resistor)
-- [ ] LiPo battery (~380-800mAh)
-- [ ] TP4056 Li-ion charge module
+- [x] LiPo battery - ACQUIRED: flat 502030 pouch, `YS 502030 3.7V 250mAh
+      0.925Wh`. **Charge current must be reduced before routine use** -
+      stock TP4056 charges it at ~4C, see PURCHASE_LIST.md's battery note
+- [x] TP4056 Li-ion charge module - ACQUIRED, battery soldered to B+/B-,
+      charging confirmed
+- [ ] **Replace the TP4056's `R3` with ~10kΩ** to bring charge current
+      down to ~120mA. Highest-priority open item; supervise all charging
+      until done
 - [ ] (optional) 5V boost converter module - see PURCHASE_LIST.md's power
       note; the current list skips this and wires the LiPo straight to 5V
 - [ ] **Slide switch, SPST** (e.g. SS-12D00 / SS12D00G3, the small
