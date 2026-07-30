@@ -82,7 +82,8 @@ threshold can move back up.
 | USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
 | **Power switch** (latching, any small SPST) | 1 | [Alash Electronics, KCD1 21×15mm, 2 contacts](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta) | 100 тг | **Confirmed in stock.** Simplest option electrically - 2 contacts is a plain on/off. But 21×15mm is chunky for a wristband; read the note below before buying |
 | — smaller alternative | 1 | [Alash Electronics, KCD11 round rocker, 3 contacts](https://alash-electronics.kz/product/kcd11-3-kontakta-chernyy-o1) | 450 тг | Confirmed in stock. Round rocker, smaller footprint than the KCD1 |
-| — **best fit, but ask in person** | 1 | Alash / RadioBazar / Ba3ar.kz, or a phone-repair stall | ~50-150 тг expected | A tiny **slide switch (SS-12D00 / SS12D00G3, ~8.5×3.7mm)** is the right part for a wrist-worn pod. **Not listed online at any of the three stores or on Kaspi** as of 2026-07-30 - small generic parts often aren't catalogued. Ask at the counter for «переключатель ползунковый на 2 положения, SS-12D00» |
+| — miniature toggle (тумблер), MTS-101 | 1 | [Satu.kz Almaty - тумблеры](https://almaty.satu.kz/Tumblery) | varies by seller | **The best realistic fit.** SPST, 2 contacts, body ~13mm - much less bulky than a rocker. Ask for «тумблер MTS-101» |
+| — ~~slide switch (SS-12D00)~~ | — | — | — | **Ruled out 2026-07-30.** Not listed online anywhere, and Alash confirmed in person they don't carry ползунковые switches. Don't spend more time hunting for one; use a тумблер or rocker instead |
 
 ### Power switch — needed once the battery is soldered in
 
@@ -98,14 +99,24 @@ mean desoldering, which is not an off button.
   undemanding - the whole device draws well under 200mA, far below what
   even the smallest switch handles - so **choose on physical size**, not
   on ratings.
-- **Size is the real constraint.** The switches actually confirmed in
-  stock at Alash are rocker types at 21×15mm (KCD1) and a round KCD11 -
-  both usable, but bulky on a wrist. A slide switch (SS-12D00, roughly
-  8.5×3.7mm) is a much better fit and costs less, but wasn't listed
-  online anywhere in this pass. It's a generic part every component shop
-  keeps in a drawer without cataloguing it, so ask at the counter before
-  settling for a rocker: «переключатель ползунковый на 2 положения,
-  SS-12D00». Phone-repair stalls at Tastak are a good bet too.
+- **Size is the real constraint**, and the obvious answer is unavailable.
+  A slide switch (SS-12D00, ~8.5×3.7mm) would be ideal, but it isn't
+  listed online anywhere *and* Alash confirmed in person they don't stock
+  ползунковые switches at all (2026-07-30). Treat that as settled - don't
+  re-run the search.
+- **What to get instead**, best fit first:
+  1. **Miniature toggle, «тумблер MTS-101»** - SPST, 2 contacts, body
+     around 13mm. Noticeably less bulky than a rocker and the closest
+     practical substitute. Sold by Almaty sellers on Satu.kz.
+  2. **KCD1 rocker, 100 тг at Alash** - confirmed in stock and cheap, but
+     21×15mm is genuinely chunky against a wrist. Fine for a first
+     working build, worth revisiting for a wearable version.
+  3. **A phone-repair stall, or salvage.** Old toys, torches, and remotes
+     are full of tiny slide switches, and a repair counter has drawers of
+     them. Free or nearly so, and often exactly the size you want.
+- **Decide the switch before finalising the enclosure.** Its footprint
+  drives the cutout in `enclosure.scad`, and swapping a 21×15mm rocker for
+  a 13mm toggle after printing means reprinting.
 - **Where it goes:** in series on the **OUT+** line, between the TP4056's
   `OUT+` pad and the Nano's `5V` pin. Switching off then disconnects the
   load while leaving the charging path intact, so the battery still
@@ -188,14 +199,29 @@ The stock setting is about four times past the ceiling. It will charge
 without complaining, which is exactly what makes it easy to leave alone.
 
 Target roughly **10kΩ** (marked `103`) for ~120mA, or 5kΩ for ~240mA if
-you want 1C. Options, easiest first:
+you want 1C.
 
-1. **Ask the shop to swap it** - Alash and the Tastak stalls do
-   surface-mount rework routinely and have the right tools.
-2. **Remove R3 and bridge an ordinary through-hole resistor across its
-   pads** - you don't have to place a new SMD part.
-3. **Buy a second TP4056** and have that one modified, keeping the
-   original as a spare.
+**Asking a shop to do it was tried and did not work** - the store had no
+SMD components and doesn't do surface-mount rework (checked 2026-07-30).
+So this is a DIY job, and the key realisation is that **you do not need an
+SMD resistor at all**: remove the existing R3 and bridge an ordinary
+through-hole 10kΩ across its two pads. Through-hole resistors are a
+standard stocked part everywhere (Alash has a Резисторы subcategory).
+
+Procedure:
+
+1. **Buy a spare TP4056 first** (~200-300 тг). Cheap insurance - if a pad
+   lifts, you have not lost the project.
+2. **Remove R3.** Without hot air: flow a generous blob of solder so it
+   bridges *both* ends of the tiny resistor at once. That blob carries
+   heat to both terminals simultaneously, so with the iron keeping it
+   molten you can nudge the part off sideways with tweezers. Don't pull -
+   ripping a cold part off takes the pad with it.
+3. **Clean the pads** with desoldering braid, or by wiping the hot iron
+   across them.
+4. **Fit the 10kΩ.** Trim its legs to ~3-4mm, tin both pads, then tack one
+   leg down and the other. The body will stand above the board; secure it
+   with a dab of hot glue so it can't flex and tear a pad later.
 
 Until it's changed: charge supervised, on a non-flammable surface, and
 stop immediately if the pouch warms up or stops being perfectly flat.
