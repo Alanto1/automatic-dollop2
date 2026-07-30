@@ -82,8 +82,9 @@ threshold can move back up.
 | USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
 | **Power switch** (latching, any small SPST) | 1 | [Alash Electronics, KCD1 21×15mm, 2 contacts](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta) | 100 тг | **Confirmed in stock.** Simplest option electrically - 2 contacts is a plain on/off. But 21×15mm is chunky for a wristband; read the note below before buying |
 | — smaller alternative | 1 | [Alash Electronics, KCD11 round rocker, 3 contacts](https://alash-electronics.kz/product/kcd11-3-kontakta-chernyy-o1) | 450 тг | Confirmed in stock. Round rocker, smaller footprint than the KCD1 |
-| — miniature toggle (тумблер), MTS-101 | 1 | [Satu.kz Almaty - тумблеры](https://almaty.satu.kz/Tumblery) | varies by seller | **The best realistic fit.** SPST, 2 contacts, body ~13mm - much less bulky than a rocker. Ask for «тумблер MTS-101» |
-| — ~~slide switch (SS-12D00)~~ | — | — | — | **Ruled out 2026-07-30.** Not listed online anywhere, and Alash confirmed in person they don't carry ползунковые switches. Don't spend more time hunting for one; use a тумблер or rocker instead |
+| **★ L-KLS7-SS12F44-G5 (SS12D01G4) slide switch, KLS** | 2 (1 + spare) | ChipDip.kz, "DIP-переключатели" category | 103 тг | **RECOMMENDED for the final wearable.** Vertical slide, ON-ON, 0.3A/50VDC, 5mm actuator, through-hole, 10k cycles. **10 days, 53 in stock** — the only slide switch not stuck on 7-9 week order. Flat profile with nothing protruding, which is what a wrist pod wants |
+| — buy-now alternative: MTS-101 A-2 micro-toggle (Jietong) | 1 | [ChipDip.kz](https://www.chipdip.kz/product/mts-101-a-2-mikrotumbler-on-off-spst-2p-jietong-switch-9000213601) | 362 тг | **In stock today**, 6,501 units. SPST ON-OFF, 3A/250V. Take this if you don't want to wait 10 days — but the ~13mm lever sticks up off the pod and can snag on a sleeve |
+| — ~~other SS-12D00 variants~~ | — | ChipDip.kz | 91-386 тг | All **7-9 week** special order. Ignore |
 
 ### Power switch — needed once the battery is soldered in
 
@@ -99,24 +100,66 @@ mean desoldering, which is not an off button.
   undemanding - the whole device draws well under 200mA, far below what
   even the smallest switch handles - so **choose on physical size**, not
   on ratings.
-- **Size is the real constraint**, and the obvious answer is unavailable.
-  A slide switch (SS-12D00, ~8.5×3.7mm) would be ideal, but it isn't
-  listed online anywhere *and* Alash confirmed in person they don't stock
-  ползунковые switches at all (2026-07-30). Treat that as settled - don't
-  re-run the search.
-- **What to get instead**, best fit first:
-  1. **Miniature toggle, «тумблер MTS-101»** - SPST, 2 contacts, body
-     around 13mm. Noticeably less bulky than a rocker and the closest
-     practical substitute. Sold by Almaty sellers on Satu.kz.
-  2. **KCD1 rocker, 100 тг at Alash** - confirmed in stock and cheap, but
-     21×15mm is genuinely chunky against a wrist. Fine for a first
-     working build, worth revisiting for a wearable version.
-  3. **A phone-repair stall, or salvage.** Old toys, torches, and remotes
-     are full of tiny slide switches, and a repair counter has drawers of
-     them. Free or nearly so, and often exactly the size you want.
+**Resolved: the KLS `L-KLS7-SS12F44-G5` slide switch, 103 тг, 10 days.**
+It sits in ChipDip's *DIP-переключатели* category rather than *Движковые
+переключатели*, which is why an earlier pass missed it and wrongly
+concluded no slide switch was obtainable. Every switch in the движковые
+category really is 7-9 weeks; this one is 10 days.
+
+Why it wins for a wrist-worn pod:
+
+- **Profile.** A 5mm slider sits nearly flush. The toggle alternative has
+  a ~13mm lever standing off the pod, which snags on sleeves and is the
+  first thing to catch when a wrist brushes a doorframe.
+- **Price.** 103 тг vs 362 тг, and you want a spare anyway.
+- **Actuation.** A slider can't be knocked over accidentally the way a
+  lever can - it needs a deliberate sideways push.
+
+Two things to get right when wiring it:
+
+- **It's ON-ON (SPDT), not ON-OFF.** That's fine - use the **centre pin
+  plus one outer pin** and leave the third unconnected. One position then
+  makes the circuit, the other breaks it. Check which way round with a
+  continuity test (or the D2→D3 sketch) before soldering it in.
+- **0.3A / 50VDC rating.** The whole device draws roughly 150mA (Nano
+  ~25mA, sensor ~25mA, motor ~60-100mA at full duty), so there's about
+  2× margin. Adequate, not generous - fine here because the load is
+  small and resistive-ish, but don't reuse this switch on anything
+  hungrier.
+
+**If you don't want to wait 10 days**, the
+[MTS-101 A-2 toggle](https://www.chipdip.kz/product/mts-101-a-2-mikrotumbler-on-off-spst-2p-jietong-switch-9000213601)
+is 362 тг and in stock today (3A/250V, so vastly more margin). It works
+perfectly well; it's just bulkier on the wrist. The
+[KCD1 rocker at Alash](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta)
+(100 тг, in stock) is a third option, but at 21×15mm it's the chunkiest
+of the three.
 - **Decide the switch before finalising the enclosure.** Its footprint
   drives the cutout in `enclosure.scad`, and swapping a 21×15mm rocker for
   a 13mm toggle after printing means reprinting.
+
+### Where to get `R3` changed — the shop said no
+
+Alash has no SMD components and doesn't do surface-mount rework. That
+rules out the obvious route, but **any phone/laptop repair counter does
+micro-soldering every day** and this is a five-minute job for them.
+Options found in Almaty (2026-07-30):
+
+- **A phone-repair stall at ТД Тастак** - the same building as RadioBazar
+  (бутик 37) and Ba3ar.kz (бутик 22), so it costs no extra trip. Best
+  first try: informal, cheap, and they have hot-air stations.
+- **[FixPC.KZ](https://fixpc.kz/remont-i-pajka-plat-almaty.html)** -
+  advertises board- and chip-level soldering in Almaty.
+- **Electron Service** - ул. Грибоедова 80, офис 316/329. Industrial
+  electronics repair, 20+ years.
+- **[OLX.kz «пайка» listings](https://www.olx.kz/uslugi/remont-i-obsluzhivanie-tehniki/alma-ata/q-%D0%BF%D0%B0%D0%B9%D0%BA%D0%B0/)**
+  - independent repair people, usually the cheapest for a job this small.
+
+Bring the module, the battery, and a 10kΩ resistor with you. **ChipDip
+also stocks resistors**, so one trip there can cover the switch and the
+10kΩ together - ask for both an SMD 0805 10kΩ (if you want it done
+properly by a repair shop) and a through-hole one (if you'd rather do the
+bridge yourself).
 - **Where it goes:** in series on the **OUT+** line, between the TP4056's
   `OUT+` pad and the Nano's `5V` pin. Switching off then disconnects the
   load while leaving the charging path intact, so the battery still
