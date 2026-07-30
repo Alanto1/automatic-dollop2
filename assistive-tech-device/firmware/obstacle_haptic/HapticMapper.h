@@ -1,6 +1,12 @@
 #pragma once
 
-#include <cstdint>
+// <stdint.h>, NOT <cstdint>. Desktop g++ ships both, but AVR-GCC (what the
+// Arduino IDE uses for the Nano's ATmega328P) only has the C header - so
+// <cstdint> compiles fine for firmware/tests/ and then fails with "fatal
+// error: cstdint: No such file or directory" the moment you build for the
+// board. The unqualified uint8_t/uint16_t/uint32_t names used below work
+// with this header on both toolchains. Don't "modernize" this back.
+#include <stdint.h>
 
 // Pure distance -> haptic feedback mapping logic for the obstacle-detection
 // wristband. No Arduino, no sensor library, no hardware dependency at all -
@@ -33,17 +39,28 @@ public:
     };
 
     // --- Distance thresholds (millimeters) ---
-    // A reading >= kFarThresholdMm is treated as "no obstacle". Deliberately
-    // set below the VL53L0X's 2000mm ceiling (not the VL53L1X's 4000mm) -
-    // no walk-in Almaty store stocks a VL53L1X as of this writing (see
-    // PURCHASE_LIST.md), so v1 assumes the 2m sensor. A reading right at a
-    // sensor's own max range is indistinguishable from "no data", so this
-    // sits 200mm under that ceiling rather than exactly at it - see
-    // README.md's sensor section for the full reasoning. If a VL53L1X does
-    // end up on the board later, this can safely move back up.
-    static constexpr uint16_t kFarThresholdMm = 1800;
-    static constexpr uint16_t kMediumThresholdMm = 1000;
-    static constexpr uint16_t kNearThresholdMm = 400;
+    // A reading >= kFarThresholdMm is treated as "no obstacle", so that
+    // constant is the main knob for "how close does something have to be
+    // before the wristband reacts at all". Lower it to make the device
+    // quieter and more local; raise it to react earlier.
+    //
+    // These were deliberately tightened from an earlier 1800/1000/400 set,
+    // which reacted to almost anything down a corridor and buzzed close to
+    // constantly indoors. At 1000mm the device stays silent until something
+    // is within about arm's reach.
+    //
+    // A useful side effect of staying at/below 1000mm: it's comfortably
+    // inside the VL53L0X's *default* measurement profile (good to roughly
+    // 1.2m), so obstacle_haptic.ino no longer needs the long-range sensor
+    // preset, which bought reach at the cost of noise immunity. If these
+    // ever go back above ~1100mm, re-read that note in the .ino - the
+    // sensor config has to move with them.
+    //
+    // Keep them strictly descending; the simulator enforces the same
+    // ordering, and classify() below assumes it.
+    static constexpr uint16_t kFarThresholdMm = 1000;
+    static constexpr uint16_t kMediumThresholdMm = 600;
+    static constexpr uint16_t kNearThresholdMm = 250;
 
     // Readings below this are treated as sensor noise/error rather than
     // "an obstacle is touching the sensor" (a real obstacle can't produce
@@ -112,11 +129,20 @@ public:
     }
 
 private:
+    // Each case rebuilds a PulseTiming from the constants' individual
+    // fields rather than returning the constant object itself. This is
+    // defensive, not a fix for an observed failure: returning `kMediumPulse`
+    // directly copies the object, which can ODR-use it, and pre-C++17 that
+    // needs an out-of-class definition the header doesn't provide. In
+    // practice desktop g++ links it fine even at -std=c++11 (checked), so
+    // this may be unnecessary on AVR too - it's just cheap insurance in the
+    // form that's guaranteed portable, since reading `.onMs`/`.offMs` as
+    // constant expressions is never an ODR-use.
     PulseTiming pulseForZone(Zone zone) const {
         switch (zone) {
-            case Zone::Medium: return kMediumPulse;
-            case Zone::Near: return kNearPulse;
-            case Zone::Critical: return kCriticalPulse;
+            case Zone::Medium: return PulseTiming{kMediumPulse.onMs, kMediumPulse.offMs};
+            case Zone::Near: return PulseTiming{kNearPulse.onMs, kNearPulse.offMs};
+            case Zone::Critical: return PulseTiming{kCriticalPulse.onMs, kCriticalPulse.offMs};
             default: return PulseTiming{0, 0};
         }
     }

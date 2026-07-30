@@ -497,16 +497,16 @@
 
     <div class="threshold-grid">
       <div class="threshold-row">
-        <div class="row-head"><label for="nearThreshold">Near threshold</label><output id="nearThresholdOut">400 mm</output></div>
-        <input type="range" class="small-range" id="nearThreshold" min="20" max="2450" step="10" value="400">
+        <div class="row-head"><label for="nearThreshold">Near threshold</label><output id="nearThresholdOut">250 mm</output></div>
+        <input type="range" class="small-range" id="nearThreshold" min="20" max="2450" step="10" value="250">
       </div>
       <div class="threshold-row">
-        <div class="row-head"><label for="mediumThreshold">Medium threshold</label><output id="mediumThresholdOut">1000 mm</output></div>
-        <input type="range" class="small-range" id="mediumThreshold" min="70" max="2470" step="10" value="1000">
+        <div class="row-head"><label for="mediumThreshold">Medium threshold</label><output id="mediumThresholdOut">600 mm</output></div>
+        <input type="range" class="small-range" id="mediumThreshold" min="70" max="2470" step="10" value="600">
       </div>
       <div class="threshold-row">
-        <div class="row-head"><label for="farThreshold">Far threshold</label><output id="farThresholdOut">1800 mm</output></div>
-        <input type="range" class="small-range" id="farThreshold" min="120" max="2500" step="10" value="1800">
+        <div class="row-head"><label for="farThreshold">Far threshold</label><output id="farThresholdOut">1000 mm</output></div>
+        <input type="range" class="small-range" id="farThreshold" min="120" max="2500" step="10" value="1000">
       </div>
     </div>
 
@@ -562,9 +562,9 @@
      are all the same logic, just in JS.
   -------------------------------------------------------------*/
   const DEFAULTS = {
-    farThresholdMm: 1800,
-    mediumThresholdMm: 1000,
-    nearThresholdMm: 400,
+    farThresholdMm: 1000,
+    mediumThresholdMm: 600,
+    nearThresholdMm: 250,
     minValidMm: 10,
     mediumPulse: { onMs: 120, offMs: 400 },
     nearPulse: { onMs: 120, offMs: 150 },

@@ -80,6 +80,28 @@ threshold can move back up.
 | Li-ion battery, 18650, 3400mAh (LiitoKala) | 1 | [Alash Electronics](https://alash-electronics.kz/product/originalnyy-akkumulyator-liitokala-18650-nadezhnyy-litiy-ionnyy-element-dlya-vysokoproizvoditelnyh-ustroystv) | 2,500 тг | **Confirmed in stock** - still an 18650 cylindrical cell, see the battery note below |
 | TP4056 charge module, with protection, Type-C | 1 | [Alash Electronics](https://alash-electronics.kz/collection/zaryadnye-ustroystva/product/modul-zaryadki-li-ion-akkumulyatorov-na-tp4056-1-a-type-c) | 200 тг | **Confirmed in stock**. Backup: [Ba3ar.kz](https://ba3ar.kz/product/modul-zaryadki-liio-lipo-s-zashhitoj-tp4056-type-c/), 300 тг, confirmed in stock (454 units) |
 | USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
+| **Slide switch, SPST** (SS-12D00 / SS12D00G3 type) | 1 | Any of the three stores | not pinned down | **Needed, not optional** - see the power-switch note below. Trivially cheap, universally stocked; a phone-repair stall will have them too |
+
+### Power switch — needed once the battery is soldered in
+
+Earlier revisions of this list called a switch optional, on the reasoning
+that you can just unplug the battery to turn the device off. That holds
+for a breadboard prototype and stops holding the moment the battery is
+soldered to the TP4056 for a permanent build - at that point "off" would
+mean desoldering, which is not an off button.
+
+- **What to get:** any small **SPST** (single-pole, single-throw) slide or
+  toggle switch. Electrically this is undemanding - the whole device draws
+  well under 200mA, far below what even the smallest switch handles - so
+  choose on physical size and how it'll sit in the enclosure, not on
+  ratings. The tiny SS-12D00 / SS12D00G3 slide switch is the usual pick.
+- **Where it goes:** in series on the **OUT+** line, between the TP4056's
+  `OUT+` pad and the Nano's `5V` pin. Switching off then disconnects the
+  load while leaving the charging path intact, so the battery still
+  charges over USB with the device switched off.
+- **Enclosure consequence, not yet done:** `enclosure/enclosure.scad` has
+  no switch cutout, and no dimensions for one. Add that before printing a
+  final shell, or the switch ends up unreachable inside a sealed pod.
 
 ### Vibration motor gap — the one part actually hard to get right now
 

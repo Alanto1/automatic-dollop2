@@ -30,8 +30,15 @@ Parts:
 - [ ] TP4056 Li-ion charge module
 - [ ] (optional) 5V boost converter module - see PURCHASE_LIST.md's power
       note; the current list skips this and wires the LiPo straight to 5V
-- [ ] (optional) Slide or toggle switch - current list disconnects the
-      battery by hand instead
+- [ ] **Slide switch, SPST** (e.g. SS-12D00 / SS12D00G3, the small
+      2-position type). **No longer optional** - it was listed that way
+      while the battery could just be unplugged by hand, which stops being
+      true the moment the battery is soldered in. A wearable with no off
+      button means unsoldering it to turn it off. Any tiny switch works
+      electrically; the whole device draws well under 200mA. Wire it in
+      series on the TP4056's **OUT+** line, between OUT+ and the Nano's 5V
+      pin, so switching off cuts the load while still letting the battery
+      charge over USB.
 - [ ] Solderless breadboard
 - [ ] Jumper wire kit (male-male at minimum)
 
