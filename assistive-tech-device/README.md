@@ -96,12 +96,18 @@ for a link instead of a download). Summary:
 | Wristband strap | mounting |
 | Breadboard + jumper wires | prototyping (breadboard phase only) |
 
-`PURCHASE_LIST.md`'s current parts list skips a 5V boost converter and a
-power switch (wires the battery straight to 5V, disconnect it to turn off)
-to keep cost/complexity down - a common enough shortcut for battery-powered
-Nano clones, flagged there as worth watching for flaky behavior rather than
-treated as wrong. Add both back if the breadboard prototype turns out to
-need them.
+`PURCHASE_LIST.md`'s parts list skips a 5V boost converter (wires the
+battery straight to 5V) to keep cost/complexity down - a common enough
+shortcut for battery-powered Nano clones, flagged there as worth watching
+for flaky behavior rather than treated as wrong.
+
+A **power switch** was originally skipped on the same reasoning - just
+unplug the battery. That reasoning only holds while the battery is
+unplugabble, so it's now listed as **required**: once the cell is soldered
+to the TP4056, "off" would otherwise mean desoldering it. A small SPST
+slide switch goes in series on the TP4056's `OUT+` line, which cuts the
+load while leaving the charging path intact. Note `enclosure.scad` has no
+cutout for it yet - that's outstanding work before a final print.
 
 ### Sensor note
 
