@@ -208,6 +208,16 @@ Draw this into a real schematic before breadboarding — this is a text
 description of the connections, not a substitute for checking datasheets
 (transistor pinout in particular varies by package/orientation).
 
+Two published references cover this visually:
+
+- **Full circuit schematic** — sensor, motor driver and power on one
+  diagram, colour-coded by net:
+  https://claude.ai/code/artifact/c69dd337-6c56-415d-b2a7-4d0eb66433ad
+- **Soldering plan** — what the breadboard's power rails become once the
+  build goes permanent (two star joints), plus five staged assembly steps
+  each with a test gate:
+  https://claude.ai/code/artifact/8f43ca79-bcd2-4351-913a-767ca58c930c
+
 ## Repository layout
 
 ```

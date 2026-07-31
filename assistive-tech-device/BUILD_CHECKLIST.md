@@ -38,15 +38,18 @@ Parts:
       until done
 - [ ] (optional) 5V boost converter module - see PURCHASE_LIST.md's power
       note; the current list skips this and wires the LiPo straight to 5V
-- [ ] **Slide switch, SPST** (e.g. SS-12D00 / SS12D00G3, the small
-      2-position type). **No longer optional** - it was listed that way
-      while the battery could just be unplugged by hand, which stops being
-      true the moment the battery is soldered in. A wearable with no off
-      button means unsoldering it to turn it off. Any tiny switch works
-      electrically; the whole device draws well under 200mA. Wire it in
-      series on the TP4056's **OUT+** line, between OUT+ and the Nano's 5V
-      pin, so switching off cuts the load while still letting the battery
-      charge over USB.
+- [x] **Power switch — ACQUIRED**: 6 slide switches (3 types, 50 тг each)
+      from an Almaty counter, uncatalogued online. **Use the 4-pin type**
+      — smallest body; the 6- and 8-pin ones are multi-pole and bigger.
+      Wire it in series on the TP4056's **OUT+** line, between OUT+ and
+      the Nano's 5V pin, so switching off cuts the load while the battery
+      still charges over USB.
+- [ ] **Identify which two switch pins make/break** with the D2→D3
+      continuity sketch, and confirm the slider LATCHES rather than
+      springing back. See PURCHASE_LIST.md's power-switch note
+- [ ] **Print `part="switch_test_coupon"`** from enclosure.scad and find
+      the smallest slot the actuator travels freely in — that sets
+      switch_slot_length/width without needing to measure the nub
 - [ ] Solderless breadboard
 - [ ] Jumper wire kit (male-male at minimum)
 

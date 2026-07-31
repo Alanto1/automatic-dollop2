@@ -5,6 +5,67 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-07-31: switches sourced locally, enclosure gains a switch cutout
+
+Tenth pass. Sourcing closed out, and the enclosure model got its first
+real change since the battery reconciliation.
+
+**Switch: bought, and the online research was superseded.** Two passes of
+catalogue searching concluded a slide switch was unobtainable in Almaty -
+first "nowhere at all", then "ChipDip lists them but 7-9 week order",
+then the KLS `L-KLS7-SS12F44-G5` at 103 тг / 10 days filed under
+*DIP-переключатели* rather than *Движковые переключатели*. All of that
+was then beaten by the builder simply asking at a counter: **six slide
+switches, three types, 50 тг each, in hand the same day.**
+
+**The lesson worth carrying forward: for generic parts, ask at the
+counter before trusting any catalogue search, including mine.** This
+project has now twice concluded a part was unavailable when a shop had a
+drawer full of them. Small passives, switches and connectors are
+routinely uncatalogued.
+
+Of the three types bought (4-pin, 6-pin and 8-pin), the **4-pin** is the
+one to use - smallest body, and only two contacts are needed. Which two
+pins make and break is still to be determined with the D2/D3 continuity
+sketch; that same test also confirms the switch latches rather than
+springing back.
+
+**`R3` rework quoted at 2000 тг, ~30 minutes** by a repair shop, after
+Alash declined (no SMD components, no surface-mount rework). Fair for the
+labour though roughly 8x the module's own cost. Still the recommended
+route over practising SMD rework on the only working TP4056. Repair
+options recorded in `PURCHASE_LIST.md`. **Not done yet - still the
+highest-priority open item.**
+
+**Enclosure changes** (`enclosure.scad`):
+- Added the switch cutout the model never had, in the **+X end face**. It
+  was first placed in a long side wall, where it cut nothing at all - the
+  strap tunnels bore straight through both long walls, so the opening
+  landed inside existing empty space. The end faces are the only walls
+  the tunnels don't touch.
+- **Fixed a pre-existing bug found while doing that**: `outer_length` was
+  derived only from the components inside, which left the two strap lug
+  tunnels overlapping by 0.4mm at default dimensions. They merged into
+  one long opening - silently, since it still rendered as valid manifold
+  geometry. That is precisely the single-wrap-point design this file's
+  header explains it rejected. `outer_length` is now the max of the
+  component and strap requirements (50.6mm -> 54mm), with an assert.
+- Added `part="switch_test_coupon"` - a flat plate with ten candidate
+  slots (two widths x five lengths). The actuator is awkward to measure,
+  and the number that matters is travel clearance rather than nub size,
+  so this replaces measuring with a short test print.
+
+**A soldering plan was published as an artifact** covering what the
+breadboard's power rails become when the build goes permanent (two star
+joints), three local joints that shrink the wiring problem, and five
+staged assembly steps each with a test gate:
+https://claude.ai/code/artifact/8f43ca79-bcd2-4351-913a-767ca58c930c
+
+**Git process note, fourth occurrence:** commits were pushed correctly but
+sat invisible because the previous PR had merged and no new one was
+opened. Pushing is not delivering. **Once a PR merges, the next commit
+needs a new PR** - check for an open PR before reporting work as done.
+
 ## Session log — 2026-07-30: Phases 2-3 working, battery in hand, open safety item
 
 Ninth pass. Substantial real-hardware progress.

@@ -82,9 +82,9 @@ threshold can move back up.
 | USB-C cable | 1 | Either store | not pinned down | Any electronics shop has these |
 | **Power switch** (latching, any small SPST) | 1 | [Alash Electronics, KCD1 21×15mm, 2 contacts](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta) | 100 тг | **Confirmed in stock.** Simplest option electrically - 2 contacts is a plain on/off. But 21×15mm is chunky for a wristband; read the note below before buying |
 | — smaller alternative | 1 | [Alash Electronics, KCD11 round rocker, 3 contacts](https://alash-electronics.kz/product/kcd11-3-kontakta-chernyy-o1) | 450 тг | Confirmed in stock. Round rocker, smaller footprint than the KCD1 |
-| **★ L-KLS7-SS12F44-G5 (SS12D01G4) slide switch, KLS** | 2 (1 + spare) | ChipDip.kz, "DIP-переключатели" category | 103 тг | **RECOMMENDED for the final wearable.** Vertical slide, ON-ON, 0.3A/50VDC, 5mm actuator, through-hole, 10k cycles. **10 days, 53 in stock** — the only slide switch not stuck on 7-9 week order. Flat profile with nothing protruding, which is what a wrist pod wants |
-| — buy-now alternative: MTS-101 A-2 micro-toggle (Jietong) | 1 | [ChipDip.kz](https://www.chipdip.kz/product/mts-101-a-2-mikrotumbler-on-off-spst-2p-jietong-switch-9000213601) | 362 тг | **In stock today**, 6,501 units. SPST ON-OFF, 3A/250V. Take this if you don't want to wait 10 days — but the ~13mm lever sticks up off the pod and can snag on a sleeve |
-| — ~~other SS-12D00 variants~~ | — | ChipDip.kz | 91-386 тг | All **7-9 week** special order. Ignore |
+| **★ ACQUIRED: slide switch, local counter** (SKU `BtnSS208`/`209`/`210`) | 6 bought (3 types × 2) | An Almaty component counter — **not catalogued online anywhere** | **50 тг each** | **Use the 4-pin type** — smallest body of the three, and only two contacts are needed. The 6-pin and 8-pin types are multi-pole: more switch than the job needs, in bigger packages. Which two pins make/break is found with the D2/D3 continuity sketch, which also confirms it latches rather than springing back |
+| — ~~KLS L-KLS7-SS12F44-G5~~ | — | ChipDip.kz, *DIP-переключатели* | 103 тг, 10 days | Superseded. Was the best catalogue option before the counter purchase; keep as a reorder path if the local ones run out |
+| — ~~MTS-101 A-2 toggle~~ | — | [ChipDip.kz](https://www.chipdip.kz/product/mts-101-a-2-mikrotumbler-on-off-spst-2p-jietong-switch-9000213601) | 362 тг | Superseded. In stock and 3A-rated, but the ~13mm lever protrudes off the pod. Only worth revisiting if the local slide switches turn out not to latch |
 
 ### Power switch — needed once the battery is soldered in
 
@@ -100,40 +100,55 @@ mean desoldering, which is not an off button.
   undemanding - the whole device draws well under 200mA, far below what
   even the smallest switch handles - so **choose on physical size**, not
   on ratings.
-**Resolved: the KLS `L-KLS7-SS12F44-G5` slide switch, 103 тг, 10 days.**
-It sits in ChipDip's *DIP-переключатели* category rather than *Движковые
-переключатели*, which is why an earlier pass missed it and wrongly
-concluded no slide switch was obtainable. Every switch in the движковые
-category really is 7-9 weeks; this one is 10 days.
+**Resolved by walking into a shop.** Six slide switches, three types, **50
+тг each** — cheaper and faster than every catalogue option, and available
+the same day.
 
-Why it wins for a wrist-worn pod:
+**This is the second time in this project that a part concluded
+"unavailable" from online research turned out to be sitting in a drawer
+at a counter.** Two full search passes said no slide switch was
+obtainable in Almaty; the answer was to ask. For generic parts —
+switches, small passives, connectors — ask in person *before* trusting a
+catalogue search. Shops routinely don't list them.
 
-- **Profile.** A 5mm slider sits nearly flush. The toggle alternative has
-  a ~13mm lever standing off the pod, which snags on sleeves and is the
-  first thing to catch when a wrist brushes a doorframe.
-- **Price.** 103 тг vs 362 тг, and you want a spare anyway.
-- **Actuation.** A slider can't be knocked over accidentally the way a
-  lever can - it needs a deliberate sideways push.
+**Use the 4-pin type.** Of the three bought (4, 6 and 8 pins), the 4-pin
+has the smallest body, and the job needs only two contacts. The 6- and
+8-pin types are multi-pole: more switch than required, in larger
+packages, with more pins to bridge accidentally.
 
-Two things to get right when wiring it:
+**Finding the right two pins** — works whatever the internal
+configuration, which is worth doing empirically rather than assuming:
 
-- **It's ON-ON (SPDT), not ON-OFF.** That's fine - use the **centre pin
-  plus one outer pin** and leave the third unconnected. One position then
-  makes the circuit, the other breaks it. Check which way round with a
-  continuity test (or the D2→D3 sketch) before soldering it in.
-- **0.3A / 50VDC rating.** The whole device draws roughly 150mA (Nano
-  ~25mA, sensor ~25mA, motor ~60-100mA at full duty), so there's about
-  2× margin. Adequate, not generous - fine here because the load is
-  small and resistive-ish, but don't reuse this switch on anything
-  hungrier.
+1. Number the pins and mark one end so the orientation doesn't get lost.
+2. Run the D2→D3 continuity sketch (`pinMode(3, INPUT_PULLUP)`, D2 LOW,
+   read D3 — "closed" means current flows).
+3. Work through all six pairs: 1-2, 1-3, 1-4, 2-3, 2-4, 3-4.
+4. **You want a pair that reads closed in one slider position and open in
+   the other.** That's the switch. A pair closed in both is a mounting
+   lug or internal link; open in both isn't connected.
+5. **Then let go of the slider and check it stays put.** If it springs
+   back it's momentary and unusable as a power switch — go back for the
+   MTS-101 toggle instead.
 
-**If you don't want to wait 10 days**, the
+A DPST will give two working pairs doing the same thing; either is fine,
+pick whichever pins are easier to reach with an iron.
+
+**Soldering to pins this small:** snip the unused pins flush first — that
+removes the bridging risk and doubles the working room. Use only a few
+strands of wire rather than a whole jumper, tin both sides separately,
+and join with a brief touch rather than feeding fresh solder in. Watch
+the heat: these bodies are plastic, and softening one shifts the internal
+contacts and kills the switch with no visible damage.
+
+**Check the pin pitch before soldering at all.** If it's 2.54mm the
+switch pushes straight into a breadboard, and the whole continuity test
+and Phase 5 wiring can be done with no soldering.
+
+Superseded catalogue options, kept as reorder paths: the KLS
+`L-KLS7-SS12F44-G5` (ChipDip, 103 тг, 10 days) and the
 [MTS-101 A-2 toggle](https://www.chipdip.kz/product/mts-101-a-2-mikrotumbler-on-off-spst-2p-jietong-switch-9000213601)
-is 362 тг and in stock today (3A/250V, so vastly more margin). It works
-perfectly well; it's just bulkier on the wrist. The
-[KCD1 rocker at Alash](https://alash-electronics.kz/product/kcd1-2115-krasnyy-2-kontakta)
-(100 тг, in stock) is a third option, but at 21×15mm it's the chunkiest
-of the three.
+(362 тг, in stock, 3A — bulkier but the fallback if the local switches
+turn out not to latch).
 - **Decide the switch before finalising the enclosure.** Its footprint
   drives the cutout in `enclosure.scad`, and swapping a 21×15mm rocker for
   a 13mm toggle after printing means reprinting.
