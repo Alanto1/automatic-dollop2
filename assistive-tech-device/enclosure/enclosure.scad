@@ -67,6 +67,32 @@ battery_thickness = 5;
 strap_width     = 20;  // wristband strap
 strap_thickness = 3;
 
+// Power switch - a small PCB-mount SLIDE switch (the ~50 тг counter part,
+// not the panel-mount MTS-101 toggle that was the earlier plan). That
+// choice matters here: a panel-mount toggle would need only a round hole
+// and its own nut would hold it. A slide switch has no threaded bushing,
+// so the shell needs a SLOT for the actuator to poke through, and the
+// switch body has to be held from inside - glue, or a scrap of perfboard
+// glued to the wall. Nothing below secures the body; that's assembly work.
+//
+// ALL FIVE NUMBERS ARE PLACEHOLDERS. Measure the real switch with
+// calipers before printing - see this file's header. The slot is the one
+// cutout where being 1mm out is immediately obvious: too tight and the
+// slider won't travel, too loose and it rattles or lets dust in.
+switch_body_length    = 9;    // along X, the direction the slider travels
+switch_body_width     = 4;    // across Y
+switch_body_height    = 4;    // PCB face to top of body, excluding actuator
+switch_actuator_length = 3;   // the nub itself, along X
+switch_actuator_width  = 2;   // across Y
+// How far the actuator has to stand proud of the outer shell surface to
+// be usable with a fingernail. Too flush and you can't work it; too proud
+// and it snags, which was the whole reason for preferring a slide switch.
+switch_actuator_proud  = 1.2;
+// Slot is sized to the actuator's full travel, not just its width: the
+// nub sweeps the length of the slot, so the opening must be at least the
+// actuator plus the throw, plus clearance at each end.
+switch_travel          = 2.5;  // total slider throw end to end
+
 // ============================================================
 // Derived / design parameters -- reasonable defaults, less
 // urgent to re-measure than the block above, but still worth
@@ -82,10 +108,18 @@ corner_radius     = 2.5;   // cosmetic, and softens stress concentration/print a
 strap_slot_width  = strap_width + 1.5;   // strap needs to slide through freely
 strap_slot_height = strap_thickness + 2;
 strap_slot_inset  = 4;  // how far each lug tunnel sits in from the pod's X ends
+// Minimum solid material left between the two lug tunnels. Without this
+// the two slots can overlap and silently merge into one long opening -
+// which is exactly the single-slot design this enclosure rejected, since
+// one wrap point lets the pod pivot instead of sitting flat. See the
+// outer_length calculation below, which grows the pod if needed to keep
+// this web intact.
+strap_web = 3;
 
 belt_clip_arm_length = 35;
 belt_clip_gap        = 6;    // fits a typical belt/waistband strap
 belt_clip_thickness  = 2.5;
+
 
 // Internal cavity sized to fit the tallest component, with everything
 // else assumed to sit beside it on the floor of the base - this is a
@@ -96,9 +130,48 @@ internal_width  = nano_width + tof_width + fit_clearance * 3;
 internal_height = max(nano_stack_height, tof_stack_height, motor_thickness, battery_thickness)
                    + fit_clearance * 2;
 
-outer_length = internal_length + wall_thickness * 2;
+// The pod has to be long enough for BOTH the components inside it and the
+// two strap tunnels side by side. Sizing it only from the components (the
+// obvious approach, and what this file did originally) let the two slots
+// overlap by a fraction of a millimetre at the default dimensions and
+// merge into a single opening - a silent failure, since it still rendered
+// as valid geometry. Taking the max of the two requirements makes the pod
+// grow instead.
+outer_length_from_parts = internal_length + wall_thickness * 2;
+outer_length_for_straps = strap_slot_inset * 2 + strap_slot_width * 2 + strap_web;
+outer_length = max(outer_length_from_parts, outer_length_for_straps);
+
 outer_width  = internal_width + wall_thickness * 2;
 outer_height = internal_height + wall_thickness + lid_lip_height;
+
+assert(outer_length >= outer_length_for_straps,
+       "Pod too short for two strap tunnels - they would merge into one slot.");
+
+// Switch slot, cut into the +X END wall - the short face at the far end
+// from the sensor.
+//
+// It started on a long side wall, which was wrong: the strap tunnels bore
+// straight through both long walls, so a side slot lands inside an
+// existing opening and cuts nothing. The end walls are the only faces the
+// strap tunnels don't touch. Putting it at the end opposite the sensor
+// also means a finger reaching for the switch never passes in front of
+// the sensor window.
+//
+// The slider therefore travels along Y (across the wrist) rather than
+// along the strap. Measure your switch accordingly.
+//
+// Must stay BELOW the outer_* block: it depends on outer_width, and
+// OpenSCAD evaluates file-scope assignments in order, so referencing that
+// earlier silently yields undef and the slot never gets cut.
+switch_slot_length = switch_actuator_length + switch_travel + fit_clearance * 2;
+switch_slot_width  = switch_actuator_width + fit_clearance * 2;
+switch_slot_y      = (outer_width - switch_slot_length) / 2;  // centred across the end face
+switch_slot_z      = wall_thickness + fit_clearance + switch_body_height / 2;
+
+assert(switch_slot_length + wall_thickness * 2 <= outer_width,
+       "Switch actuator slot is wider than the pod's end face.");
+assert(switch_slot_z + switch_slot_width / 2 <= outer_height - lid_lip_height,
+       "Switch slot runs past the top of the base and into the lid seam.");
 
 $fn = 48;
 
@@ -122,6 +195,22 @@ module wristband_slots() {
             cube([strap_slot_width, outer_width + 2, strap_slot_height]);
 }
 
+module switch_slot() {
+    // Rectangular opening through the +X end wall for the slide switch's
+    // actuator. Sits partway up the wall so the switch body can rest
+    // against the inside face with its pins pointing inward.
+    //
+    // Deliberately only the opening - the body is NOT captured by any
+    // printed feature. Retaining it is an assembly step (glue, or a scrap
+    // of perfboard glued to the inner wall). Modelling a press-fit pocket
+    // would need real caliper numbers first, and guessing one that ends up
+    // too tight is worse than leaving it out.
+    translate([outer_length - wall_thickness - 1,
+               switch_slot_y,
+               switch_slot_z - switch_slot_width / 2])
+        cube([wall_thickness + 2, switch_slot_length, switch_slot_width]);
+}
+
 module base() {
     difference() {
         rounded_box([outer_length, outer_width, outer_height - lid_lip_height], corner_radius);
@@ -133,6 +222,7 @@ module base() {
             );
 
         wristband_slots();
+        switch_slot();
     }
 }
 
@@ -193,6 +283,53 @@ module belt_clip_back() {
         cube([belt_clip_arm_length, belt_clip_gap + belt_clip_thickness, belt_clip_thickness]);
 }
 
+// ============================================================
+// Switch fit test coupon - print this BEFORE the real enclosure.
+// ============================================================
+//
+// The switch actuator's dimensions are the hardest numbers in this whole
+// model to measure: the nub is a couple of millimetres across, and what
+// actually matters isn't its size but how much slot it needs to travel
+// freely without rattling. Calipers answer the first question, not the
+// second.
+//
+// So don't measure it - test it. This coupon is a flat plate, printed at
+// the real wall_thickness, carrying ten candidate slots:
+//   - two rows: 3.0mm wide (upper) and 4.0mm wide (lower)
+//   - five columns: 5, 6, 7, 8, 9mm long, left to right
+//
+// Print it (a few minutes, a few grams), then push the switch's actuator
+// through each slot in turn. You want the SMALLEST slot the slider can
+// travel end to end in without catching. Note its row and column, set
+// switch_slot_length / switch_slot_width from the table above, and the
+// real enclosure will fit first time.
+//
+// Printing this costs one short print and saves the reprint-and-refit
+// loop that Phase 7 of tutorial.md warns takes 2-3 attempts.
+coupon_widths  = [3.0, 4.0];
+coupon_lengths = [5, 6, 7, 8, 9];
+coupon_pitch_x = 12;
+coupon_pitch_y = 10;
+coupon_margin  = 5;
+
+module switch_test_coupon() {
+    plate_x = coupon_margin * 2 + coupon_pitch_x * len(coupon_lengths);
+    plate_y = coupon_margin * 2 + coupon_pitch_y * len(coupon_widths);
+
+    difference() {
+        rounded_box([plate_x, plate_y, wall_thickness], corner_radius);
+
+        for (row = [0 : len(coupon_widths) - 1])
+            for (col = [0 : len(coupon_lengths) - 1])
+                translate([
+                    coupon_margin + coupon_pitch_x * col + (coupon_pitch_x - coupon_lengths[col]) / 2,
+                    coupon_margin + coupon_pitch_y * row + (coupon_pitch_y - coupon_widths[row]) / 2,
+                    -1
+                ])
+                    cube([coupon_lengths[col], coupon_widths[row], wall_thickness + 2]);
+    }
+}
+
 module render_all() {
     wristband_back();
     translate([0, outer_width + 5, 0]) lid();
@@ -202,4 +339,5 @@ module render_all() {
 if (part == "base" || part == "wristband_back") wristband_back();
 else if (part == "lid") lid();
 else if (part == "belt_clip_back") belt_clip_back();
+else if (part == "switch_test_coupon") switch_test_coupon();
 else render_all();

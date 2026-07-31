@@ -50,13 +50,16 @@ before trusting them on a wrist.
 - [ ] **Week 0 — outreach.** Drafted (`outreach/`), not sent.
 - [~] **Weeks 1-2 — breadboard prototype.** Firmware logic is written and
   desktop-unit-tested (14/14 passing, see `firmware/tests/` — actually run
-  in this environment, not just claimed). **Parts are bought and the
-  sensor is alive**: as of 2026-07-28 the Nano flashes, and
-  `01_sensor_only.ino` returns live distance readings over I2C — that's
-  `tutorial.md`'s Phase 2 passing on real hardware (getting there required
-  finding the GY-53 `PS` pin gotcha, see the sensor note below). Phase 3
-  onward — motor driver, combined firmware, battery — is not started, and
-  `obstacle_haptic.ino` itself has still never been flashed.
+  in this environment, not just claimed). On real hardware as of
+  2026-07-30: **Phase 2 (sensor) and Phase 3 (motor driver) both pass** —
+  live distance readings over I2C, and the motor buzzing under firmware
+  control. The 10×3mm motor and the flat 502030 LiPo are both in hand, and
+  the battery is soldered to a TP4056 with charging confirmed.
+  **Outstanding safety item: that TP4056 is stock, charging a 250mAh cell
+  at 1A (~4C) — `R3` needs changing to ~10kΩ, see `PURCHASE_LIST.md`.**
+  Phase 4 (combined firmware on hardware) and Phase 5 (running off
+  battery) are not done, and `obstacle_haptic.ino` has still never been
+  flashed to the board.
 - [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
   cleanly (headless OpenSCAD, base/lid/belt-clip all export as valid
   manifold geometry — see the file header for how that was checked). Every
@@ -204,6 +207,16 @@ Power (as currently purchased - see PURCHASE_LIST.md's power note):
 Draw this into a real schematic before breadboarding — this is a text
 description of the connections, not a substitute for checking datasheets
 (transistor pinout in particular varies by package/orientation).
+
+Two published references cover this visually:
+
+- **Full circuit schematic** — sensor, motor driver and power on one
+  diagram, colour-coded by net:
+  https://claude.ai/code/artifact/c69dd337-6c56-415d-b2a7-4d0eb66433ad
+- **Soldering plan** — what the breadboard's power rails become once the
+  build goes permanent (two star joints), plus five staged assembly steps
+  each with a test gate:
+  https://claude.ai/code/artifact/8f43ca79-bcd2-4351-913a-767ca58c930c
 
 ## Repository layout
 
