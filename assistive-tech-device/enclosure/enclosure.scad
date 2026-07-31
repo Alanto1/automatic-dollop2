@@ -283,6 +283,53 @@ module belt_clip_back() {
         cube([belt_clip_arm_length, belt_clip_gap + belt_clip_thickness, belt_clip_thickness]);
 }
 
+// ============================================================
+// Switch fit test coupon - print this BEFORE the real enclosure.
+// ============================================================
+//
+// The switch actuator's dimensions are the hardest numbers in this whole
+// model to measure: the nub is a couple of millimetres across, and what
+// actually matters isn't its size but how much slot it needs to travel
+// freely without rattling. Calipers answer the first question, not the
+// second.
+//
+// So don't measure it - test it. This coupon is a flat plate, printed at
+// the real wall_thickness, carrying ten candidate slots:
+//   - two rows: 3.0mm wide (upper) and 4.0mm wide (lower)
+//   - five columns: 5, 6, 7, 8, 9mm long, left to right
+//
+// Print it (a few minutes, a few grams), then push the switch's actuator
+// through each slot in turn. You want the SMALLEST slot the slider can
+// travel end to end in without catching. Note its row and column, set
+// switch_slot_length / switch_slot_width from the table above, and the
+// real enclosure will fit first time.
+//
+// Printing this costs one short print and saves the reprint-and-refit
+// loop that Phase 7 of tutorial.md warns takes 2-3 attempts.
+coupon_widths  = [3.0, 4.0];
+coupon_lengths = [5, 6, 7, 8, 9];
+coupon_pitch_x = 12;
+coupon_pitch_y = 10;
+coupon_margin  = 5;
+
+module switch_test_coupon() {
+    plate_x = coupon_margin * 2 + coupon_pitch_x * len(coupon_lengths);
+    plate_y = coupon_margin * 2 + coupon_pitch_y * len(coupon_widths);
+
+    difference() {
+        rounded_box([plate_x, plate_y, wall_thickness], corner_radius);
+
+        for (row = [0 : len(coupon_widths) - 1])
+            for (col = [0 : len(coupon_lengths) - 1])
+                translate([
+                    coupon_margin + coupon_pitch_x * col + (coupon_pitch_x - coupon_lengths[col]) / 2,
+                    coupon_margin + coupon_pitch_y * row + (coupon_pitch_y - coupon_widths[row]) / 2,
+                    -1
+                ])
+                    cube([coupon_lengths[col], coupon_widths[row], wall_thickness + 2]);
+    }
+}
+
 module render_all() {
     wristband_back();
     translate([0, outer_width + 5, 0]) lid();
@@ -292,4 +339,5 @@ module render_all() {
 if (part == "base" || part == "wristband_back") wristband_back();
 else if (part == "lid") lid();
 else if (part == "belt_clip_back") belt_clip_back();
+else if (part == "switch_test_coupon") switch_test_coupon();
 else render_all();
