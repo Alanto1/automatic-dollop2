@@ -188,7 +188,9 @@ phone and squirts you, with a focus experiment." That alone wins a room.
 ## Files in this project
 
 - `README.md` — this overview
-- `PARTS.md` — bill of materials, budget, wiring, Berlin sourcing notes
+- `PARTS.md` — bill of materials, wiring, and what each part is for
+- `PURCHASE_LIST.md` — **the real cart**: verified 2026-08-01 prices, stock
+  counts, which shop, and the budget corrections
 - `BUILD_CHECKLIST.md` — week-by-week plan to the Jugend forscht window
 
 ## How to start (in your next session)
@@ -201,10 +203,11 @@ phone and squirts you, with a focus experiment." That alone wins a room.
 
 ## Open decisions to make first
 
-1. **Hexapod (18 servos) or quadruped (12)?** Hexapod = the true "spider"
-   look and rock-solid stability, ~€300. Quadruped = ~40% cheaper, far less
-   power drama, reads as a creature just as well. Recommendation: quadruped if
-   budget or power worries you at all; the software is identical.
+1. ~~**Hexapod (18 servos) or quadruped (12)?**~~ **DECIDED: quadruped
+   (12 servos).** Less power drama, cheaper, reads as a creature just as
+   well, and the software is identical either way.
+   [`PURCHASE_LIST.md`](PURCHASE_LIST.md) is costed for 12 legs + 2 head
+   servos.
 2. **Which mode first?** Recommendation: **Squirt**, stationary, end-to-end
    (detect → escalate → aim → fire) before you add walking. Earliest complete
    demo.

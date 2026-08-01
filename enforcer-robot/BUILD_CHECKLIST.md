@@ -24,11 +24,21 @@ escalate → aim → fire), then add walking, then the other two modes.
 
 Procurement is the long pole. Nothing else matters until the order is placed.
 
-- [ ] Sourcing pass (Reichelt / Conrad / BerryBase / local Berlin shops / AliExpress)
-- [ ] Place **one** order with spares (3 servos, 2nd SD card, 2nd pump) + any
-      printer part
+- [x] ~~Sourcing pass~~ — **done 2026-08-01**, see [`PURCHASE_LIST.md`](PURCHASE_LIST.md)
+- [x] ~~Decide: hexapod vs quadruped~~ — **quadruped (12 servos)**
+- [ ] Decide **Pi 5 4GB (€118,50) vs 2GB (€69,50)** — new, and now the
+      biggest line in the build (PURCHASE_LIST "Decisions this forces")
+- [ ] Place the **AliExpress** order FIRST — buck converter, pan/tilt, and
+      the chassis if the printer gate looks bad. 2–4 week lead time makes
+      this the long pole, longer than anything German.
+- [ ] Place the **BerryBase** order — and don't dawdle: the PCA9685 showed
+      **only 4 in stock** and the GC9A01 eye only 5
+- [ ] Place the **roboter-bausatz** order (15× MG90S — nobody else stocks them)
+- [ ] Source the **power block** (LiPo, UBEC, charger, LiPo bag) at an RC
+      retailer — the one block no maker shop carries, and still unpriced
+- [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
+      for MOSFET, diode, fuse, switch, wire, heatshrink, screws
 - [ ] Note the delivery window somewhere visible
-- [ ] Decide: hexapod vs quadruped (see README "Open decisions")
 
 Meanwhile, zero hardware:
 

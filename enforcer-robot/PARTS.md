@@ -5,13 +5,26 @@ version. Both include spares.
 
 ## Read this first
 
-**These are specifications, not verified local stock.** Unlike your wristband
-`PURCHASE_LIST.md` (which was walked into real Almaty shops on a real date),
-nothing here is confirmed on a Berlin shelf yet. Treat it as "what to look
-for," then do a sourcing pass: German electronics retailers (Reichelt,
-Conrad, BerryBase, Berlin's maker/electronics shops), plus AliExpress for the
-generic mechanical parts. **Order once, early, with spares** — shipping is the
-long pole.
+**These are specifications. For real prices, read
+[`PURCHASE_LIST.md`](PURCHASE_LIST.md).** The sourcing pass was done on
+**2026-08-01** against German retailers, and it found the budget below to be
+roughly **half** the real cost — mostly because of one part. The €-columns
+here are kept as the original spec estimates so the gap stays visible; treat
+`PURCHASE_LIST.md` as the number that matters.
+
+The short version of what changed:
+
+- **Raspberry Pi 5 4GB is €118.50, not €65** (confirmed at two retailers) —
+  a RAM price surge, passed straight through. The **2GB at €69.50** is now
+  the sensible buy.
+- The **Pi 4 fallback below is void**: Pi 4 4GB is €108.40, so it saves €10,
+  not €20, for a much weaker CPU.
+- Realistic quadruped total: **~€450**, or ~€380 with the 2GB Pi and a USB
+  webcam.
+
+**Order once, early, with spares** — shipping is the long pole, and the
+AliExpress items (buck converter, pan/tilt, chassis) are the longest at 2–4
+weeks.
 
 ## Core electronics
 
@@ -19,7 +32,7 @@ long pole.
 |---|---|---|---|---|
 | 1 | **MG90S metal-gear servo** | 18 (+3 spare) / 12 for quad | 55 / 38 | Metal gear is not optional — plastic SG90s strip under leg load. Buy spares. |
 | 2 | **PCA9685 16-ch PWM driver** | 2 (1 for quad) | 8 | Chainable over I2C. 2 boards = 32 channels (18 legs + 2 head + spare). |
-| 3 | **Raspberry Pi 5 (4GB)** | 1 | 65 | Runs the camera + a small detector in real time. Pi 4 works, saves ~€20. |
+| 3 | **Raspberry Pi 5 (4GB)** | 1 | ~~65~~ **118,50** | Runs the camera + a small detector in real time. ~~Pi 4 works, saves ~€20.~~ Pi 4 now saves only €10 — don't. Consider the **2GB at €69,50** instead. |
 | 4 | microSD 32GB A2 | 1 (+1 spare) | 14 | The spare is real advice; cards die at the worst moment. |
 | 5 | **Camera** (Pi Camera Module 3 or USB webcam) | 1 | 15–25 | Module 3 has autofocus; USB is simpler on a moving robot. |
 | 6 | **GC9A01 round SPI LCD** (the eye) | 1 | 8 | Highest personality-per-euro part in the build. |
@@ -61,8 +74,11 @@ long pole.
 | 22 | M2/M3 screws + standoffs | 1 set | 8 | You'll use more than you think. |
 | 23 | Silicone wire (18AWG servo rail, 22AWG logic), JST, heatshrink | — | 8 | |
 
-**Rough total:** hexapod ~€320, quadruped ~€230 (before printer/chassis
-choice).
+**Rough total (original spec estimate):** hexapod ~€320, quadruped ~€230.
+
+**Actual, sourced 2026-08-01:** quadruped **~€450** — or **~€380** with the
+2GB Pi and a USB webcam. See [`PURCHASE_LIST.md`](PURCHASE_LIST.md) for the
+line-by-line cart, stock counts, and which shop.
 
 ## Optional accelerator
 
