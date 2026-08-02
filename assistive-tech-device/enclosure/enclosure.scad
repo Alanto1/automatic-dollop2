@@ -121,14 +121,51 @@ belt_clip_gap        = 6;    // fits a typical belt/waistband strap
 belt_clip_thickness  = 2.5;
 
 
-// Internal cavity sized to fit the tallest component, with everything
-// else assumed to sit beside it on the floor of the base - this is a
-// simplified layout, not a precision placement, which isn't meaningful
-// until the [MEASURE YOUR PARTS] block above holds real numbers anyway.
-internal_length = max(nano_length, battery_length) + fit_clearance * 2;
-internal_width  = nano_width + tof_width + fit_clearance * 3;
-internal_height = max(nano_stack_height, tof_stack_height, motor_thickness, battery_thickness)
-                   + fit_clearance * 2;
+// ============================================================
+// [MEASURE THE BUNDLE] -- the easier way to size the cavity.
+// ============================================================
+//
+// Once everything is soldered together it stops being separate components
+// and becomes one awkward bundle of boards and wire. Measuring each part
+// individually then becomes both difficult and beside the point: what has
+// to fit in the pod is the whole assembly, wires included, not a tidy sum
+// of datasheet dimensions.
+//
+// So there are two ways to size the cavity, and the second is usually
+// easier once you've soldered:
+//
+//   1. Leave these at 0. The cavity is derived from the individual part
+//      dimensions in the [MEASURE YOUR PARTS] block above.
+//
+//   2. Set them to real numbers. Arrange the soldered assembly exactly as
+//      it will sit inside the pod - boards flat, battery beside or under
+//      them, wires folded where they'll actually go - then measure the
+//      overall block it occupies. Length, width, height of that. Those
+//      three numbers replace the derived ones, and fit_clearance is added
+//      on top, so measure the bundle relaxed rather than squeezed.
+//
+// Option 2 is more honest about what actually determines the fit, because
+// the folded wire between two boards is often thicker than either board.
+measured_bundle_length = 0;  // 0 = derive from the parts block above
+measured_bundle_width  = 0;
+measured_bundle_height = 0;
+
+// Internal cavity. When the bundle hasn't been measured, this falls back
+// to fitting the tallest component with everything else assumed to sit
+// beside it on the floor of the base - a simplified layout, not a
+// precision placement.
+internal_length = measured_bundle_length > 0
+    ? measured_bundle_length + fit_clearance * 2
+    : max(nano_length, battery_length) + fit_clearance * 2;
+
+internal_width = measured_bundle_width > 0
+    ? measured_bundle_width + fit_clearance * 2
+    : nano_width + tof_width + fit_clearance * 3;
+
+internal_height = measured_bundle_height > 0
+    ? measured_bundle_height + fit_clearance * 2
+    : max(nano_stack_height, tof_stack_height, motor_thickness, battery_thickness)
+        + fit_clearance * 2;
 
 // The pod has to be long enough for BOTH the components inside it and the
 // two strap tunnels side by side. Sizing it only from the components (the
