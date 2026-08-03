@@ -146,9 +146,16 @@ belt_clip_thickness  = 2.5;
 //
 // Option 2 is more honest about what actually determines the fit, because
 // the folded wire between two boards is often thicker than either board.
-measured_bundle_length = 0;  // 0 = derive from the parts block above
-measured_bundle_width  = 0;
-measured_bundle_height = 0;
+// CURRENT VALUES ARE A TARGET, NOT A MEASUREMENT. The assembled bundle
+// measured roughly 110 x 75 x 46mm loose - about 30x the volume of the
+// components inside it, i.e. almost entirely air and unfolded wire. These
+// numbers are a deliberate midpoint between that and the ~60 x 45 x 18mm
+// the parts could theoretically pack into: large enough to be reachable
+// by folding and bundling the wire, small enough to still be wearable.
+// Replace them with a real measurement once the bundle is compacted.
+measured_bundle_length = 75;  // 0 = derive from the parts block above
+measured_bundle_width  = 50;
+measured_bundle_height = 25;
 
 // Internal cavity. When the bundle hasn't been measured, this falls back
 // to fitting the tallest component with everything else assumed to sit
