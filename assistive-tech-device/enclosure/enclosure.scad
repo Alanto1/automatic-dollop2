@@ -93,6 +93,38 @@ switch_actuator_proud  = 1.2;
 // actuator plus the throw, plus clearance at each end.
 switch_travel          = 2.5;  // total slider throw end to end
 
+// USB access - TWO openings are needed, and forgetting either one seals
+// the pod shut for a whole workflow:
+//
+//   * TP4056's USB-C     -> charging. Without it the battery can only be
+//                           charged by opening the enclosure.
+//   * Nano's mini-USB    -> reflashing AND serial debugging. The debug
+//                           workflow is: switch OFF (isolating the
+//                           battery), plug in USB, read the serial
+//                           monitor. That is the only way to diagnose a
+//                           fault in an assembled device, and it needs
+//                           this port reachable.
+//
+// LAYOUT CONSTRAINT this imposes: both boards must be oriented so their
+// USB connectors face the SAME end wall (-X, opposite the switch). Decide
+// that when arranging the bundle - it is painful to fix after gluing.
+//
+// PLACEHOLDER SIZES - measure your own connectors. These are the
+// receptacle openings, not the plug; clearance is added below.
+usb_charge_width  = 9.0;   // TP4056 Type-C receptacle, across
+usb_charge_height = 3.2;   // and its height
+usb_data_width    = 7.7;   // Nano mini-USB receptacle, across
+usb_data_height   = 4.5;   // and its height
+// How far each connector's centre sits above the inside floor of the base.
+// Both are surface-mount on their PCBs, so this is roughly the board's
+// resting height plus half the connector.
+usb_charge_z      = 5;
+usb_data_z        = 5;
+// Generous on purpose: a plug has to find the hole without a chamfer to
+// guide it, and a socket recessed behind an undersized opening is
+// unusable. Better slightly loose than unpluggable.
+usb_clearance     = 1.2;
+
 // ============================================================
 // Derived / design parameters -- reasonable defaults, less
 // urgent to re-measure than the block above, but still worth
@@ -217,6 +249,22 @@ assert(switch_slot_length + wall_thickness * 2 <= outer_width,
 assert(switch_slot_z + switch_slot_width / 2 <= outer_height - lid_lip_height,
        "Switch slot runs past the top of the base and into the lid seam.");
 
+// USB openings, both in the -X end wall (opposite the switch), side by
+// side across Y. Charging port toward one side, data port toward the
+// other, with a web of material between them so the wall keeps some
+// stiffness rather than becoming one long slot.
+usb_charge_w = usb_charge_width + usb_clearance;
+usb_charge_h = usb_charge_height + usb_clearance;
+usb_data_w   = usb_data_width + usb_clearance;
+usb_data_h   = usb_data_height + usb_clearance;
+usb_gap      = 4;  // material left between the two openings
+
+usb_total_w  = usb_charge_w + usb_gap + usb_data_w;
+usb_start_y  = (outer_width - usb_total_w) / 2;
+
+assert(usb_total_w + wall_thickness * 2 <= outer_width,
+       "Both USB openings don't fit across the end wall - widen the pod or stack them.");
+
 $fn = 48;
 
 module rounded_box(size, radius) {
@@ -255,6 +303,19 @@ module switch_slot() {
         cube([wall_thickness + 2, switch_slot_length, switch_slot_width]);
 }
 
+module usb_ports() {
+    // Both openings pierce the -X end wall. Deliberately plain
+    // rectangles: no recess or funnel, because either would need the
+    // connector's exact setback from the board edge, which isn't known
+    // until the boards are positioned. Slightly oversize instead - a plug
+    // that goes in easily beats a neat hole that doesn't reach.
+    translate([-1, usb_start_y, usb_charge_z - usb_charge_h / 2])
+        cube([wall_thickness + 2, usb_charge_w, usb_charge_h]);
+
+    translate([-1, usb_start_y + usb_charge_w + usb_gap, usb_data_z - usb_data_h / 2])
+        cube([wall_thickness + 2, usb_data_w, usb_data_h]);
+}
+
 module base() {
     difference() {
         rounded_box([outer_length, outer_width, outer_height - lid_lip_height], corner_radius);
@@ -267,6 +328,7 @@ module base() {
 
         wristband_slots();
         switch_slot();
+        usb_ports();
     }
 }
 
