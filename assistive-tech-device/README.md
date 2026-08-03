@@ -60,11 +60,13 @@ before trusting them on a wrist.
   Phase 4 (combined firmware on hardware) and Phase 5 (running off
   battery) are not done, and `obstacle_haptic.ino` has still never been
   flashed to the board.
-- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
-  cleanly (headless OpenSCAD, base/lid/belt-clip all export as valid
-  manifold geometry — see the file header for how that was checked). Every
-  dimension in its "[MEASURE YOUR PARTS]" section is still a guess, not a
-  caliper measurement.
+- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
+  the builder's 67 × 30 × 50mm sketch and render-verifies cleanly (headless
+  OpenSCAD; base, lid, belt-clip and switch coupon all export as valid
+  manifold geometry, with each cutout checked against its expected
+  coordinates in the exported STL — see the file header). Most dimensions
+  are now real caliper numbers; the switch actuator size and USB connector
+  body margin are still guesses. Nothing has been printed yet.
 - [ ] **Weeks 4-6 — real feedback session** with whoever responds to
   outreach. Not started.
 - [ ] **Writeup + consent**, after the above.
@@ -109,8 +111,10 @@ unplug the battery. That reasoning only holds while the battery is
 unplugabble, so it's now listed as **required**: once the cell is soldered
 to the TP4056, "off" would otherwise mean desoldering it. A small SPST
 slide switch goes in series on the TP4056's `OUT+` line, which cuts the
-load while leaving the charging path intact. Note `enclosure.scad` has no
-cutout for it yet - that's outstanding work before a final print.
+load while leaving the charging path intact. `enclosure.scad` now cuts a
+slot for it in the pod's back wall, sized from the real switch body —
+though the actuator nub itself is still a guess, which is what
+`switch_test_coupon` exists to settle.
 
 ### Sensor note
 
@@ -264,16 +268,39 @@ real firmware behavior - not just a rough sketch.
 
 ## Enclosure
 
-`enclosure/enclosure.scad` is parametric: three modules (`wristband_back`
-/ `lid` / `belt_clip_back`) built from a block of measurements at the top
-of the file. **Every dimension in the "[MEASURE YOUR PARTS]" section is a
-placeholder** - update it from real calipers once parts are in hand, then
-re-render before printing. The belt-clip alternative mount is explicitly
-unvalidated (needs print-and-test iteration on real material/printer) -
-the wristband strap-slot mount (two lug tunnels, watch-lug style) is v1's
-primary, chosen over a single-slot design specifically because one slot
-would let the pod pivot around that single wrap point instead of sitting
-flat.
+`enclosure/enclosure.scad` is parametric: four printable modules
+(`wristband_back` / `lid` / `belt_clip_back` / `switch_test_coupon`) built
+from a block of measurements at the top of the file. Most of that block is
+now real caliper data; the two that are still guesses — the switch
+actuator's size and the USB connector body margin — are labelled as such,
+and both are worth checking before a real print.
+
+**Built to the builder's sketch: 67 × 30 × 50mm.** Layout:
+
+| Feature | Where |
+| --- | --- |
+| Sensor window (6mm) | −X front wall, mid-height, looking where you walk |
+| Power switch slot | +X back wall, mid-height |
+| USB-C (charge) + mini-USB (data) | **in the lid**, side by side, pointing up |
+| Strap channel (20mm) | one closed tunnel through the base's underside, centred |
+| Vibration motor | glued to an inside wall — no cutout needed |
+
+All three boards **hang from the lid**, the two with connectors hanging
+connector-end up so their ports come out through the top. Lift the lid and
+the whole electronics stack comes with it, which is what makes the pod
+serviceable instead of a sealed box. The lid's ports are counterbored from
+underneath so a plug can actually reach the receptacle through 5.2mm of
+lid — without that they'd be decorative.
+
+Two things about this are deliberate compromises rather than best answers.
+The single strap channel replaced two watch-style lug tunnels at the
+builder's request; one wrap point lets the pod rock about the strap's
+axis, and the sensor aims wherever the pod happens to point. And the
+closed tunnel eats ~9mm of internal height, since the outer height is
+pinned at 50mm — usable interior is 37.6mm tall, which is less than an
+Arduino Nano's 45mm long edge, so the Nano has to hang 18mm-edge-down. The
+belt-clip alternative mount remains explicitly unvalidated (needs
+print-and-test iteration on real material and printer).
 
 ## Safety notes
 

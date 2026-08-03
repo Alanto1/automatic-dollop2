@@ -73,29 +73,44 @@ Steps:
 ## Weeks 3-4 — Wearable enclosure
 
 Parts:
-- [ ] Wristband strap (width matches `strap_width` in `enclosure.scad`)
+- [x] Wristband strap - 20mm, matches `strap_width` in `enclosure.scad`
 - [ ] PLA (or similar) filament for 3D printing
-- [ ] Small glue gun + glue sticks (securing components inside the pod,
-      not structural - the enclosure itself shouldn't need glue to hold
-      together)
+- [ ] Small glue gun + glue sticks. The enclosure itself doesn't need glue
+      to hold together, but the current design *does* rely on it for
+      assembly: all three boards are glued to the lid's underside, the
+      switch body is glued behind its slot, and the motor is glued to an
+      inside wall
 
 Tools:
 - [ ] Calipers (for measuring real part dimensions - do this before
-      touching `enclosure.scad`'s placeholder numbers)
+      touching `enclosure.scad`'s remaining placeholder numbers)
 - [ ] OpenSCAD installed
 - [ ] Access to a 3D printer (own, school, library, print service)
 
+The model is built to the sketched 67 × 30 × 50mm box. Sensor window in
+the front wall, switch slot in the back wall, both USB ports in the lid,
+one 20mm strap tunnel through the base's underside.
+
 Steps:
-- [ ] Measure Nano, VL53L0X breakout, motor, and battery with calipers -
-      if the battery ended up being an 18650 cell (see PURCHASE_LIST.md's
-      battery note), enclosure.scad's battery cavity needs reshaping, not
-      just re-measuring
+- [ ] **Print `part="switch_test_coupon"` first.** Two minutes, a few
+      grams, and it settles `switch_actuator_length`/`_width` - the
+      largest remaining guess in the file - without measuring a 2mm nub
+- [ ] Measure how far the USB connector *bodies* stand proud of their
+      boards, and set `usb_body_margin` from that. The lid counterbore is
+      what lets a plug reach the receptacle through 5.2mm of lid; guess it
+      too small and both ports are unusable, which won't be obvious until
+      the print is in your hand
+- [ ] Check the Nano fits: the strap tunnel leaves 37.6mm of internal
+      height, and the Nano's long edge is 45mm, so it has to hang
+      18mm-edge-down from the lid
 - [ ] Update the "[MEASURE YOUR PARTS]" block at the top of
-      `enclosure/enclosure.scad` with real numbers
+      `enclosure/enclosure.scad` with those numbers
 - [ ] Re-render in OpenSCAD (F5 preview, then F6 for a full render) and
       re-check `part = "all"` looks sane before exporting STLs
-- [ ] Print `wristband_back` + `lid` first; treat `belt_clip_back` as a
+- [ ] Print `wristband_back` + `lid` next; treat `belt_clip_back` as a
       separate print-and-test iteration, not a guaranteed-good part
+- [ ] Print the base with supports (or accept some droop): the cavity
+      floor bridges 21.5mm over the strap tunnel
 - [ ] Dry-fit all components before gluing anything down
 
 ## Weeks 4-6 — Real feedback session

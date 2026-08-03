@@ -5,6 +5,64 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-08-03: enclosure built to the builder's sketch
+
+Twelfth pass. `enclosure.scad` was rebuilt around a hand-drawn sketch and
+a set of real caliper measurements, replacing most of the guessed layout.
+Final arrangement, all confirmed against exported STL coordinates rather
+than assumed:
+
+| Feature | Where | Verified |
+| --- | --- | --- |
+| Box | 67 × 30 × 50mm | base 67×30×47, lid −3..2.2 |
+| Sensor window, ⌀6 | −X front wall, z 25.2–31.2 | ✅ |
+| Switch slot, 6.5 × 3 | +X back wall, z 26.7–29.7 | ✅ |
+| USB-C, 9.36 × 4.64 | lid, x 21.82–31.18 | ✅ |
+| mini-USB, 8.0 × 6.83 | lid, x 37.18–45.18 | ✅ |
+| Strap tunnel, 21.5 wide | base underside, x 22.75–44.25, z 2.2–7.2 | ✅ |
+
+**Both USB ports moved from a side wall into the lid.** All three boards
+hang from the lid; the two with connectors hang connector-end up, so the
+ports come out through the top. Each port is counterbored from underneath
+so the connector body nests up inside the lid's lip — without that the
+receptacle sits at the bottom of a 5.2mm shaft and no plug reaches it. The
+counterbore is the load-bearing detail of this whole arrangement, and
+`usb_body_margin` (2mm) is a **guess**, not a measurement.
+
+**The two watch-style lug tunnels became one central strap channel**, at
+the builder's request. Worth knowing: this file's own comments had
+explicitly rejected a single slot because one wrap point lets the pod
+pivot instead of sitting flat. That concern was not solved, it was
+accepted — it's now documented in the file header rather than deleted,
+so nobody rediscovers it as a surprise. It's modelled as a *closed*
+tunnel rather than an open groove, so the pod stays on the strap when the
+band is off and the underside stays a continuous face against the wrist.
+
+**Cost of the tunnel:** the base's floor is now three layers (skin,
+tunnel, ceiling) = 9.4mm, and outer height is pinned at 50mm, so the
+cavity loses the height rather than the box growing. Usable interior is
+37.6mm — **less than the Nano's 45mm long edge**, so the Nano must hang
+18mm-edge-down. Flag this if the layout is ever revisited.
+
+### Two silent-failure bugs caught this pass
+
+Both rendered as valid manifold geometry with zero warnings, which is why
+render success alone is not verification in this file:
+
+1. **USB counterbores abutted at exactly 0mm.** `usb_gap = 4` with
+   `usb_body_margin = 2` on each facing side left a zero-thickness wall;
+   CGAL reported `Simple: yes` and the two pockets would have printed as
+   one trench. Fixed by deriving `usb_gap` from `usb_body_margin` and
+   asserting they can't touch.
+2. **`belt_clip_back` had no switch slot and no sensor window** — it
+   duplicated the shell by hand and never picked up either cutout, so
+   printing it produced a sealed box. Now calls both modules.
+
+This is the third and fourth time a cutout in this file has silently done
+nothing (earlier: the switch slot landing inside a strap tunnel, and two
+tunnels merging). **Verify cutouts by checking coordinates in the exported
+STL, not by checking that the render succeeded.**
+
 ## Session log — 2026-07-31: switches sourced locally, enclosure gains a switch cutout
 
 Tenth pass. Sourcing closed out, and the enclosure model got its first
@@ -439,11 +497,12 @@ consent before naming or showing any test user.
   "Session log" above). Hardware itself has not been purchased or
   assembled — see `PURCHASE_LIST.md`. Blindfolded course test (with
   sighted spotter) not yet possible until hardware exists.
-- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
-  cleanly (base/lid/clip all confirmed via headless OpenSCAD in this
-  pass — see "Session log"). Every dimension is still a placeholder —
-  needs real caliper measurements once parts arrive, then re-render
-  before printing.
+- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
+  the builder's 67 × 30 × 50mm sketch, and base/lid/clip/coupon all
+  render-verify cleanly with every cutout confirmed against exported STL
+  coordinates (see the 2026-08-03 session log). Most dimensions are real
+  caliper numbers now; `switch_actuator_length`/`_width` and
+  `usb_body_margin` are the remaining guesses. Nothing printed yet.
 - [ ] **Weeks 4-6 — real feedback session** with whoever responds to the
   Week 0 outreach. Not started (outreach not sent yet).
 - [ ] **Writeup + consent**, after the above.
@@ -577,12 +636,24 @@ assistive-tech-device/
 
 ## Natural next steps
 
-1. Send the outreach emails (`outreach/`) — still the most time-sensitive
-   open item, ideally in parallel with the steps below, not after.
-2. Work through `PURCHASE_LIST.md` and actually buy the parts - either
-   the flat 502030 LiPo pouch via Kaspi.kz or an 18650 in person at Alash
-   Electronics, see the battery note for the tradeoff.
-3. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
+As of 2026-08-03, in priority order:
+
+1. **Get the TP4056's `R3` swapped to ~10kΩ.** Still the only open safety
+   item, and it has been open for four passes. The stock module pushes
+   ~1A into a 250mAh cell (~4C). Supervise every charge until it's done.
+2. **Print `part="switch_test_coupon"`** and report which slot the
+   actuator moves freely in — that closes the largest remaining unknown
+   in the enclosure without measuring a 2mm nub.
+3. **Measure `usb_body_margin`** — how far each USB connector's body
+   stands proud of its board. The lid's counterbore depends on it, and
+   getting it wrong makes both ports unreachable.
+4. **Identify which two switch pins make/break** with the D2→D3
+   continuity sketch, and confirm the slider latches.
+5. Phase 4 (combined firmware on real hardware) and Phase 5 (running off
+   the battery) — neither started.
+6. Send the outreach emails (`outreach/`) — the most time-sensitive open
+   item, and independent of everything above, so it shouldn't wait on it.
+7. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
    board bring-up, sensor, motor, combined firmware, power, soldering,
    the enclosure fit-and-reprint loop, final assembly, and the blindfolded
    test, in the order that makes problems easiest to isolate. Don't skip
