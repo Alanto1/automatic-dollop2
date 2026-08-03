@@ -123,14 +123,19 @@ usb_charge_width  = 8.86;  // TP4056 Type-C receptacle, across
 usb_charge_height = 4.14;
 usb_data_width    = 7.5;   // Nano mini-USB receptacle, across
 usb_data_height   = 6.33;
-// STILL PLACEHOLDERS: how far each connector's centre sits above the
-// inside floor. With the boards stacked in a 50mm-tall box these depend
-// entirely on where each board ends up, so they must be set once the
-// stack is arranged. Getting these wrong is the failure mode where the
-// opening is the right SIZE but the wrong HEIGHT, and the plug still
-// won't reach.
-usb_charge_z      = 12;
-usb_data_z        = 26;
+// ALL THREE BOARDS MOUNT TO THE LID, not the base floor. Lift the lid and
+// the whole electronics stack comes with it, which makes the pod
+// serviceable rather than a sealed box you have to dig into.
+//
+// So connector heights are measured DOWN FROM THE LID'S UNDERSIDE. That
+// keeps them correct even if the box's height changes later; measuring
+// up from the floor would break every time it did.
+//
+// Defaults assume a board glued back-flat to the lid, so its connector
+// hangs about one PCB thickness plus half the connector below:
+//   1.6 + 4.14/2 -> ~3.7      1.6 + 6.33/2 -> ~4.8
+usb_charge_depth  = 3.7;  // TP4056 Type-C centre, below the lid underside
+usb_data_depth    = 4.8;  // Nano mini-USB centre, below the lid underside
 // 0.5mm all round, per the builder's call. A 3D printer typically
 // overshoots into a hole by 0.1-0.3mm on its own, so the 0.1mm originally
 // proposed would often have come out negative - the plug simply wouldn't
@@ -151,8 +156,7 @@ switch_clearance  = 0.5;
 // and it reads a permanent obstacle a few centimetres away.
 sensor_window_dia = 6;   // wider than the chip's 4.4mm so the 25 degree
                          // field of view isn't clipped by a setback
-sensor_window_z   = 38;  // PLACEHOLDER - height of the sensor's centre
-                         // above the inside floor, set once mounted
+// sensor_window_z is derived below - centred in the cavity.
 
 // ============================================================
 // Derived / design parameters -- reasonable defaults, less
@@ -281,8 +285,20 @@ assert(outer_length >= outer_length_for_straps,
 switch_slot_length = switch_actuator_length + switch_travel + switch_clearance * 2;
 switch_slot_width  = switch_actuator_width + switch_clearance * 2;
 switch_slot_y      = (outer_width - switch_slot_length) / 2;  // centred across the end face
-switch_slot_z      = 8;  // PLACEHOLDER - height of the actuator's centre
-                         // above the inside floor, set once mounted
+// Cavity reference planes, used by every cutout below.
+cavity_floor  = wall_thickness;
+lid_underside = outer_height - lid_lip_height;
+cavity_mid_z  = (cavity_floor + lid_underside) / 2;
+
+// Switch and sensor sit mid-height. Neither is forced to a particular
+// height - the switch just needs a finger, the sensor an unobstructed
+// view - so centring leaves the most material around each opening.
+switch_slot_z   = cavity_mid_z;
+sensor_window_z = cavity_mid_z;
+
+// USB openings hang from the lid, following the boards they serve.
+usb_charge_z = lid_underside - usb_charge_depth;
+usb_data_z   = lid_underside - usb_data_depth;
 
 assert(switch_slot_length + wall_thickness * 2 <= outer_width,
        "Switch actuator slot is wider than the pod's end face.");
@@ -298,31 +314,37 @@ usb_charge_h = usb_charge_height + usb_clearance;
 usb_data_w   = usb_data_width + usb_clearance;
 usb_data_h   = usb_data_height + usb_clearance;
 
-// Placed in the solid web BETWEEN the two strap tunnels, which bore
-// straight through this wall. Landing a port inside a tunnel would cut
-// nothing - the same mistake the switch slot made before it moved to an
-// end face.
+// Both openings sit SIDE BY SIDE, centred along the flank.
 //
-// Side by side they don't fit: the two openings need about 20mm of web
-// and there is only 16mm. They are stacked VERTICALLY instead, both
-// centred on the same span of X. That works precisely because the two
-// boards sit at different heights in the stack, so the openings never
-// meet - and it is a reminder that usb_charge_z and usb_data_z must stay
-// far enough apart for that to hold.
+// An earlier revision stacked them vertically to squeeze into the 16mm
+// web between the strap tunnels, because one port sat low enough to
+// collide with a tunnel. Mounting the boards to the lid lifted both
+// connectors to the top of the box, well clear of the tunnels at
+// z 2.8-7.8, so that constraint dissolved and they can spread along X.
+//
+// The assert still checks it rather than trusting it: if a port's height
+// ever drops back into the tunnels' band, it must sit within the web or
+// it would open into a tunnel and hold nothing.
+usb_gap      = 4;   // material left between the two openings
+usb_total_w  = usb_charge_w + usb_gap + usb_data_w;
+usb_charge_x = (outer_length - usb_total_w) / 2;
+usb_data_x   = usb_charge_x + usb_charge_w + usb_gap;
+
 strap_web_start = strap_slot_inset + strap_slot_width;
 strap_web_end   = outer_length - strap_slot_inset - strap_slot_width;
-usb_web_centre  = (strap_web_start + strap_web_end) / 2;
+strap_z_lo      = wall_thickness + fit_clearance;
+strap_z_hi      = strap_z_lo + strap_slot_height;
 
-usb_charge_x = usb_web_centre - usb_charge_w / 2;
-usb_data_x   = usb_web_centre - usb_data_w / 2;
+function clears_straps(x, w, z, h) =
+    (z - h / 2 > strap_z_hi) || (z + h / 2 < strap_z_lo)
+    || (x >= strap_web_start && x + w <= strap_web_end);
 
-assert(usb_charge_x >= strap_web_start && usb_charge_x + usb_charge_w <= strap_web_end,
-       "Charging port overruns a strap tunnel - widen the web between tunnels.");
-assert(usb_data_x >= strap_web_start && usb_data_x + usb_data_w <= strap_web_end,
-       "Data port overruns a strap tunnel - widen the web between tunnels.");
-assert(abs(usb_charge_z - usb_data_z) > (usb_charge_h + usb_data_h) / 2,
-       "The two USB openings overlap vertically - separate usb_charge_z and usb_data_z.");
-
+assert(clears_straps(usb_charge_x, usb_charge_w, usb_charge_z, usb_charge_h),
+       "Charging port collides with a strap tunnel - raise it clear or move it into the web.");
+assert(clears_straps(usb_data_x, usb_data_w, usb_data_z, usb_data_h),
+       "Data port collides with a strap tunnel - raise it clear or move it into the web.");
+assert(usb_total_w <= outer_length - wall_thickness * 2,
+       "The two USB openings don't fit along the flank.");
 $fn = 48;
 
 module rounded_box(size, radius) {
