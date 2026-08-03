@@ -21,9 +21,15 @@
 //            design (one tunnel, strap folded back through it) was
 //            considered and rejected because it would let the pod pivot
 //            around that one wrap point instead of sitting flat.
-//   Z axis - up. The lid (+Z) carries the sensor window and faces
-//            outward, away from the skin. The base (-Z) sits against
-//            the wrist.
+//   Z axis - up. The lid (+Z) lifts off the top, away from the skin; a
+//            seam on the underside would press into the wrist. The base
+//            (-Z) sits against the arm.
+//
+// Face assignments, all on the base:
+//   -X front  : sensor window, looking in the direction of travel
+//   +X back   : power switch slot
+//   +Y flank  : both USB openings, stacked vertically
+//   both Y    : strap tunnels bore through here
 //
 // Which part to render: set `part` below, or override from the command
 // line, e.g.:
@@ -79,11 +85,12 @@ strap_thickness = 3;
 // calipers before printing - see this file's header. The slot is the one
 // cutout where being 1mm out is immediately obvious: too tight and the
 // slider won't travel, too loose and it rattles or lets dust in.
-switch_body_length    = 9;    // along X, the direction the slider travels
-switch_body_width     = 4;    // across Y
-switch_body_height    = 4;    // PCB face to top of body, excluding actuator
-switch_actuator_length = 3;   // the nub itself, along X
-switch_actuator_width  = 2;   // across Y
+// MEASURED 2026-08-02: switch body including solder, 10.8 x 2.85 x 3.2mm.
+switch_body_length    = 10.8;  // along the slider's travel
+switch_body_width     = 2.85;
+switch_body_height    = 3.2;
+switch_actuator_length = 3;   // the nub itself - still a placeholder
+switch_actuator_width  = 2;   // across
 // How far the actuator has to stand proud of the outer shell surface to
 // be usable with a fingernail. Too flush and you can't work it; too proud
 // and it snags, which was the whole reason for preferring a slide switch.
@@ -106,24 +113,46 @@ switch_travel          = 2.5;  // total slider throw end to end
 //                           this port reachable.
 //
 // LAYOUT CONSTRAINT this imposes: both boards must be oriented so their
-// USB connectors face the SAME end wall (-X, opposite the switch). Decide
-// that when arranging the bundle - it is painful to fix after gluing.
+// USB connectors face the SAME long side (+Y). Both 30mm end faces are
+// spoken for - sensor at the front, switch at the back - so the ports go
+// on a flank. Decide this when arranging the stack; it is painful to fix
+// after gluing.
 //
-// PLACEHOLDER SIZES - measure your own connectors. These are the
-// receptacle openings, not the plug; clearance is added below.
-usb_charge_width  = 9.0;   // TP4056 Type-C receptacle, across
-usb_charge_height = 3.2;   // and its height
-usb_data_width    = 7.7;   // Nano mini-USB receptacle, across
-usb_data_height   = 4.5;   // and its height
-// How far each connector's centre sits above the inside floor of the base.
-// Both are surface-mount on their PCBs, so this is roughly the board's
-// resting height plus half the connector.
-usb_charge_z      = 5;
-usb_data_z        = 5;
-// Generous on purpose: a plug has to find the hole without a chamfer to
-// guide it, and a socket recessed behind an undersized opening is
-// unusable. Better slightly loose than unpluggable.
-usb_clearance     = 1.2;
+// MEASURED 2026-08-02.
+usb_charge_width  = 8.86;  // TP4056 Type-C receptacle, across
+usb_charge_height = 4.14;
+usb_data_width    = 7.5;   // Nano mini-USB receptacle, across
+usb_data_height   = 6.33;
+// STILL PLACEHOLDERS: how far each connector's centre sits above the
+// inside floor. With the boards stacked in a 50mm-tall box these depend
+// entirely on where each board ends up, so they must be set once the
+// stack is arranged. Getting these wrong is the failure mode where the
+// opening is the right SIZE but the wrong HEIGHT, and the plug still
+// won't reach.
+usb_charge_z      = 12;
+usb_data_z        = 26;
+// 0.5mm all round, per the builder's call. A 3D printer typically
+// overshoots into a hole by 0.1-0.3mm on its own, so the 0.1mm originally
+// proposed would often have come out negative - the plug simply wouldn't
+// enter. 0.5mm stays snug while actually fitting.
+usb_clearance     = 0.5;
+switch_clearance  = 0.5;
+
+// Sensor window - in the FRONT WALL (-X), not the lid.
+//
+// It was in the lid originally, pointing up out of the top face. Moved
+// here because the front is the direction of travel: a wrist-worn pod
+// wants to see what you are about to walk into, not the sky. This is the
+// change that makes the device's aim match its purpose.
+//
+// The two apertures on the VL53L0X - emitter and receiver - must BOTH sit
+// inside this opening, and nothing transparent may cover it. A window
+// over the sensor reflects the emitter straight back into the receiver
+// and it reads a permanent obstacle a few centimetres away.
+sensor_window_dia = 6;   // wider than the chip's 4.4mm so the 25 degree
+                         // field of view isn't clipped by a setback
+sensor_window_z   = 38;  // PLACEHOLDER - height of the sensor's centre
+                         // above the inside floor, set once mounted
 
 // ============================================================
 // Derived / design parameters -- reasonable defaults, less
@@ -213,12 +242,22 @@ internal_height = measured_bundle_height > 0
 // merge into a single opening - a silent failure, since it still rendered
 // as valid geometry. Taking the max of the two requirements makes the pod
 // grow instead.
+// Direct outer-size override. Set these when you've decided the box's
+// external dimensions rather than deriving them from what's inside -
+// which is what happens once you've sketched a box and want it built to
+// that size. 0 = derive as before.
+box_outer_length = 67;
+box_outer_width  = 30;
+box_outer_height = 50;
+
 outer_length_from_parts = internal_length + wall_thickness * 2;
 outer_length_for_straps = strap_slot_inset * 2 + strap_slot_width * 2 + strap_web;
-outer_length = max(outer_length_from_parts, outer_length_for_straps);
+outer_length = box_outer_length > 0
+    ? box_outer_length
+    : max(outer_length_from_parts, outer_length_for_straps);
 
-outer_width  = internal_width + wall_thickness * 2;
-outer_height = internal_height + wall_thickness + lid_lip_height;
+outer_width  = box_outer_width  > 0 ? box_outer_width  : internal_width + wall_thickness * 2;
+outer_height = box_outer_height > 0 ? box_outer_height : internal_height + wall_thickness + lid_lip_height;
 
 assert(outer_length >= outer_length_for_straps,
        "Pod too short for two strap tunnels - they would merge into one slot.");
@@ -239,31 +278,50 @@ assert(outer_length >= outer_length_for_straps,
 // Must stay BELOW the outer_* block: it depends on outer_width, and
 // OpenSCAD evaluates file-scope assignments in order, so referencing that
 // earlier silently yields undef and the slot never gets cut.
-switch_slot_length = switch_actuator_length + switch_travel + fit_clearance * 2;
-switch_slot_width  = switch_actuator_width + fit_clearance * 2;
+switch_slot_length = switch_actuator_length + switch_travel + switch_clearance * 2;
+switch_slot_width  = switch_actuator_width + switch_clearance * 2;
 switch_slot_y      = (outer_width - switch_slot_length) / 2;  // centred across the end face
-switch_slot_z      = wall_thickness + fit_clearance + switch_body_height / 2;
+switch_slot_z      = 8;  // PLACEHOLDER - height of the actuator's centre
+                         // above the inside floor, set once mounted
 
 assert(switch_slot_length + wall_thickness * 2 <= outer_width,
        "Switch actuator slot is wider than the pod's end face.");
 assert(switch_slot_z + switch_slot_width / 2 <= outer_height - lid_lip_height,
        "Switch slot runs past the top of the base and into the lid seam.");
 
-// USB openings, both in the -X end wall (opposite the switch), side by
-// side across Y. Charging port toward one side, data port toward the
-// other, with a web of material between them so the wall keeps some
-// stiffness rather than becoming one long slot.
+// USB openings moved to the +Y LONG SIDE. Both 30mm end faces are now
+// spoken for - sensor at the front, switch at the back - so the ports go
+// on a flank. They sit at different heights because the boards they
+// belong to are at different levels in the stack.
 usb_charge_w = usb_charge_width + usb_clearance;
 usb_charge_h = usb_charge_height + usb_clearance;
 usb_data_w   = usb_data_width + usb_clearance;
 usb_data_h   = usb_data_height + usb_clearance;
-usb_gap      = 4;  // material left between the two openings
 
-usb_total_w  = usb_charge_w + usb_gap + usb_data_w;
-usb_start_y  = (outer_width - usb_total_w) / 2;
+// Placed in the solid web BETWEEN the two strap tunnels, which bore
+// straight through this wall. Landing a port inside a tunnel would cut
+// nothing - the same mistake the switch slot made before it moved to an
+// end face.
+//
+// Side by side they don't fit: the two openings need about 20mm of web
+// and there is only 16mm. They are stacked VERTICALLY instead, both
+// centred on the same span of X. That works precisely because the two
+// boards sit at different heights in the stack, so the openings never
+// meet - and it is a reminder that usb_charge_z and usb_data_z must stay
+// far enough apart for that to hold.
+strap_web_start = strap_slot_inset + strap_slot_width;
+strap_web_end   = outer_length - strap_slot_inset - strap_slot_width;
+usb_web_centre  = (strap_web_start + strap_web_end) / 2;
 
-assert(usb_total_w + wall_thickness * 2 <= outer_width,
-       "Both USB openings don't fit across the end wall - widen the pod or stack them.");
+usb_charge_x = usb_web_centre - usb_charge_w / 2;
+usb_data_x   = usb_web_centre - usb_data_w / 2;
+
+assert(usb_charge_x >= strap_web_start && usb_charge_x + usb_charge_w <= strap_web_end,
+       "Charging port overruns a strap tunnel - widen the web between tunnels.");
+assert(usb_data_x >= strap_web_start && usb_data_x + usb_data_w <= strap_web_end,
+       "Data port overruns a strap tunnel - widen the web between tunnels.");
+assert(abs(usb_charge_z - usb_data_z) > (usb_charge_h + usb_data_h) / 2,
+       "The two USB openings overlap vertically - separate usb_charge_z and usb_data_z.");
 
 $fn = 48;
 
@@ -304,16 +362,24 @@ module switch_slot() {
 }
 
 module usb_ports() {
-    // Both openings pierce the -X end wall. Deliberately plain
+    // Both openings pierce the +Y long side wall. Deliberately plain
     // rectangles: no recess or funnel, because either would need the
-    // connector's exact setback from the board edge, which isn't known
+    // connector's exact setback from its board edge, which isn't known
     // until the boards are positioned. Slightly oversize instead - a plug
     // that goes in easily beats a neat hole that doesn't reach.
-    translate([-1, usb_start_y, usb_charge_z - usb_charge_h / 2])
-        cube([wall_thickness + 2, usb_charge_w, usb_charge_h]);
+    translate([usb_charge_x, outer_width - wall_thickness - 1, usb_charge_z - usb_charge_h / 2])
+        cube([usb_charge_w, wall_thickness + 2, usb_charge_h]);
 
-    translate([-1, usb_start_y + usb_charge_w + usb_gap, usb_data_z - usb_data_h / 2])
-        cube([wall_thickness + 2, usb_data_w, usb_data_h]);
+    translate([usb_data_x, outer_width - wall_thickness - 1, usb_data_z - usb_data_h / 2])
+        cube([usb_data_w, wall_thickness + 2, usb_data_h]);
+}
+
+module sensor_window() {
+    // Bored through the -X FRONT wall, along X, so the sensor looks in
+    // the direction of travel. Centred across the width.
+    translate([-1, outer_width / 2, sensor_window_z])
+        rotate([0, 90, 0])
+            cylinder(d = sensor_window_dia, h = wall_thickness + 2);
 }
 
 module base() {
@@ -329,29 +395,26 @@ module base() {
         wristband_slots();
         switch_slot();
         usb_ports();
+        sensor_window();
     }
 }
 
 module lid() {
-    difference() {
-        union() {
-            rounded_box([outer_length, outer_width, wall_thickness], corner_radius);
+    // Plain cover now - the sensor window moved to the front wall of the
+    // base, so nothing pierces the lid. It lifts off the TOP, which is the
+    // face away from the arm; a seam on the underside would press against
+    // the wrist all day.
+    union() {
+        rounded_box([outer_length, outer_width, wall_thickness], corner_radius);
 
-            // Inner lip that plugs into the base for a friction-fit close.
-            translate([wall_thickness + lid_lip_clearance, wall_thickness + lid_lip_clearance, -lid_lip_height])
-                rounded_box(
-                    [outer_length - (wall_thickness + lid_lip_clearance) * 2,
-                     outer_width - (wall_thickness + lid_lip_clearance) * 2,
-                     lid_lip_height],
-                    max(corner_radius - wall_thickness, 0.5)
-                );
-        }
-
-        // Sensor window, centered over where the ToF sensor sits near one
-        // end (X) - see README.md's wiring diagram for which end faces
-        // forward when worn.
-        translate([strap_slot_inset + tof_length / 2, outer_width / 2, -1])
-            cylinder(d = tof_window_dia, h = wall_thickness + 2);
+        // Inner lip that plugs into the base for a friction-fit close.
+        translate([wall_thickness + lid_lip_clearance, wall_thickness + lid_lip_clearance, -lid_lip_height])
+            rounded_box(
+                [outer_length - (wall_thickness + lid_lip_clearance) * 2,
+                 outer_width - (wall_thickness + lid_lip_clearance) * 2,
+                 lid_lip_height],
+                max(corner_radius - wall_thickness, 0.5)
+            );
     }
 }
 
