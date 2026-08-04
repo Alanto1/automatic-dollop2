@@ -88,12 +88,16 @@ Tools:
 - [ ] Access to a 3D printer (own, school, library, print service)
 
 The model is built to the sketched box: **67mm long (along the arm) × 30mm
-wide × 50mm tall**, on a 7.2mm strap plinth underneath. Sensor window in
+wide × 52mm tall**, on a 7.2mm strap plinth underneath. Sensor window in
 the front wall, switch slot in the back wall, both USB ports in the lid,
-one 20mm strap tunnel through the plinth. The base prints 57.2mm tall and
-the assembled pod is 59.4mm.
+one 20mm strap tunnel through the plinth. The base prints 59.2mm tall and
+the assembled pod is 61.4mm.
 
-Steps:
+Everything inside is located by a printed feature and held by glue: board
+pockets hang from the lid, the sensor gets a frame on the front wall, the
+motor gets a ring on the floor.
+
+Measure before printing:
 - [ ] **Print `part="switch_test_coupon"` first.** Two minutes, a few
       grams, and it settles `switch_actuator_length`/`_width` - the
       largest remaining guess in the file - without measuring a 2mm nub
@@ -102,18 +106,39 @@ Steps:
       what lets a plug reach the receptacle through 5.2mm of lid; guess it
       too small and both ports are unusable, which won't be obvious until
       the print is in your hand
-- [ ] Decide how the Nano hangs. The cavity is 44.8mm and the Nano's long
-      edge is 45mm - 0.2mm short - so either hang it 18mm-edge-down, or
-      raise `box_outer_height` to 51
+- [ ] **Measure the TP4056 board** - `tp4056_length/width/stack_height`
+      are placeholders. The numbers taken on 2026-08-02 were its
+      connector, not the board
+- [ ] **Measure where the VL53L0X's lens sits relative to the centre of
+      its breakout**, and set `tof_lens_offset_y/z`. Both default to 0,
+      i.e. "chip is centred", and on a GY-53 it isn't. Get this wrong and
+      the sensor looks at the inside of the wall and reads a permanent
+      obstacle - the device would work, it would just always buzz
+- [ ] Measure the Nano's stack height with its headers soldered on - it
+      sets how wide the Nano's pocket is
 - [ ] Update the "[MEASURE YOUR PARTS]" block at the top of
-      `enclosure/enclosure.scad` with those numbers
+      `enclosure/enclosure.scad` with all of the above
 - [ ] Re-render in OpenSCAD (F5 preview, then F6 for a full render) and
       re-check `part = "all"` looks sane before exporting STLs
-- [ ] Print `wristband_back` + `lid` next; treat `belt_clip_back` as a
-      separate print-and-test iteration, not a guaranteed-good part
-- [ ] Print the base open-side-up, with supports (or accept some droop):
-      the box floor bridges 21.5mm over the strap tunnel
-- [ ] Dry-fit all components before gluing anything down
+
+Printing:
+- [ ] Print `lid` **plate-down on the bed** - the pockets and the lip both
+      stand up off it, so nothing overhangs and no supports are needed
+- [ ] Print the base **open-side-up, with supports** (or accept some
+      droop): the box floor bridges 21.5mm over the strap tunnel
+- [ ] Treat `belt_clip_back` as a separate print-and-test iteration, not a
+      guaranteed-good part
+
+Assembly:
+- [ ] Dry-fit every board in its pocket before any glue
+- [ ] **Glue the boards with the lid upside down on the bench.** The
+      pockets become open-topped cups, each board drops in connector-end
+      first, and gravity holds it while the glue sets
+- [ ] Check both plugs actually seat in the lid's holes *before* gluing
+      the second board - if the counterbore is too shallow you want to
+      find out with one board in, not three
+- [ ] Sensor into its cradle last, pushed flat against the front wall
+- [ ] Lower the lid onto the base with the wires tucked in
 
 ## Weeks 4-6 — Real feedback session
 

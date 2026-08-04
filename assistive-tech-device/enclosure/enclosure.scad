@@ -30,10 +30,10 @@
 //   lid top   : both USB openings, pointing straight up
 //
 // HEIGHTS, since three different numbers all get called "the height":
-//   box_outer_height  50    the open-topped box that holds the electronics
-//   base_height       57.2  what actually prints, box + strap plinth
-//   assembled         59.4  base_height + the lid's plate on top
-//   cavity_height     44.8  what a board hanging from the lid can use
+//   box_outer_height  52    the open-topped box that holds the electronics
+//   base_height       59.2  what actually prints, box + strap plinth
+//   assembled         61.4  base_height + the lid's plate on top
+//   cavity_height     46.8  what a board hanging from the lid can use
 //
 // The strap plinth is EXTRA height under the box, not a slice taken out
 // of it. An earlier revision did it the other way - tunnel through the
@@ -71,14 +71,34 @@ part = "all";  // "base" | "lid" | "wristband_back" | "belt_clip_back" | "all"
 // BUILD_CHECKLIST.md / PURCHASE_LIST.md for sourcing calipers.
 // ============================================================
 
-nano_length       = 45;  // Arduino Nano clone, long edge
+// Every board hangs from the lid as a VERTICAL PLATE, long edge down, so
+// "length" below is how far it hangs and "stack height" is how thick it
+// is once headers and components are counted. Both matter now: length
+// sets how deep the cavity has to be, stack height sets how much of the
+// pod's 67mm the pockets eat.
+nano_length       = 45;  // Arduino Nano clone, long edge (hangs vertically)
 nano_width        = 18;  // short edge
-nano_stack_height = 8;   // PCB + header pins + USB-C connector, stacked
+nano_stack_height = 8;   // PCB + soldered header pins + components
+
+// TP4056 charge module. Hangs USB-C end UP, like the Nano.
+// PLACEHOLDER - the numbers measured on 2026-08-02 were the connector,
+// not the board.
+tp4056_length       = 26;
+tp4056_width        = 17;
+tp4056_stack_height = 5;
 
 tof_length       = 14;  // VL53L0X breakout board (e.g. GY-53) - see
 tof_width        = 8;   // PURCHASE_LIST.md, no walk-in Almaty store had a
 tof_stack_height = 4;   // VL53L1X in stock as of this writing
 tof_window_dia   = 5;   // clear aperture needed in front of the sensor lens
+
+// Where the sensor's LENS sits relative to the CENTRE of its breakout
+// board, so the cradle can be shifted to put the lens on the window.
+// Zero means centred, which is the assumption baked in until someone
+// looks at the real board - on a GY-53 the chip sits well off centre, and
+// a cradle that ignores that aims the sensor at the inside of the wall.
+tof_lens_offset_y = 0;   // + moves the lens toward +Y
+tof_lens_offset_z = 0;   // + moves the lens toward +Z
 
 motor_dia       = 10;  // vibration motor (10x3mm "pancake" type)
 motor_thickness = 3;
@@ -210,6 +230,40 @@ corner_radius     = 2.5;   // cosmetic, and softens stress concentration/print a
 strap_channel_width  = strap_width + 1.5;    // 21.5 for a 20mm strap
 strap_channel_height = strap_thickness + 2;  // 5 for a 3mm strap
 
+// ------------------------------------------------------------
+// Internal mounting - pockets for the boards, a cradle for the
+// sensor, a seat for the motor.
+// ------------------------------------------------------------
+//
+// Every one of these is a LOCATOR, not a clamp. Nothing here grips a part
+// tightly enough to hold it on its own, and none of it is a press fit:
+// the parts are glued, and what these features buy is that the glue joint
+// is made against a flat surface in a known position instead of against
+// whatever the part happened to be resting on. That matters most for the
+// two boards whose connectors have to line up with a hole in the lid, and
+// for the sensor, which has to look straight down its window.
+//
+// Board pockets HANG FROM THE LID. Assembly is: turn the lid upside down
+// on the bench, drop each board into its pocket connector-end first, glue,
+// then lower the lid onto the base with the wires tucked in. Upside down
+// the pockets are open-topped cups and gravity does the holding while the
+// glue sets - which is the whole reason they hang rather than standing up
+// from the base floor.
+rib_thickness    = 1.6;   // pocket/cradle wall - 4 perimeters at 0.4mm
+pocket_clearance = 0.6;   // slop around each board inside its pocket
+
+// How much of a board's length the pocket wraps. Less than all of it on
+// purpose: the exposed lower end is where the wires are, and a pocket
+// that ran the full length would bury the solder joints.
+pocket_grip = 0.55;
+// The battery is the exception - a soft pouch, so it gets wrapped almost
+// end to end rather than left to dangle from a short collar.
+battery_pocket_grip = 0.9;
+
+motor_seat_height = 2;    // raised ring the pancake motor drops into
+motor_wire_notch  = 4;    // gap in that ring for the motor's leads
+tof_wire_notch    = 6;    // gap in the sensor cradle's lower rail
+
 belt_clip_arm_length = 35;
 belt_clip_gap        = 6;    // fits a typical belt/waistband strap
 belt_clip_thickness  = 2.5;
@@ -285,7 +339,15 @@ internal_height = measured_bundle_height > 0
 // the printed base comes out taller than this number. See base_height.
 box_outer_length = 67;
 box_outer_width  = 30;
-box_outer_height = 50;
+// 52, not the sketched 50, and this is a forced change rather than a
+// preference. The Nano hangs from the lid on its long edge - the only
+// orientation that puts its mini-USB where the lid's hole is - so the
+// cavity has to be at least 45mm deep. At 50 the cavity came out 44.8mm:
+// short by 0.2mm, which is the kind of miss that only shows up when the
+// print is in your hand. 52 gives 46.8mm and 1.8mm of slack. The assert
+// on cavity_height below enforces it, so dropping back to 50 fails loudly
+// instead of quietly producing a box the Nano won't go into.
+box_outer_height = 52;
 
 outer_length = box_outer_length > 0
     ? box_outer_length
@@ -300,9 +362,9 @@ box_height   = box_outer_height > 0 ? box_outer_height : internal_height + wall_
 //
 // It is a PLINTH UNDER THE BOX, not a tunnel through the box's floor.
 // That is the whole point: it costs the interior nothing. The earlier
-// revision put the tunnel inside the 50mm and the cavity paid for it,
+// revision put the tunnel inside the box and the cavity paid for it,
 // dropping usable height to 37.6mm; this way the cavity keeps its full
-// 44.8mm and the pod just stands ~7mm further off the wrist.
+// 46.8mm and the pod just stands ~7mm further off the wrist.
 //
 // Full footprint rather than a pedestal under the middle only. A pedestal
 // would save a little material and shorten the contact patch, but the
@@ -344,9 +406,9 @@ switch_slot_y      = (outer_width - switch_slot_length) / 2;  // centred across 
 //   0    -> 2.2   bottom skin, the face against the wrist
 //   2.2  -> 7.2   strap tunnel (5mm clear)         } the plinth
 //   7.2  -> 9.4   the box's own floor
-//   9.4  -> 54.2  cavity, 44.8mm of usable interior
-//   54.2 -> 57.2  seat the lid's lip plugs into
-//   57.2 -> 59.4  lid plate, once closed
+//   9.4  -> 56.2  cavity, 46.8mm of usable interior
+//   56.2 -> 59.2  seat the lid's lip plugs into
+//   59.2 -> 61.4  lid plate, once closed
 //
 // The tunnel's roof and the box's floor are separate 2.2mm layers rather
 // than one shared skin, so neither is doing two jobs. The floor bridges
@@ -357,14 +419,16 @@ cavity_floor  = box_z0 + wall_thickness;
 lid_underside = base_height - lid_lip_height;
 cavity_mid_z  = (cavity_floor + lid_underside) / 2;
 
-// Height available to a board hanging from the lid's underside. Worth
-// checking against a real board: an Arduino Nano is 45mm on its long
-// edge, and 44.8mm is 0.2mm short of that - so the Nano has to hang
-// 18mm-edge-down, or box_outer_height has to go up by a millimetre.
+// Height available to a board hanging from the lid's underside. The
+// longest board sets it, and that is the Nano at 45mm - it has to hang on
+// its long edge, because that is the only orientation that puts its
+// mini-USB at the top where the lid's hole is.
 cavity_height = lid_underside - cavity_floor;
 
-assert(cavity_height > 10,
-       "Cavity is too shallow - raise box_outer_height.");
+assert(cavity_height >= nano_length + 1,
+       "Cavity is too shallow for the Nano to hang from the lid - raise box_outer_height.");
+assert(cavity_height >= tp4056_length + 1 && cavity_height >= battery_length + 1,
+       "Cavity is too shallow for the TP4056 or the battery to hang from the lid.");
 
 // Switch and sensor sit mid-height. Neither is forced to a particular
 // height - the switch just needs a finger, the sensor an unobstructed
@@ -381,33 +445,73 @@ assert(switch_slot_z - switch_slot_width / 2 >= cavity_floor,
 assert(sensor_window_z - sensor_window_dia / 2 >= cavity_floor,
        "Sensor window runs below the cavity floor and into the strap compartment.");
 
-// USB openings are in the LID, pointing straight up (+Z), because the
-// boards hang vertically from the lid with their connector ends at the
-// top. So these are X-Y positions in the lid plane, not X-Z positions on
-// a wall - the receptacle's "width" runs along X, its "height" along Y.
-usb_charge_w = usb_charge_width + usb_clearance;
-usb_charge_d = usb_charge_height + usb_clearance;   // along Y now
-usb_data_w   = usb_data_width + usb_clearance;
-usb_data_d   = usb_data_height + usb_clearance;
-
-// Side by side along the lid's length, centred as a pair.
+// ------------------------------------------------------------
+// Internal layout along X.
+// ------------------------------------------------------------
 //
-// The gap is measured between the MOUTHS, but what has to stay solid is
-// the material between the COUNTERBORES, which are usb_body_margin wider
-// on each facing side. A flat 4mm gap left exactly 0mm of wall between
-// the two pockets - they abutted at a plane, CGAL still called the result
-// simple, and the lid would have printed with the two pockets merged into
-// one trench. Derive it instead so the two can't touch.
-usb_gap      = usb_body_margin * 2 + 2;
-usb_total_w  = usb_charge_w + usb_gap + usb_data_w;
-usb_charge_x = (outer_length - usb_total_w) / 2;
-usb_data_x   = usb_charge_x + usb_charge_w + usb_gap;
+// The three boards hang as vertical plates FACING ALONG X, stacked front
+// to back down the pod's length like files in a drawer. That is forced,
+// not chosen: stacked the other way (facing along Y) the three pockets
+// need 29.4mm across a cavity only 25.6mm wide, and they don't fit. Along
+// X there is 62.6mm to work with and they use less than half of it.
+//
+// Order, front to back:
+//   [sensor zone] Nano | battery | TP4056 [switch zone]
+//
+// The Nano goes nearest the sensor so the I2C run is short - I2C is the
+// bus that already cost this project a multi-hour debugging session, and
+// long unshielded SDA/SCL wires are the classic way to make it flaky. The
+// TP4056 goes nearest the switch it feeds, with the battery beside it.
+//
+// A consequence worth stating plainly: each board's own width now runs
+// along Y, so the USB receptacles are WIDE ALONG Y AND NARROW ALONG X -
+// the opposite of the previous revision, which had them the other way
+// round and would have cut two holes the plugs could not enter.
+// A pocket's outer footprint: the board, its slop, and a wall each side.
+// Same formula both ways round - X follows the board's thickness, Y its
+// width - so they share one function.
+function pocket_outer(d) = d + pocket_clearance + rib_thickness * 2;
 
-// Both centred across the width, which assumes the two boards hang in the
-// SAME plane. If they end up hanging as parallel plates at different Y
-// depths instead, split these two values by the board-to-board pitch -
-// that is the one edit this layout is likely to need, so it's a separate
-// parameter per port rather than one shared centre line.
+nano_pocket_x_size    = nano_stack_height   + pocket_clearance + rib_thickness * 2;
+battery_pocket_x_size = battery_thickness   + pocket_clearance + rib_thickness * 2;
+tp4056_pocket_x_size  = tp4056_stack_height + pocket_clearance + rib_thickness * 2;
+
+// Front of the cavity is reserved for the sensor cradle and, below it,
+// the motor seat. The motor is the wider of the two, so it sets the depth.
+motor_seat_dia    = motor_dia + pocket_clearance + rib_thickness * 2;
+sensor_zone_depth = max(tof_stack_height + 8, motor_seat_dia + 2);
+
+// Back of the cavity is reserved for the switch body sitting against the
+// inside of the end wall, plus room for whatever holds it there.
+switch_zone_depth = switch_body_width + 4;
+
+boards_x_start = wall_thickness + sensor_zone_depth;
+boards_x_end   = outer_length - wall_thickness - switch_zone_depth;
+pockets_total  = nano_pocket_x_size + battery_pocket_x_size + tp4056_pocket_x_size;
+pocket_gap     = (boards_x_end - boards_x_start - pockets_total) / 2;
+
+assert(pocket_gap >= 0,
+       "The three board pockets don't fit between the sensor and switch zones.");
+
+nano_pocket_x    = boards_x_start;
+battery_pocket_x = nano_pocket_x + nano_pocket_x_size + pocket_gap;
+tp4056_pocket_x  = battery_pocket_x + battery_pocket_x_size + pocket_gap;
+
+// USB openings are in the LID, pointing straight up (+Z), and each one is
+// CENTRED ON THE POCKET THAT HOLDS ITS BOARD. Deriving them from the
+// pocket rather than placing them independently is the point: a hole that
+// drifts a couple of millimetres off its board is a hole the plug fouls
+// on, and there is no way to see that in a render.
+usb_charge_w = usb_charge_height + usb_clearance;  // Type-C, narrow along X
+usb_charge_d = usb_charge_width  + usb_clearance;  // wide along Y
+usb_data_w   = usb_data_height   + usb_clearance;  // mini-USB, narrow along X
+usb_data_d   = usb_data_width    + usb_clearance;  // wide along Y
+
+usb_charge_x = tp4056_pocket_x + rib_thickness
+               + (tp4056_stack_height + pocket_clearance - usb_charge_w) / 2;
+usb_data_x   = nano_pocket_x + rib_thickness
+               + (nano_stack_height + pocket_clearance - usb_data_w) / 2;
+
 usb_charge_y = (outer_width - usb_charge_d) / 2;
 usb_data_y   = (outer_width - usb_data_d) / 2;
 
@@ -417,10 +521,24 @@ usb_data_y   = (outer_width - usb_data_d) / 2;
 // lid's outer rectangle.
 lip_inset = wall_thickness + lid_lip_clearance;
 
-assert(usb_gap > usb_body_margin * 2,
-       "USB counterbores touch or overlap - the two pockets would merge into one trench.");
-assert(usb_charge_x - usb_body_margin >= lip_inset
-       && usb_data_x + usb_data_w + usb_body_margin <= outer_length - lip_inset,
+// The counterbore also has to stay INSIDE its pocket's footprint. The
+// pocket walls are glued to the lip's underside; a counterbore wider than
+// the pocket eats the material those walls hang from, and the pocket ends
+// up attached to nothing. With usb_body_margin at 2mm both clear by less
+// than a millimetre, so this is checked rather than assumed.
+assert(usb_data_x - usb_body_margin >= nano_pocket_x
+       && usb_data_x + usb_data_w + usb_body_margin
+          <= nano_pocket_x + nano_pocket_x_size,
+       "The data port's counterbore undercuts the Nano pocket's walls - reduce usb_body_margin.");
+assert(usb_charge_x - usb_body_margin >= tp4056_pocket_x
+       && usb_charge_x + usb_charge_w + usb_body_margin
+          <= tp4056_pocket_x + tp4056_pocket_x_size,
+       "The charging port's counterbore undercuts the TP4056 pocket's walls - reduce usb_body_margin.");
+assert(usb_data_x + usb_data_w + usb_body_margin
+       < usb_charge_x - usb_body_margin,
+       "The two USB counterbores overlap - they would merge into one trench.");
+assert(usb_data_x - usb_body_margin >= lip_inset
+       && usb_charge_x + usb_charge_w + usb_body_margin <= outer_length - lip_inset,
        "A USB counterbore runs off the end of the lid's lip.");
 assert(usb_charge_y - usb_body_margin >= lip_inset
        && usb_charge_y + usb_charge_d + usb_body_margin <= outer_width - lip_inset,
@@ -428,6 +546,14 @@ assert(usb_charge_y - usb_body_margin >= lip_inset
 assert(usb_data_y - usb_body_margin >= lip_inset
        && usb_data_y + usb_data_d + usb_body_margin <= outer_width - lip_inset,
        "The data port's counterbore runs off the side of the lid's lip.");
+
+// Every pocket is centred across the pod's width, so all three boards sit
+// on one centreline and the wire runs between them are as short as the
+// layout allows.
+assert(pocket_outer(nano_width) <= outer_width - wall_thickness * 2
+       && pocket_outer(tp4056_width) <= outer_width - wall_thickness * 2
+       && pocket_outer(battery_width) <= outer_width - wall_thickness * 2,
+       "A board pocket is wider than the cavity - the pod needs to be wider.");
 $fn = 48;
 
 module rounded_box(size, radius) {
@@ -470,6 +596,118 @@ module switch_slot() {
                switch_slot_y,
                switch_slot_z - switch_slot_width / 2])
         cube([wall_thickness + 2, switch_slot_length, switch_slot_width]);
+}
+
+module board_pocket(x0, w, t, depth, open_back = false) {
+    // A four-walled collar for one board, hanging DOWN from z = 0. The
+    // caller puts z = 0 at the lid's underside.
+    //
+    // x0 is the pocket's -X outer face; it is centred across Y. The board
+    // stands on edge inside it: `t` (its thickness) runs along X, `w` (its
+    // width) along Y, and it hangs `depth` deep - less than the board's
+    // full length, so the lower end with all the solder joints stays in
+    // the open where you can reach it.
+    //
+    // Open at the bottom, obviously, and optionally open on the -X face
+    // too. That is for the battery: a LiPo pouch swells as it ages, and a
+    // rigid box with no room to give is a bad place to discover that. The
+    // open face also lets you see the cell, which is the only way to
+    // notice swelling before it becomes a problem.
+    inner_x = t + pocket_clearance;
+    inner_y = w + pocket_clearance;
+    outer_x = inner_x + rib_thickness * 2;
+    outer_y = inner_y + rib_thickness * 2;
+    y0 = (outer_width - outer_y) / 2;
+
+    difference() {
+        translate([x0, y0, -depth]) cube([outer_x, outer_y, depth]);
+
+        translate([x0 + rib_thickness, y0 + rib_thickness, -depth - 1])
+            cube([inner_x, inner_y, depth + 1]);
+
+        if (open_back)
+            translate([x0 - 1, y0 + rib_thickness, -depth - 1])
+                cube([rib_thickness + 1, inner_y, depth + 1]);
+    }
+}
+
+module board_pockets() {
+    // All three, hanging from the lid's underside. Front to back:
+    // Nano, battery, TP4056 - see the layout block above for why.
+    translate([0, 0, -lid_lip_height]) {
+        board_pocket(nano_pocket_x, nano_width, nano_stack_height,
+                     nano_length * pocket_grip);
+
+        board_pocket(battery_pocket_x, battery_width, battery_thickness,
+                     battery_length * battery_pocket_grip,
+                     open_back = true);
+
+        board_pocket(tp4056_pocket_x, tp4056_width, tp4056_stack_height,
+                     tp4056_length * pocket_grip);
+    }
+}
+
+module sensor_cradle() {
+    // A picture-frame standing proud of the INSIDE of the -X front wall,
+    // centred on the sensor window. Push the breakout in along -X until
+    // it is flat against the wall, then glue it.
+    //
+    // The frame locates the board in Y and Z; the glue holds it in X.
+    // That division matters, because the alignment that actually has to
+    // be right is the lens sitting on the window - get that wrong by 3mm
+    // and the sensor spends its life staring at the inside of the wall,
+    // reading a permanent obstacle. Nothing about a working device would
+    // look wrong; it would just always buzz.
+    //
+    // If the chip is not centred on its breakout - and on a GY-53 it is
+    // not - set tof_lens_offset_y/z rather than moving anything here.
+    cy = outer_width / 2 - tof_lens_offset_y;
+    cz = sensor_window_z - tof_lens_offset_z;
+    iw = tof_length + pocket_clearance;   // across, along Y
+    ih = tof_width + pocket_clearance;    // up, along Z
+
+    difference() {
+        translate([wall_thickness, cy - iw / 2 - rib_thickness, cz - ih / 2 - rib_thickness])
+            cube([tof_stack_height + 1.5, iw + rib_thickness * 2, ih + rib_thickness * 2]);
+
+        translate([wall_thickness - 1, cy - iw / 2, cz - ih / 2])
+            cube([tof_stack_height + 3.5, iw, ih]);
+
+        // Notch in the lower rail so the sensor's wires drop straight out
+        // instead of being pinched against the frame.
+        translate([wall_thickness - 1, cy - tof_wire_notch / 2,
+                   cz - ih / 2 - rib_thickness - 1])
+            cube([tof_stack_height + 3.5, tof_wire_notch, rib_thickness + 2]);
+    }
+}
+
+module motor_seat() {
+    // A raised ring on the cavity floor for the 10x3mm pancake motor,
+    // in the front zone below the sensor.
+    //
+    // On the FLOOR rather than a side wall, and that is the one placement
+    // choice here that affects how the device feels to use: the floor is
+    // the surface nearest the skin, with solid plinth beneath it at this
+    // end of the pod, so the buzz couples into the wrist instead of
+    // rattling around inside the shell. A side wall would have been easier
+    // to glue to and noticeably weaker to feel.
+    //
+    // The ring only stops it sliding while the glue sets - it is 2mm tall
+    // against a 3mm motor, so it is a locator, not a socket.
+    seat_x = wall_thickness + sensor_zone_depth / 2;
+
+    translate([seat_x, outer_width / 2, cavity_floor])
+        difference() {
+            cylinder(d = motor_seat_dia, h = motor_seat_height);
+            translate([0, 0, -1])
+                cylinder(d = motor_dia + pocket_clearance, h = motor_seat_height + 2);
+            // Gap for the motor's two leads, opening toward +X - the
+            // direction the Nano is in. Pointing it the other way would
+            // send the leads at the front wall and back, which is exactly
+            // the kind of detail that only annoys you at assembly time.
+            translate([0, -motor_wire_notch / 2, -1])
+                cube([motor_seat_dia, motor_wire_notch, motor_seat_height + 2]);
+        }
 }
 
 module usb_port_cut(px, py, pw, pd) {
@@ -529,6 +767,13 @@ module pod_shell(with_strap = true) {
         switch_slot();
         sensor_window();
     }
+
+    // Added AFTER the difference, not inside it. Both of these live inside
+    // the cavity, so unioning them before the cavity is cut would hand
+    // them straight back to the same subtraction that carves it out - they
+    // would vanish, and the render would look perfectly fine.
+    sensor_cradle();
+    motor_seat();
 }
 
 module base() {
@@ -537,9 +782,13 @@ module base() {
 
 module lid() {
     // Lifts off the TOP, which is the face away from the arm; a seam on
-    // the underside would press against the wrist all day. Carries both
-    // USB openings, because all three boards hang from it and the two
-    // with connectors hang connector-end up.
+    // the underside would press against the wrist all day.
+    //
+    // This part carries the whole electronics stack: both USB openings and
+    // all three board pockets. Print it plate-down on the bed and the
+    // pockets and lip both stand up off it, so nothing overhangs and no
+    // supports are needed - the one orientation that makes this printable
+    // in a single piece.
     difference() {
         union() {
             rounded_box([outer_length, outer_width, wall_thickness], corner_radius);
@@ -552,6 +801,8 @@ module lid() {
                      lid_lip_height],
                     max(corner_radius - wall_thickness, 0.5)
                 );
+
+            board_pockets();
         }
 
         usb_ports();

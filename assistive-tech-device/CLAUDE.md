@@ -5,7 +5,7 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
-## Session log — 2026-08-03: enclosure built to the builder's sketch
+## Session log — 2026-08-03/04: enclosure built to the sketch, then given internal mounting
 
 Twelfth pass. `enclosure.scad` was rebuilt around a hand-drawn sketch and
 a set of real caliper measurements, replacing most of the guessed layout.
@@ -17,31 +17,40 @@ looks forward. Sensor on that front face, switch on the back one.
 
 | Feature | Where | Verified |
 | --- | --- | --- |
-| Box | 67 × 30 × 50, on a 7.2mm plinth | base prints 67×30×**57.2** |
-| Sensor window, ⌀6 | −X front wall, z 28.8–34.8 | ✅ |
-| Switch slot, 6.5 × 3 | +X back wall, z 30.3–33.3 | ✅ |
-| USB-C, 9.36 × 4.64 | lid, x 21.82–31.18 | ✅ |
-| mini-USB, 8.0 × 6.83 | lid, x 37.18–45.18 | ✅ |
+| Box | 67 × 30 × 52, on a 7.2mm plinth | base prints 67×30×**59.2** |
+| Sensor window, ⌀6 | −X front wall, z 29.8–35.8 | ✅ |
+| Switch slot, 6.5 × 3 | +X back wall, z 31.3–34.3 | ✅ |
+| Sensor cradle | front wall, x 2.2–7.7, z 26.9–38.7 | ✅ |
+| Motor seat ring, ⌀13.8 | floor, centre x 10.1, z 9.4–11.4 | ✅ |
+| Nano pocket | lid, x 18.0–29.8, hangs 24.75 | ✅ |
+| Battery pocket (1 face open) | lid, x 35.08–43.88, hangs 27 | ✅ |
+| TP4056 pocket | lid, x 49.15–57.95, hangs 14.3 | ✅ |
+| mini-USB, 6.83 × 8.0 | lid, x 20.48–27.32 (on the Nano pocket) | ✅ |
+| USB-C, 4.64 × 9.36 | lid, x 51.23–55.87 (on the TP4056 pocket) | ✅ |
 | Strap tunnel, 21.5 wide | plinth, x 22.75–44.25, z 2.2–7.2 | ✅ |
 
 **The strap compartment is a plinth UNDER the box, not a tunnel through
 the box's floor.** This was corrected mid-pass: the first version bored
 the tunnel through the floor and the cavity paid ~7mm for it, dropping
 usable interior to 37.6mm. The builder's actual intent was extra height
-below the 50mm, so the interior keeps its full 44.8mm and the pod stands
+below the box, so the interior keeps its full height and the pod stands
 further off the wrist instead.
 
 Three numbers all get called "the height" — worth keeping straight:
 
 | | mm |
 | --- | --- |
-| `box_outer_height` — the open-topped box alone | 50 |
-| `base_height` — what prints, box + plinth | 57.2 |
-| assembled, with the lid plate | 59.4 |
-| `cavity_height` — usable, for a board hanging from the lid | 44.8 |
+| `box_outer_height` — the open-topped box alone | 52 |
+| `base_height` — what prints, box + plinth | 59.2 |
+| assembled, with the lid plate | 61.4 |
+| `cavity_height` — usable, for a board hanging from the lid | 46.8 |
 
-**44.8mm is 0.2mm short of an Arduino Nano's 45mm long edge.** Either the
-Nano hangs 18mm-edge-down, or `box_outer_height` goes to 51. Not decided.
+**The box is 52, not the sketched 50, and that was forced.** The Nano has
+to hang on its long edge — the only orientation putting its mini-USB where
+the lid's hole is — so the cavity needs ≥45mm. At 50 it came out 44.8:
+short by 0.2mm, the kind of miss that only surfaces when the print is in
+your hand. An assert on `cavity_height` now enforces it, so going back to
+50 fails loudly.
 
 The plinth is the pod's full 67 × 30 footprint rather than a pedestal
 under the middle. A pedestal would use less material, but the box floor
@@ -56,6 +65,50 @@ so the connector body nests up inside the lid's lip — without that the
 receptacle sits at the bottom of a 5.2mm shaft and no plug reaches it. The
 counterbore is the load-bearing detail of this whole arrangement, and
 `usb_body_margin` (2mm) is a **guess**, not a measurement.
+
+### Internal mounting — pockets, cradle, motor seat
+
+Added 2026-08-04. Everything is a **locator, not a clamp**: nothing is a
+press fit, the parts are glued, and what the features buy is a glue joint
+made against a flat surface in a known position.
+
+- **Board pockets hang from the lid**, four walls each, `rib_thickness`
+  1.6mm. The **battery's has one face left open** — a LiPo pouch swells
+  with age and a rigid box with no give is a bad place to discover that;
+  the open face also lets you see the cell.
+- **Order front→back is Nano · battery · TP4056.** Nano nearest the
+  sensor keeps the I2C run short (I2C already cost this project hours;
+  long unshielded SDA/SCL is the classic way to make it flaky), TP4056
+  nearest the switch it feeds.
+- **Boards face along X**, stacked down the pod's length. Forced, not
+  chosen: facing along Y the three pockets need 29.4mm across a 25.6mm
+  cavity. A knock-on effect — the receptacles are now **wide along Y and
+  narrow along X**, the opposite of the previous revision, which would
+  have cut two holes the plugs couldn't enter.
+- **USB holes are derived from the pockets**, not placed independently. A
+  hole that drifts 2mm off its board is a hole the plug fouls on, and
+  there is no way to see that in a render.
+- **Sensor cradle** is a picture-frame on the inside of the front wall,
+  centred on the window, with a notch in its lower rail for wires.
+  `tof_lens_offset_y/z` exist because on a GY-53 the chip is *not* centred
+  on the breakout — both default to 0 and **need measuring**. Wrong here
+  means the sensor stares at the inside of the wall and reads a permanent
+  obstacle; the device would look fine and just always buzz.
+- **Motor seat** is a ring on the cavity floor, front zone, wire notch
+  facing +X toward the Nano. On the floor rather than a side wall because
+  the floor is nearest the skin with solid plinth beneath it, so the buzz
+  couples into the wrist instead of rattling around the shell.
+
+**Assembly is designed around the lid being upside down on the bench** —
+pockets become open-topped cups, boards drop in connector-end first, and
+gravity holds them while the glue sets. That is the whole reason they hang
+from the lid rather than standing up from the base floor.
+
+One trap worth remembering: `sensor_cradle()` and `motor_seat()` are
+unioned **after** `pod_shell`'s `difference()`, not inside it. Both live
+inside the cavity, so unioning them first would hand them straight to the
+same subtraction that carves the cavity out — they'd vanish, and the
+render would look perfectly fine.
 
 **The two watch-style lug tunnels became one central strap channel**, at
 the builder's request. Worth knowing: this file's own comments had

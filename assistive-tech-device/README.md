@@ -292,32 +292,65 @@ Three numbers all get called "the height", so to be explicit:
 
 | | mm |
 | --- | --- |
-| The box itself (open-topped, holds the electronics) | 50 |
-| What actually prints as the base — box + strap plinth | 57.2 |
-| Assembled, with the lid's plate on top | 59.4 |
-| Usable interior for a board hanging from the lid | 44.8 |
+| The box itself (open-topped, holds the electronics) | 52 |
+| What actually prints as the base — box + strap plinth | 59.2 |
+| Assembled, with the lid's plate on top | 61.4 |
+| Usable interior for a board hanging from the lid | 46.8 |
 
 **The strap compartment is extra height beneath the box, not a slice out
 of it.** An earlier revision ran the tunnel through the box's own floor
 and the cavity paid ~7mm for it; this way the interior keeps its full
-44.8mm and the pod just stands a little further off the wrist.
+height and the pod just stands a little further off the wrist.
 
-All three boards **hang from the lid**, the two with connectors hanging
-connector-end up so their ports come out through the top. Lift the lid and
-the whole electronics stack comes with it, which is what makes the pod
-serviceable instead of a sealed box. The lid's ports are counterbored from
-underneath so a plug can actually reach the receptacle through 5.2mm of
-lid — without that they'd be decorative.
+The box is 52mm rather than the sketched 50 because the Nano has to hang
+on its long edge — the only orientation that puts its mini-USB where the
+lid's hole is — and 50 gave a 44.8mm cavity, 0.2mm short of the Nano's
+45mm. An assert enforces it now, so dropping back to 50 fails loudly
+instead of quietly producing a box the Nano won't go into.
 
-Two caveats worth knowing. The single strap tunnel replaced two
-watch-style lug tunnels at the builder's request: one wrap point lets the
-pod rock about the strap's axis, and the sensor aims wherever the pod
-happens to point. The full-footprint plinth beds the pod down on a wide
-flat face, which helps, but doesn't eliminate it. And at 44.8mm the cavity
-is **0.2mm short** of an Arduino Nano's 45mm long edge, so the Nano has to
-hang 18mm-edge-down — or `box_outer_height` goes up by a millimetre. The
-belt-clip alternative mount remains explicitly unvalidated (needs
-print-and-test iteration on real material and printer).
+### Internal mounting
+
+Everything is located by a printed feature and held by glue. Nothing is a
+press fit; what the features buy is that each glue joint is made against a
+flat surface in a known position.
+
+| Part | Feature |
+| --- | --- |
+| Nano, TP4056 | four-walled pocket hanging from the lid, connector-end up |
+| Battery | same, but **one face left open** — a LiPo pouch swells with age, and a rigid box with no give is a bad place to find that out |
+| VL53L0X | picture-frame cradle on the inside of the front wall, centred on the window |
+| Motor | raised ring on the cavity floor, front zone |
+
+The three pockets sit front to back down the pod's length: **Nano ·
+battery · TP4056**. That order isn't arbitrary — the Nano is nearest the
+sensor so the I2C run is short (I2C is what cost this project a multi-hour
+debugging session, and long unshielded SDA/SCL is the classic way to make
+it flaky), and the TP4056 is nearest the switch it feeds.
+
+**Assembly is meant to happen with the lid upside down on the bench**:
+the pockets become open-topped cups, each board drops in connector-end
+first, and gravity holds it while the glue sets. Then the lid goes onto
+the base with the wires tucked in.
+
+The motor sits on the floor rather than a side wall because the floor is
+the surface nearest the skin, with solid plinth beneath it at that end —
+the buzz couples into the wrist instead of rattling around inside the
+shell.
+
+### Caveats
+
+- The single strap tunnel replaced two watch-style lug tunnels at the
+  builder's request: one wrap point lets the pod rock about the strap's
+  axis, and the sensor aims wherever the pod happens to point. The
+  full-footprint plinth beds the pod down on a wide flat face, which
+  helps, but doesn't eliminate it.
+- **`tof_lens_offset_y/z` are both 0**, i.e. the cradle assumes the
+  VL53L0X chip is centred on its breakout. On a GY-53 it isn't. Get this
+  wrong and the sensor spends its life staring at the inside of the wall,
+  reading a permanent obstacle — and nothing about the device would *look*
+  wrong, it would just always buzz.
+- The belt-clip alternative mount remains explicitly unvalidated (needs
+  print-and-test iteration on real material and printer).
 
 ## Safety notes
 
