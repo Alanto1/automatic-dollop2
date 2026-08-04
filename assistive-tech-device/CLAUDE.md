@@ -12,14 +12,42 @@ a set of real caliper measurements, replacing most of the guessed layout.
 Final arrangement, all confirmed against exported STL coordinates rather
 than assumed:
 
+The pod lies with its **67mm length along the arm**, so a 30mm end face
+looks forward. Sensor on that front face, switch on the back one.
+
 | Feature | Where | Verified |
 | --- | --- | --- |
-| Box | 67 × 30 × 50mm | base 67×30×47, lid −3..2.2 |
-| Sensor window, ⌀6 | −X front wall, z 25.2–31.2 | ✅ |
-| Switch slot, 6.5 × 3 | +X back wall, z 26.7–29.7 | ✅ |
+| Box | 67 × 30 × 50, on a 7.2mm plinth | base prints 67×30×**57.2** |
+| Sensor window, ⌀6 | −X front wall, z 28.8–34.8 | ✅ |
+| Switch slot, 6.5 × 3 | +X back wall, z 30.3–33.3 | ✅ |
 | USB-C, 9.36 × 4.64 | lid, x 21.82–31.18 | ✅ |
 | mini-USB, 8.0 × 6.83 | lid, x 37.18–45.18 | ✅ |
-| Strap tunnel, 21.5 wide | base underside, x 22.75–44.25, z 2.2–7.2 | ✅ |
+| Strap tunnel, 21.5 wide | plinth, x 22.75–44.25, z 2.2–7.2 | ✅ |
+
+**The strap compartment is a plinth UNDER the box, not a tunnel through
+the box's floor.** This was corrected mid-pass: the first version bored
+the tunnel through the floor and the cavity paid ~7mm for it, dropping
+usable interior to 37.6mm. The builder's actual intent was extra height
+below the 50mm, so the interior keeps its full 44.8mm and the pod stands
+further off the wrist instead.
+
+Three numbers all get called "the height" — worth keeping straight:
+
+| | mm |
+| --- | --- |
+| `box_outer_height` — the open-topped box alone | 50 |
+| `base_height` — what prints, box + plinth | 57.2 |
+| assembled, with the lid plate | 59.4 |
+| `cavity_height` — usable, for a board hanging from the lid | 44.8 |
+
+**44.8mm is 0.2mm short of an Arduino Nano's 45mm long edge.** Either the
+Nano hangs 18mm-edge-down, or `box_outer_height` goes to 51. Not decided.
+
+The plinth is the pod's full 67 × 30 footprint rather than a pedestal
+under the middle. A pedestal would use less material, but the box floor
+would then overhang it at ~71° from vertical — support-or-fail — and the
+ramp needed to bring that back to a printable 45° would reach nearly to
+the pod's ends anyway.
 
 **Both USB ports moved from a side wall into the lid.** All three boards
 hang from the lid; the two with connectors hang connector-end up, so the
@@ -38,12 +66,6 @@ so nobody rediscovers it as a surprise. It's modelled as a *closed*
 tunnel rather than an open groove, so the pod stays on the strap when the
 band is off and the underside stays a continuous face against the wrist.
 
-**Cost of the tunnel:** the base's floor is now three layers (skin,
-tunnel, ceiling) = 9.4mm, and outer height is pinned at 50mm, so the
-cavity loses the height rather than the box growing. Usable interior is
-37.6mm — **less than the Nano's 45mm long edge**, so the Nano must hang
-18mm-edge-down. Flag this if the layout is ever revisited.
-
 ### Two silent-failure bugs caught this pass
 
 Both rendered as valid manifold geometry with zero warnings, which is why
@@ -56,7 +78,10 @@ render success alone is not verification in this file:
    asserting they can't touch.
 2. **`belt_clip_back` had no switch slot and no sensor window** — it
    duplicated the shell by hand and never picked up either cutout, so
-   printing it produced a sealed box. Now calls both modules.
+   printing it produced a sealed box. Fixed structurally rather than by
+   patching: both backs now share one `pod_shell(with_strap)` module, so
+   anything added to the shell reaches both and they can't drift apart
+   again.
 
 This is the third and fourth time a cutout in this file has silently done
 nothing (earlier: the switch slot landing inside a strap tunnel, and two

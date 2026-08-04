@@ -15,9 +15,10 @@
 // measurements. Re-render after updating them, and before printing.
 //
 // Orientation convention used throughout this file:
-//   X axis - the long axis of the pod (67mm), aligned with the wristband
-//            strap's direction of travel around the wrist.
-//   Y axis - across the pod (30mm). The strap channel bores through here.
+//   X axis - the pod's 67mm length, lying ALONG the arm.
+//   Y axis - the pod's 30mm width, so a 30mm end face looks forward, in
+//            the direction of travel. The strap runs this way too, around
+//            the wrist, and the strap tunnel bores through in Y.
 //   Z axis - up. The lid (+Z) lifts off the top, away from the skin; a
 //            seam on the underside would press into the wrist. The base
 //            (-Z) sits against the arm.
@@ -25,8 +26,18 @@
 // Face assignments:
 //   -X front  : sensor window, looking in the direction of travel
 //   +X back   : power switch slot
-//   base underside : ONE 20mm strap channel, boring through in Y
+//   base underside : ONE 20mm strap tunnel, in a plinth BELOW the box
 //   lid top   : both USB openings, pointing straight up
+//
+// HEIGHTS, since three different numbers all get called "the height":
+//   box_outer_height  50    the open-topped box that holds the electronics
+//   base_height       57.2  what actually prints, box + strap plinth
+//   assembled         59.4  base_height + the lid's plate on top
+//   cavity_height     44.8  what a board hanging from the lid can use
+//
+// The strap plinth is EXTRA height under the box, not a slice taken out
+// of it. An earlier revision did it the other way - tunnel through the
+// box's own floor - and the cavity paid 7mm for it.
 //
 // STRAP MOUNT - changed 2026-08-03, and the tradeoff is deliberate.
 //
@@ -38,10 +49,12 @@
 //
 // The pivot concern has not gone away, it has been accepted: with one
 // 20mm passage the pod can rock about the strap's axis, and the sensor
-// aims wherever the pod happens to be pointing. Two things reduce it in
+// aims wherever the pod happens to be pointing. Three things reduce it in
 // practice - the channel is a full tunnel rather than a pair of skids, so
-// the strap is captured on all four sides, and the pod's 67mm length gives
-// it a long footprint to settle against the wrist. If it turns out to
+// the strap is captured on all four sides; the plinth is the pod's whole
+// 67 x 30 footprint, so the pod beds down on a wide flat face rather than
+// balancing on a narrow pedestal; and that footprint is long enough to
+// settle against the arm. If it turns out to
 // wander in real use, the fix is to widen the channel's X span so it grips
 // more strap length, or to go back to two tunnels.
 //
@@ -265,6 +278,11 @@ internal_height = measured_bundle_height > 0
 // external dimensions rather than deriving them from what's inside -
 // which is what happens once you've sketched a box and want it built to
 // that size. 0 = derive as before.
+//
+// box_outer_height is the BOX ALONE - the open-topped part that holds the
+// electronics, measured from the top of the strap compartment upward. The
+// strap compartment is extra height BELOW it, not a slice out of it, so
+// the printed base comes out taller than this number. See base_height.
 box_outer_length = 67;
 box_outer_width  = 30;
 box_outer_height = 50;
@@ -274,10 +292,29 @@ outer_length = box_outer_length > 0
     : internal_length + wall_thickness * 2;
 
 outer_width  = box_outer_width  > 0 ? box_outer_width  : internal_width + wall_thickness * 2;
-outer_height = box_outer_height > 0 ? box_outer_height : internal_height + wall_thickness + lid_lip_height;
+box_height   = box_outer_height > 0 ? box_outer_height : internal_height + wall_thickness + lid_lip_height;
 
-// Strap channel, centred along the pod's length, boring through in Y.
-strap_channel_x = (outer_length - strap_channel_width) / 2;
+// Strap compartment, centred along the pod's length, boring through in Y
+// so the strap runs around the wrist while the pod's 67mm length lies
+// along the arm.
+//
+// It is a PLINTH UNDER THE BOX, not a tunnel through the box's floor.
+// That is the whole point: it costs the interior nothing. The earlier
+// revision put the tunnel inside the 50mm and the cavity paid for it,
+// dropping usable height to 37.6mm; this way the cavity keeps its full
+// 44.8mm and the pod just stands ~7mm further off the wrist.
+//
+// Full footprint rather than a pedestal under the middle only. A pedestal
+// would save a little material and shorten the contact patch, but the
+// box's floor would then overhang it at 71 degrees from vertical - a
+// support-or-fail overhang - and the ramp needed to bring that back to a
+// printable 45 degrees would reach almost to the pod's ends anyway.
+strap_plinth_height = wall_thickness + strap_channel_height;  // 2.2 + 5
+strap_channel_x     = (outer_length - strap_channel_width) / 2;
+
+// Everything above the plinth. box_z0 is the underside of the 50mm box.
+box_z0      = strap_plinth_height;
+base_height = box_z0 + box_height;   // total printed height of the base
 
 assert(strap_channel_width + wall_thickness * 4 <= outer_length,
        "Strap channel leaves too little material at the pod's ends.");
@@ -301,33 +338,33 @@ assert(strap_channel_width + wall_thickness * 4 <= outer_length,
 switch_slot_length = switch_actuator_length + switch_travel + switch_clearance * 2;
 switch_slot_width  = switch_actuator_width + switch_clearance * 2;
 switch_slot_y      = (outer_width - switch_slot_length) / 2;  // centred across the end face
-// Cavity reference planes, used by every cutout below.
+// Cavity reference planes, used by every cutout below. All in absolute Z
+// with the printed base's underside at 0, so the layers stack:
 //
-// The floor is NOT one wall thickness any more. The strap channel is a
-// closed tunnel through the underside, so the base's bottom is three
-// layers: a skin against the wrist, the tunnel, then a ceiling over it
-// that becomes the cavity floor.
+//   0    -> 2.2   bottom skin, the face against the wrist
+//   2.2  -> 7.2   strap tunnel (5mm clear)         } the plinth
+//   7.2  -> 9.4   the box's own floor
+//   9.4  -> 54.2  cavity, 44.8mm of usable interior
+//   54.2 -> 57.2  seat the lid's lip plugs into
+//   57.2 -> 59.4  lid plate, once closed
 //
-// That ceiling spans the full 21.5mm of the tunnel unsupported, which is
-// a long bridge for 2.2mm of PLA - print with supports, or accept some
-// droop on the first layer above the tunnel. Nothing structural depends
-// on it staying flat; the bundle hangs from the lid.
-//
-// This costs 9.4mm of internal height, and the pod's outer height is
-// fixed at 50mm by the sketch, so the cavity loses it rather than the box
-// growing. Usable interior is now 9.4mm to 47mm = 37.6mm tall.
-//
-// CHECK THIS AGAINST THE BOARDS BEFORE PRINTING. A Nano is 45mm on its
-// long edge; it cannot hang from the lid long-edge-down in 37.6mm. It has
-// to hang 18mm-edge-down, which puts its mini-USB on a SIDE of the board
-// rather than at the bottom - fine, because the port faces up through the
-// lid either way, but it means the board hangs wide rather than deep.
-cavity_floor  = wall_thickness * 2 + strap_channel_height;
-lid_underside = outer_height - lid_lip_height;
+// The tunnel's roof and the box's floor are separate 2.2mm layers rather
+// than one shared skin, so neither is doing two jobs. The floor bridges
+// the 21.5mm of tunnel below it - print with supports, or accept some
+// droop; nothing structural rests on it, since the boards hang from the
+// lid.
+cavity_floor  = box_z0 + wall_thickness;
+lid_underside = base_height - lid_lip_height;
 cavity_mid_z  = (cavity_floor + lid_underside) / 2;
 
-assert(cavity_floor < lid_underside - 10,
-       "Strap channel has eaten the cavity - lower it or raise outer_height.");
+// Height available to a board hanging from the lid's underside. Worth
+// checking against a real board: an Arduino Nano is 45mm on its long
+// edge, and 44.8mm is 0.2mm short of that - so the Nano has to hang
+// 18mm-edge-down, or box_outer_height has to go up by a millimetre.
+cavity_height = lid_underside - cavity_floor;
+
+assert(cavity_height > 10,
+       "Cavity is too shallow - raise box_outer_height.");
 
 // Switch and sensor sit mid-height. Neither is forced to a particular
 // height - the switch just needs a finger, the sensor an unobstructed
@@ -337,8 +374,12 @@ sensor_window_z = cavity_mid_z;
 
 assert(switch_slot_length + wall_thickness * 2 <= outer_width,
        "Switch actuator slot is wider than the pod's end face.");
-assert(switch_slot_z + switch_slot_width / 2 <= outer_height - lid_lip_height,
+assert(switch_slot_z + switch_slot_width / 2 <= lid_underside,
        "Switch slot runs past the top of the base and into the lid seam.");
+assert(switch_slot_z - switch_slot_width / 2 >= cavity_floor,
+       "Switch slot runs below the cavity floor and into the strap compartment.");
+assert(sensor_window_z - sensor_window_dia / 2 >= cavity_floor,
+       "Sensor window runs below the cavity floor and into the strap compartment.");
 
 // USB openings are in the LID, pointing straight up (+Z), because the
 // boards hang vertically from the lid with their connector ends at the
@@ -466,22 +507,32 @@ module sensor_window() {
             cylinder(d = sensor_window_dia, h = wall_thickness + 2);
 }
 
-module base() {
+module pod_shell(with_strap = true) {
+    // The open-topped box, shared by both back options.
+    //
+    // It is ONE module on purpose. belt_clip_back() used to duplicate this
+    // geometry by hand, and the copy silently never picked up the switch
+    // slot or the sensor window - so printing it produced a sealed box
+    // with no openings at all. Anything added here now reaches both.
     difference() {
-        rounded_box([outer_length, outer_width, outer_height - lid_lip_height], corner_radius);
+        rounded_box([outer_length, outer_width, base_height], corner_radius);
 
-        // Cavity floor sits above the strap tunnel, not one wall
-        // thickness up - see cavity_floor.
+        // Cavity floor sits on top of the strap plinth, not one wall
+        // thickness off the print bed - see cavity_floor.
         translate([wall_thickness, wall_thickness, cavity_floor])
             rounded_box(
-                [outer_length - wall_thickness * 2, outer_width - wall_thickness * 2, outer_height],
+                [outer_length - wall_thickness * 2, outer_width - wall_thickness * 2, base_height],
                 max(corner_radius - wall_thickness, 0.5)
             );
 
-        strap_channel();
+        if (with_strap) strap_channel();
         switch_slot();
         sensor_window();
     }
+}
+
+module base() {
+    pod_shell(with_strap = true);
 }
 
 module lid() {
@@ -521,24 +572,13 @@ module belt_clip_back() {
     // flex/grip depends heavily on printer, material, and layer
     // orientation, none of which is known yet.
     //
-    // No strap tunnel, so the floor stays one wall thick and this shell
-    // gets back the ~7mm of interior height the wristband version spends
-    // on the tunnel. It still carries the switch slot and sensor window -
-    // it used to have neither, which would have made it a wasted print
-    // whatever the clip did.
-    difference() {
-        rounded_box([outer_length, outer_width, outer_height - lid_lip_height], corner_radius);
-        translate([wall_thickness, wall_thickness, wall_thickness])
-            rounded_box(
-                [outer_length - wall_thickness * 2, outer_width - wall_thickness * 2, outer_height],
-                max(corner_radius - wall_thickness, 0.5)
-            );
+    // Same shell as the wristband version, just without the strap tunnel
+    // bored through the plinth. The plinth itself stays: it carries the
+    // switch slot and sensor window at the same heights, so both backs
+    // take the same lid and the same board layout.
+    pod_shell(with_strap = false);
 
-        switch_slot();
-        sensor_window();
-    }
-
-    clip_height = outer_height * 0.7;
+    clip_height = base_height * 0.7;
 
     // Vertical arm, standing off the back of the pod.
     translate([outer_length / 2 - belt_clip_arm_length / 2, -belt_clip_gap - belt_clip_thickness, 0])

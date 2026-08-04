@@ -87,9 +87,11 @@ Tools:
 - [ ] OpenSCAD installed
 - [ ] Access to a 3D printer (own, school, library, print service)
 
-The model is built to the sketched 67 × 30 × 50mm box. Sensor window in
+The model is built to the sketched box: **67mm long (along the arm) × 30mm
+wide × 50mm tall**, on a 7.2mm strap plinth underneath. Sensor window in
 the front wall, switch slot in the back wall, both USB ports in the lid,
-one 20mm strap tunnel through the base's underside.
+one 20mm strap tunnel through the plinth. The base prints 57.2mm tall and
+the assembled pod is 59.4mm.
 
 Steps:
 - [ ] **Print `part="switch_test_coupon"` first.** Two minutes, a few
@@ -100,17 +102,17 @@ Steps:
       what lets a plug reach the receptacle through 5.2mm of lid; guess it
       too small and both ports are unusable, which won't be obvious until
       the print is in your hand
-- [ ] Check the Nano fits: the strap tunnel leaves 37.6mm of internal
-      height, and the Nano's long edge is 45mm, so it has to hang
-      18mm-edge-down from the lid
+- [ ] Decide how the Nano hangs. The cavity is 44.8mm and the Nano's long
+      edge is 45mm - 0.2mm short - so either hang it 18mm-edge-down, or
+      raise `box_outer_height` to 51
 - [ ] Update the "[MEASURE YOUR PARTS]" block at the top of
       `enclosure/enclosure.scad` with those numbers
 - [ ] Re-render in OpenSCAD (F5 preview, then F6 for a full render) and
       re-check `part = "all"` looks sane before exporting STLs
 - [ ] Print `wristband_back` + `lid` next; treat `belt_clip_back` as a
       separate print-and-test iteration, not a guaranteed-good part
-- [ ] Print the base with supports (or accept some droop): the cavity
-      floor bridges 21.5mm over the strap tunnel
+- [ ] Print the base open-side-up, with supports (or accept some droop):
+      the box floor bridges 21.5mm over the strap tunnel
 - [ ] Dry-fit all components before gluing anything down
 
 ## Weeks 4-6 — Real feedback session

@@ -61,12 +61,13 @@ before trusting them on a wrist.
   battery) are not done, and `obstacle_haptic.ino` has still never been
   flashed to the board.
 - [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
-  the builder's 67 × 30 × 50mm sketch and render-verifies cleanly (headless
-  OpenSCAD; base, lid, belt-clip and switch coupon all export as valid
-  manifold geometry, with each cutout checked against its expected
-  coordinates in the exported STL — see the file header). Most dimensions
-  are now real caliper numbers; the switch actuator size and USB connector
-  body margin are still guesses. Nothing has been printed yet.
+  the builder's sketch — a 67 × 30 × 50mm box on a strap plinth — and
+  render-verifies cleanly (headless OpenSCAD; base, lid, belt-clip and
+  switch coupon all export as valid manifold geometry, with each cutout
+  checked against its expected coordinates in the exported STL — see the
+  file header). Most dimensions are now real caliper numbers; the switch
+  actuator size and USB connector body margin are still guesses. Nothing
+  has been printed yet.
 - [ ] **Weeks 4-6 — real feedback session** with whoever responds to
   outreach. Not started.
 - [ ] **Writeup + consent**, after the above.
@@ -275,15 +276,31 @@ now real caliper data; the two that are still guesses — the switch
 actuator's size and the USB connector body margin — are labelled as such,
 and both are worth checking before a real print.
 
-**Built to the builder's sketch: 67 × 30 × 50mm.** Layout:
+**Built to the builder's sketch.** The pod lies with its **67mm length
+along the arm**, so a 30mm end face looks forward in the direction of
+travel. Layout:
 
 | Feature | Where |
 | --- | --- |
 | Sensor window (6mm) | −X front wall, mid-height, looking where you walk |
 | Power switch slot | +X back wall, mid-height |
 | USB-C (charge) + mini-USB (data) | **in the lid**, side by side, pointing up |
-| Strap channel (20mm) | one closed tunnel through the base's underside, centred |
+| Strap tunnel (20mm) | in a plinth **under** the box, centred, boring across |
 | Vibration motor | glued to an inside wall — no cutout needed |
+
+Three numbers all get called "the height", so to be explicit:
+
+| | mm |
+| --- | --- |
+| The box itself (open-topped, holds the electronics) | 50 |
+| What actually prints as the base — box + strap plinth | 57.2 |
+| Assembled, with the lid's plate on top | 59.4 |
+| Usable interior for a board hanging from the lid | 44.8 |
+
+**The strap compartment is extra height beneath the box, not a slice out
+of it.** An earlier revision ran the tunnel through the box's own floor
+and the cavity paid ~7mm for it; this way the interior keeps its full
+44.8mm and the pod just stands a little further off the wrist.
 
 All three boards **hang from the lid**, the two with connectors hanging
 connector-end up so their ports come out through the top. Lift the lid and
@@ -292,13 +309,13 @@ serviceable instead of a sealed box. The lid's ports are counterbored from
 underneath so a plug can actually reach the receptacle through 5.2mm of
 lid — without that they'd be decorative.
 
-Two things about this are deliberate compromises rather than best answers.
-The single strap channel replaced two watch-style lug tunnels at the
-builder's request; one wrap point lets the pod rock about the strap's
-axis, and the sensor aims wherever the pod happens to point. And the
-closed tunnel eats ~9mm of internal height, since the outer height is
-pinned at 50mm — usable interior is 37.6mm tall, which is less than an
-Arduino Nano's 45mm long edge, so the Nano has to hang 18mm-edge-down. The
+Two caveats worth knowing. The single strap tunnel replaced two
+watch-style lug tunnels at the builder's request: one wrap point lets the
+pod rock about the strap's axis, and the sensor aims wherever the pod
+happens to point. The full-footprint plinth beds the pod down on a wide
+flat face, which helps, but doesn't eliminate it. And at 44.8mm the cavity
+is **0.2mm short** of an Arduino Nano's 45mm long edge, so the Nano has to
+hang 18mm-edge-down — or `box_outer_height` goes up by a millimetre. The
 belt-clip alternative mount remains explicitly unvalidated (needs
 print-and-test iteration on real material and printer).
 
