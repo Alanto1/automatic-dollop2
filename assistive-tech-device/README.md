@@ -60,11 +60,14 @@ before trusting them on a wrist.
   Phase 4 (combined firmware on hardware) and Phase 5 (running off
   battery) are not done, and `obstacle_haptic.ino` has still never been
   flashed to the board.
-- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
-  cleanly (headless OpenSCAD, base/lid/belt-clip all export as valid
-  manifold geometry — see the file header for how that was checked). Every
-  dimension in its "[MEASURE YOUR PARTS]" section is still a guess, not a
-  caliper measurement.
+- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
+  the builder's sketch — a 67 × 30 × 50mm box on a strap plinth — and
+  render-verifies cleanly (headless OpenSCAD; base, lid, belt-clip and
+  switch coupon all export as valid manifold geometry, with each cutout
+  checked against its expected coordinates in the exported STL — see the
+  file header). Most dimensions are now real caliper numbers; the switch
+  actuator size and USB connector body margin are still guesses. Nothing
+  has been printed yet.
 - [ ] **Weeks 4-6 — real feedback session** with whoever responds to
   outreach. Not started.
 - [ ] **Writeup + consent**, after the above.
@@ -109,8 +112,10 @@ unplug the battery. That reasoning only holds while the battery is
 unplugabble, so it's now listed as **required**: once the cell is soldered
 to the TP4056, "off" would otherwise mean desoldering it. A small SPST
 slide switch goes in series on the TP4056's `OUT+` line, which cuts the
-load while leaving the charging path intact. Note `enclosure.scad` has no
-cutout for it yet - that's outstanding work before a final print.
+load while leaving the charging path intact. `enclosure.scad` now cuts a
+slot for it in the pod's back wall, sized from the real switch body —
+though the actuator nub itself is still a guess, which is what
+`switch_test_coupon` exists to settle.
 
 ### Sensor note
 
@@ -264,16 +269,88 @@ real firmware behavior - not just a rough sketch.
 
 ## Enclosure
 
-`enclosure/enclosure.scad` is parametric: three modules (`wristband_back`
-/ `lid` / `belt_clip_back`) built from a block of measurements at the top
-of the file. **Every dimension in the "[MEASURE YOUR PARTS]" section is a
-placeholder** - update it from real calipers once parts are in hand, then
-re-render before printing. The belt-clip alternative mount is explicitly
-unvalidated (needs print-and-test iteration on real material/printer) -
-the wristband strap-slot mount (two lug tunnels, watch-lug style) is v1's
-primary, chosen over a single-slot design specifically because one slot
-would let the pod pivot around that single wrap point instead of sitting
-flat.
+`enclosure/enclosure.scad` is parametric: four printable modules
+(`wristband_back` / `lid` / `belt_clip_back` / `switch_test_coupon`) built
+from a block of measurements at the top of the file. Most of that block is
+now real caliper data; the two that are still guesses — the switch
+actuator's size and the USB connector body margin — are labelled as such,
+and both are worth checking before a real print.
+
+**Built to the builder's sketch.** The pod lies with its **67mm length
+along the arm**, so a 30mm end face looks forward in the direction of
+travel. Layout:
+
+| Feature | Where |
+| --- | --- |
+| Sensor window (6mm) | −X front wall, mid-height, looking where you walk |
+| Power switch slot | +X back wall, mid-height |
+| USB-C (charge) + mini-USB (data) | **in the lid**, side by side, pointing up |
+| Strap tunnel (20mm) | in a plinth **under** the box, centred, boring across |
+| Vibration motor | glued to an inside wall — no cutout needed |
+
+Three numbers all get called "the height", so to be explicit:
+
+| | mm |
+| --- | --- |
+| The box itself (open-topped, holds the electronics) | 52 |
+| What actually prints as the base — box + strap plinth | 59.2 |
+| Assembled, with the lid's plate on top | 61.4 |
+| Usable interior for a board hanging from the lid | 46.8 |
+
+**The strap compartment is extra height beneath the box, not a slice out
+of it.** An earlier revision ran the tunnel through the box's own floor
+and the cavity paid ~7mm for it; this way the interior keeps its full
+height and the pod just stands a little further off the wrist.
+
+The box is 52mm rather than the sketched 50 because the Nano has to hang
+on its long edge — the only orientation that puts its mini-USB where the
+lid's hole is — and 50 gave a 44.8mm cavity, 0.2mm short of the Nano's
+45mm. An assert enforces it now, so dropping back to 50 fails loudly
+instead of quietly producing a box the Nano won't go into.
+
+### Internal mounting
+
+Everything is located by a printed feature and held by glue. Nothing is a
+press fit; what the features buy is that each glue joint is made against a
+flat surface in a known position.
+
+| Part | Feature |
+| --- | --- |
+| Nano, TP4056 | four-walled pocket hanging from the lid, connector-end up |
+| Battery | same, but **one face left open** — a LiPo pouch swells with age, and a rigid box with no give is a bad place to find that out |
+| VL53L0X | picture-frame cradle on the inside of the front wall, centred on the window |
+| Motor | raised ring on the cavity floor, front zone |
+
+The three pockets sit front to back down the pod's length: **Nano ·
+battery · TP4056**. That order isn't arbitrary — the Nano is nearest the
+sensor so the I2C run is short (I2C is what cost this project a multi-hour
+debugging session, and long unshielded SDA/SCL is the classic way to make
+it flaky), and the TP4056 is nearest the switch it feeds.
+
+**Assembly is meant to happen with the lid upside down on the bench**:
+the pockets become open-topped cups, each board drops in connector-end
+first, and gravity holds it while the glue sets. Then the lid goes onto
+the base with the wires tucked in.
+
+The motor sits on the floor rather than a side wall because the floor is
+the surface nearest the skin, with solid plinth beneath it at that end —
+the buzz couples into the wrist instead of rattling around inside the
+shell.
+
+### Caveats
+
+- The single strap tunnel replaced two watch-style lug tunnels at the
+  builder's request: one wrap point lets the pod rock about the strap's
+  axis, and the sensor aims wherever the pod happens to point. The
+  full-footprint plinth beds the pod down on a wide flat face, which
+  helps, but doesn't eliminate it.
+- **`tof_lens_offset_y/z` are both 0**, i.e. the cradle assumes the
+  VL53L0X chip is centred on its breakout. On a GY-53 it isn't. Get this
+  wrong and the sensor spends its life staring at the inside of the wall,
+  reading a permanent obstacle — and nothing about the device would *look*
+  wrong, it would just always buzz.
+- The belt-clip alternative mount remains explicitly unvalidated (needs
+  print-and-test iteration on real material and printer).
 
 ## Safety notes
 
