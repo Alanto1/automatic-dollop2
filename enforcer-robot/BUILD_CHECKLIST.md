@@ -8,12 +8,12 @@ Concept and architecture: [`README.md`](README.md). What to buy:
 [`PARTS.md`](PARTS.md) and [`PURCHASE_LIST.md`](PURCHASE_LIST.md). What to do
 before parts arrive: [`START_HERE.md`](START_HERE.md).
 
-**Order of attack:** get **Sesame walking on stock firmware** first, then
-**Squirt mode stationary** end-to-end, then combine, then Warden.
+**Order of attack:** get **Sesame walking on stock firmware** first, then the
+**motion engine** (this is what stops it looking stiff), then **Squirt mode**
+end-to-end, then Warden.
 
-The plan is shorter than it used to be, because you're no longer designing a
-body. Weeks 0–4 of the old plan (leg IK, one leg, all legs, power rails) are
-now "build Sesame as documented."
+Stock first is not optional: it's how you know a later fault is yours and not
+an assembly error.
 
 ---
 
@@ -73,7 +73,45 @@ That's already a robot on a table.
 
 ---
 
-## Week 3 — Weigh it, then decide the payload
+## Week 3 — The motion engine (this is what makes it feel alive)
+
+The single highest-impact week in the plan, and it's the thing that separates
+"3D print that twitches" from "creature." See README "Making it move like a
+creature". Runs on the **ESP32**, not the Pi — smooth motion needs steady
+timing.
+
+- [ ] **Characterise the 20ms stagger.** Ramp all 8 servos in ~1° steps at
+      50 Hz with no stagger. Does the board reset? Write down the rate and
+      step size where it starts to
+- [ ] If it browns out: **1000µF+ bulk capacitance** across the servo rail,
+      then retest. Cheaper than a bigger battery
+- [ ] **Easing** — cubic or sine ease-in-out between poses at 30–50 Hz,
+      instead of commanding the target angle directly
+- [ ] **All joints over one time window**, small per-joint phase offsets
+- [ ] **Idle breathing** — ±2–3° at ~0.2 Hz. Biggest "alive" cue for the least
+      work. Do this one first
+- [ ] **Anticipation + follow-through** on the lunge and the victory bounce
+- [ ] **Jitter timings ±15%** so it never loops identically
+- [ ] Film it before and after. That comparison belongs in the writeup
+
+**Demoable:** it breathes, creeps, and lunges like something alive — with no
+AI attached yet.
+
+## Week 4 — Restyle the shell (make it a spider)
+
+- [ ] ⚠️ **Weigh the robot, set `SESAME_MASS_G`, re-run `make_stl.py --test`**
+      for your real torque budget before changing anything
+- [ ] Open Sesame's Fusion 360 sources. **Change the shell, not the frame or
+      the leg pivots**
+- [ ] Keep the foot within the computed reach limit (~48mm at 507g). Get the
+      spider from *shape* — angular shell, low body, knees-up — not from
+      longer legs, which the servos cannot pay for
+- [ ] Spider eyes on the OLED instead of dog eyes. Free identity
+- [ ] Re-print, re-assemble, confirm it still walks
+
+**Demoable:** it's recognisably *your* robot now.
+
+## Week 5 — Weigh it, then decide the payload
 
 Do this **before** designing anything around the reservoir.
 
@@ -92,7 +130,7 @@ Do this **before** designing anything around the reservoir.
 
 **Demoable:** it squirts on command.
 
-## Week 4 — Perception
+## Week 6 — Perception
 
 - [ ] Pi Zero 2 W on the payload deck; camera on its mount, forward-facing
 - [ ] Camera streaming into OpenCV on the Pi Zero
@@ -105,18 +143,19 @@ Do this **before** designing anything around the reservoir.
 
 **Demoable:** on screen, correct labels for "working" / "on phone" / "gone."
 
-## Week 5 — Wire the brain to the body
+## Week 7 — Wire the brain to the body
 
 - [ ] Python client for Sesame's JSON API: `stand`, `walk`, `turn`, `face`
 - [ ] Mood → face expression mapping (Sesame ships faces; add your own)
-- [ ] Mood → body language via **Sesame Studio**: perk-up, creep-in, victory
-      bounce, cooldown settle
+- [ ] Mood → body language: perk-up, creep-in, victory bounce, cooldown
+      settle — authored in **Sesame Studio**, played through *your* motion
+      engine so they come out smooth rather than staccato
 - [ ] Randomise timing so it never loops identically
 - [ ] Speaker + a handful of pre-recorded taunt clips
 
 **Demoable:** it *reacts* with attitude to what it sees — no squirt needed.
 
-## Week 6 — Squirt mode, end to end
+## Week 8 — Squirt mode, end to end
 
 - [ ] Aiming: turn until the target is **horizontally** centred in frame, then
       fire. Vertical is fixed at +20° in the printed mounts — nothing to tune
@@ -127,7 +166,7 @@ Do this **before** designing anything around the reservoir.
 
 **Demoable: the flagship works.** This alone is a complete project.
 
-## Week 7 — Autonomous walking
+## Week 9 — Autonomous walking
 
 - [ ] **Cliff sensors first** — it must refuse to step off the desk edge
 - [ ] Walk toward a target under closed-loop control from the onboard camera
@@ -136,7 +175,7 @@ Do this **before** designing anything around the reservoir.
 
 **Demoable:** it walks to you, *then* squirts you.
 
-## Week 8 — Warden mode
+## Week 10 — Warden mode
 
 - [ ] Phone-on-tray test; if payload fails, switch to guard-and-block
 - [ ] Reactive avoidance: hand approaches → walk away from it
@@ -146,7 +185,7 @@ Do this **before** designing anything around the reservoir.
 
 ---
 
-## Week 9 — Harden it
+## Week 11 — Harden it
 
 - [ ] One-hour continuous run; log and fix every crash
 - [ ] Servo temperature after sustained walking
@@ -156,14 +195,14 @@ Do this **before** designing anything around the reservoir.
 - [ ] Water-safety recheck; cable strain relief
 - [ ] Battery runtime measured and written down
 
-## Week 10 — The experiment
+## Week 12 — The experiment
 
 - [ ] Run it: 8–15 volunteers, timer-vs-Enforcer, counterbalanced, written
       consent (see README "The experiment")
 - [ ] Log phone pickups, on-task minutes, questionnaire
 - [ ] Analyse; write up honestly, including the acceptability trade-off
 
-## Week 11 — Rehearsal
+## Week 13 — Rehearsal
 
 - [ ] Demo to 5 people who aren't you; fix what confuses them
 - [ ] Rehearse failures: someone works normally (no false squirt), WiFi off,
@@ -171,9 +210,9 @@ Do this **before** designing anything around the reservoir.
 - [ ] Charge spare battery; flash + test spare SD card
 - [ ] Photos + video of it working, taken **before** demo day
 
-## Week 12 — Buffer + submit
+## Week 14 — Buffer + submit
 
-- [ ] Whatever broke in week 11
+- [ ] Whatever broke in week 13
 - [ ] **Writeup: what's Sesame's, what's yours, what it can't do.** The table
       in README is the answer — have it on a slide
 - [ ] Credit Sesame (Apache 2.0) clearly, in the writeup *and* on the poster

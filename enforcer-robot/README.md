@@ -1,7 +1,8 @@
-# The Enforcer — an AI layer that holds you accountable, on a Sesame body
+# The Enforcer — an AI spider robot that holds you accountable
 
 A four-legged desk robot with a face, a camera watching you, and
-consequences. Slack off — pick up your phone, wander away — and it doesn't
+consequences. Built on [Sesame](https://github.com/dorianborian/sesame-robot)'s
+proven skeleton, with your shell, your motion, and your brain on top. Slack off — pick up your phone, wander away — and it doesn't
 beep politely. It notices, gives you attitude, stalks toward you, and
 **squirts you with water**. Get back on task and it backs off, smug.
 
@@ -19,50 +20,121 @@ later is ~30 lines, not a rewrite.
 
 ---
 
-## The most important decision in this project: don't build the body
+## Sesame is the foundation, not the destination
 
-**Build [Sesame](https://github.com/dorianborian/sesame-robot) and put your
-effort on top of it.**
+**Fork the skin. Keep the skeleton.**
 
-Sesame is an open-source mini quadruped — 8× MG90S servos (2 per leg), an
-ESP32-S2, an OLED face — that walks, poses, and emotes for **$50–60**. It's
-**Apache 2.0 licensed**, with all CAD, STLs, firmware, wiring guide and BOM
-published. Its creator spent **four months** designing it.
+[Sesame](https://github.com/dorianborian/sesame-robot) is an open-source mini
+quadruped — 8× MG90S (2 per leg), an ESP32-S2, an OLED face — that walks and
+emotes for **$50–60**. Apache 2.0, all CAD/STL/firmware/BOM published, Fusion
+360 sources included. Its author spent **four months** on it, and says
+outright that it's *"a foundation for making your own awesome version"* — the
+repo and video show mods with wheels, cat ears, different faces and different
+shells.
 
-You do not have four months, and body design is not where your project's
-originality lives. Sesame gives you a walking, expressive creature in ~2
-weeks of printing and assembly. Everything that makes this *The Enforcer* —
-the perception, the mood state machine, the water rig, the experiment — is
-still entirely yours to build.
+So this is **not** "build Sesame and bolt a tank on it." It's Sesame's proven
+skeleton carrying your robot.
 
-This is the same reasoning `PARTS.md` already applies to the chassis: *"Buying
-the frame is not defeat; it moves your effort to the AI and the water rig,
-which is where the originality is."* Sesame is that argument taken to its
-conclusion — and it's better than a kit chassis, because it comes with tested
-gaits and an animation tool.
+| Keep from Sesame (it's proven, and hard) | Make it yours (it's easy, and it's the identity) |
+|---|---|
+| Internal frame, motor mounts, leg pivot geometry | **Outer shell** — the spider look |
+| Working 2-DOF-per-leg kinematics | **Stance and proportions** (within the torque budget below) |
+| Servo driving, the 8-channel harness | **Face** — spider eyes, not dog eyes |
+| Base firmware, the JSON API | **Motion engine** — see below. This is the big one |
+
+What you must **not** casually change is the leg pivot geometry and the frame:
+that's the part that took four months to get walking, and every hour you spend
+re-deriving it is an hour not spent on the thing that's actually yours.
 
 ### What's Sesame's, and what's yours
 
-The Week 12 checklist asks you to write down exactly this. Have the answer
-from day one — a jury respects a clean line far more than a blurry one.
+Have this answer from day one — a jury respects a clean line far more than a
+blurry one, and the Week 12 checklist asks for exactly this.
 
 | | Sesame (Apache 2.0, credit it) | **Yours** |
 |---|---|---|
-| Body, legs, 3D printed parts | ✅ | |
-| Walking gaits, poses, animations | ✅ | |
-| OLED face rendering | ✅ | |
-| WiFi control page + JSON API | ✅ | |
+| Internal frame, leg kinematics, harness | ✅ | |
+| Base firmware, servo driving, JSON API | ✅ | |
+| Stock gaits and poses | ✅ | |
+| **Shell, stance, spider identity** | | ✅ |
+| **Motion engine** — easing, breathing, anticipation | | ✅ |
 | **Person + phone detection** | | ✅ |
 | **Mood state machine** (the personality) | | ✅ |
 | **The water rig** | | ✅ |
 | **Autonomy** — Sesame is remote-controlled; yours decides for itself | | ✅ |
 | **The focus experiment** | | ✅ |
 
-That last row is the real intellectual claim. **Sesame is a puppet — a human
-presses buttons on a web page. The Enforcer is an agent.** Turning a
-teleoperated toy into something that watches, judges, and acts on its own is
-a genuine contribution, and it's a much cleaner story than "I designed some
-brackets."
+**Sesame is a puppet — a human presses buttons on a web page. The Enforcer is
+an agent.** Turning a teleoperated toy into something that watches, judges,
+moves like a creature, and acts on its own is the real contribution.
+
+---
+
+## Making it move like a creature, not a machine
+
+This is the difference between "cool 3D print" and "that thing is alive," and
+it is almost entirely **software you write**. It also deserves to be a headline
+result in the writeup, not a footnote.
+
+### Why a servo robot looks stiff
+
+Four causes, all fixable:
+
+1. **A servo told "go to 90°" slews at full speed and stops dead.** No
+   acceleration, no deceleration. That single fact is most of the stiffness.
+2. **Keyframe animation is staccato** — a list of angles played back is a
+   series of lurches, not a movement.
+3. **Sesame's firmware staggers servo writes by 20ms** to avoid brownout, so
+   joints *start at different times* and the motion reads as mechanical.
+4. **Perfect stillness between moves reads as dead.** Nothing alive is ever
+   completely still.
+
+### The fix: an interpolation layer, on the ESP32
+
+Between "what pose do I want" and "write the servo," insert a motion engine:
+
+- **Easing.** Don't command the target — command a stream of intermediate
+  setpoints along a cubic or sine ease-in-out curve at 30–50 Hz. The servo
+  then *tracks a ramp* instead of slamming. This alone transforms it.
+- **Move all joints over one time window**, with small per-joint phase
+  offsets. Coordinated, not sequential.
+- **Idle breathing.** A slow ±2–3° body-height oscillation at ~0.2 Hz, plus
+  tiny random drift. **The single biggest "alive" cue, and nearly free.**
+- **Anticipation and follow-through.** Before a lunge, pull back slightly;
+  after a strike, overshoot ~5–10% and settle. Straight out of classic
+  animation, and it reads as *intent*.
+- **Jitter timings ±15%** so it never loops identically. Fixed cadence reads
+  as a machine.
+
+**This runs on the ESP32, not the Pi Zero.** Smooth motion needs steady 30–50
+Hz timing, and a 1–2 FPS brain across a network hop cannot provide it. So the
+split is: **the Pi decides, the ESP32 performs.** The Pi sends "creep forward,
+suspicious"; the ESP32 renders that into motion.
+
+That does mean modifying Sesame's firmware — which is fine, and is exactly the
+kind of contribution worth writing up. Get it walking stock *first*, so you
+know any new fault is yours.
+
+### The obstacle you will hit, and how to attack it
+
+Interpolating at 30 Hz across 8 servos is 240 servo updates per second. At
+Sesame's 20ms stagger that's 4.8 seconds of staggering per second of motion —
+impossible. So the stagger has to go, and you need to understand *why* it's
+there before removing it.
+
+It exists to limit **inrush current**: eight servos starting from rest and
+slewing a long way, all at once, is a current spike that browns out the board.
+But **interpolated steps are tiny** — a degree or two — so the per-step current
+is far lower. That's a testable hypothesis, and testing it is real engineering:
+
+1. Ramp all 8 servos in ~1° steps at 50 Hz with **no** stagger. Does it reset?
+2. If yes, add **bulk capacitance** (1000 µF+ across the servo rail). This is
+   the standard fix for inrush and is far cheaper than a bigger battery.
+3. Still resetting? Drop to 20–25 Hz, and/or cap how many joints move at once.
+
+Characterising that limit and replacing a fixed 20ms stagger with a real
+motion system is a genuinely good result — measure it, plot it, put it in the
+writeup.
 
 ---
 
@@ -208,19 +280,26 @@ Consent in writing, and anyone can stop any time.
 
 ## Honest hard parts
 
-1. **Payload.** Sesame is small and runs 8 MG90S servos off an 800mAh pack.
-   Water is heavy — 100ml is 100g. **Weigh your build and test with a full
-   reservoir early.** If it can't walk loaded, drop to a 50ml reservoir or
-   run Squirt mode stationary (see the scope ladder). Decide this in week 3,
-   not week 10.
-2. **"On-task vs slacking" detection** that doesn't false-fire — a robot that
+1. **Torque is the hard limit on the spider look.** `cad/make_stl.py --test`
+   computes it: at ~507g loaded, **a foot can sit only ~48mm out from its
+   hip** before MG90S runs out of derated torque. 50mm is already over.
+   Torque scales linearly with how far out the foot sits, so **long legs and
+   a wide splayed stance are both expensive** — and payload eats the same
+   budget, at roughly **1.2mm of reach per 10g**.
+   **So get the spider from shape, not size:** angular shell, low body,
+   knees-up silhouette, spider eyes. Not longer legs. Re-run that test with
+   your *measured* mass before you restyle anything.
+2. **Payload.** Water is heavy — 100ml is 100g, and it costs you ~12mm of
+   reach. **Weigh your build and walk it loaded early.** If it can't, drop to
+   a 30–50ml reservoir or run Squirt stationary. Week 5, not week 12.
+3. **"On-task vs slacking" detection** that doesn't false-fire — a robot that
    squirts you while you're working is a *bad* robot. Hysteresis and time
    thresholds.
-3. **Brownout.** Sesame's firmware already staggers servo moves by 20ms
+4. **Brownout.** Sesame's firmware already staggers servo moves by 20ms
    because driving all of them at once browns out the board. **Adding a pump
    to the same battery is exactly the kind of load that breaks this.** Give
    the pump its own supply or a large capacitor, and re-test.
-4. **2 DOF per leg, not 3.** Sesame's legs move in a plane. It turns by
+5. **2 DOF per leg, not 3.** Sesame's legs move in a plane. It turns by
    differential gait, not by swivelling a hip. Fine for stalking and fleeing,
    but don't plan motions that need a third joint.
 
@@ -228,13 +307,18 @@ Consent in writing, and anyone can stop any time.
 
 | If… | Ship this instead |
 |---|---|
-| Sesame isn't walking reliably | **Stationary Squirt sniper** — Sesame poses and emotes, doesn't walk. Still complete |
+| Sesame isn't walking reliably | **Stationary Squirt sniper** — it poses, breathes and emotes, doesn't walk. Still complete |
 | The pump browns out the ESP32 | Separate pump battery, or a solenoid + gravity feed |
-| Payload fails | Guard-and-block Warden (no carrying), or a smaller reservoir |
-| Behind at week 10 | Cut Warden; polish Squirt + run the experiment |
+| Payload fails | Guard-and-block Warden (no carrying), or a 30ml reservoir |
+| The shell restyle is eating weeks | Ship Sesame's stock shell + your face and motion. Identity mostly lives in *how it moves* anyway |
+| Behind at week 11 | Cut Warden. Polish Squirt, keep the motion engine, run the experiment |
 
-The floor is "a robot that catches you on your phone and squirts you, with a
-focus experiment." That alone wins a room.
+**Cut Warden before you cut the motion engine.** A robot that moves like a
+creature and does one thing beats a stiff robot that does two — on a demo
+table and in a writeup.
+
+The floor is "a robot that breathes, catches you on your phone, and squirts
+you, with a focus experiment." That alone wins a room.
 
 ## What carries over from your wristband
 
@@ -253,7 +337,8 @@ focus experiment." That alone wins a room.
 - `PARTS.md` — what to buy and why, Sesame BOM + the Enforcer additions
 - `PURCHASE_LIST.md` — the German cart with verified prices and stock
 - `BUILD_CHECKLIST.md` — week-by-week plan
-- `cad/` — the Enforcer's *additional* printed parts (Sesame provides the body)
+- `cad/` — the Enforcer's *additional* printed parts, and the torque budget
+  that constrains how far you can restyle the legs
 
 ## Open decisions
 

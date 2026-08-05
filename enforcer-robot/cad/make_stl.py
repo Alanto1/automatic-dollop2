@@ -61,6 +61,18 @@ CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 # safety section of README.md.
 NOZZLE_TILT = 20.0
 
+# Torque budget for restyling the legs. MG90S is rated 1.8 kg-cm at 4.8V and
+# 2.2 at 6V; derate hard, because a servo held at its rating cooks and a
+# quadruped holds a pose continuously rather than in bursts.
+MG90S_STALL_KGCM = 2.2
+SERVO_DERATE = 0.55         # usable fraction of stall for a sustained hold
+
+# !!! ESTIMATE -- WEIGH YOUR SESAME AND REPLACE !!!
+SESAME_MASS_G = 380.0
+# Worst case during a crawl gait: the body shifts its weight to free a leg,
+# so one leg momentarily carries roughly half the machine.
+WORST_LEG_SHARE = 0.5
+
 SEG = 24                    # facets per full circle
 
 # --------------------------------------------------------------------------
@@ -415,6 +427,24 @@ def is_watertight(tris, tol=5):
 # --------------------------------------------------------------------------
 
 
+def joint_torque_kgcm(mass_g: float, reach_mm: float,
+                     share: float = WORST_LEG_SHARE) -> float:
+    """Peak sustained torque at one hip, in kg-cm.
+
+    Torque is force times lever arm, and the lever arm is the *horizontal*
+    distance from the joint to the foot -- which is what changes when you
+    restyle the legs longer or splay them wider for a spider stance. Both
+    cost torque linearly, and MG90S has very little to give.
+    """
+    return (mass_g * share / 1000.0) * (reach_mm / 10.0)
+
+
+def max_reach_mm(mass_g: float, share: float = WORST_LEG_SHARE) -> float:
+    """How far out a foot may sit before MG90S runs out of derated torque."""
+    budget = MG90S_STALL_KGCM * SERVO_DERATE
+    return budget / (mass_g * share / 1000.0) * 10.0
+
+
 def grid_holes(cols=GRID_COLS, rows=GRID_ROWS, pitch=GRID_PITCH, d=M3):
     """Mounting grid. Every add-on lines up to this, so the reservoir can move
     fore/aft after you weigh the robot and find the balance point."""
@@ -702,6 +732,20 @@ def self_test():
         parts = ", ".join(f"{k} {v:.0f}g" for k, v in payload.items())
         print(f"  ok    payload {total:.0f}g  ({parts})")
         print(f"        WEIGH your Sesame -- this has to walk on 8x MG90S")
+
+    # How much leg restyling the servos will actually tolerate.
+    payload_g = sum(payload.values())
+    total_g = SESAME_MASS_G + payload_g
+    limit = max_reach_mm(total_g)
+    print(f"  ok    at {total_g:.0f}g loaded, a foot may sit {limit:.0f}mm out "
+          f"from its hip")
+    print(f"        (MG90S {MG90S_STALL_KGCM} kg-cm derated to "
+          f"{SERVO_DERATE:.0%} for a sustained hold)")
+    for reach in (50.0, 60.0, 70.0, 80.0, 90.0):
+        t = joint_torque_kgcm(total_g, reach)
+        flag = "OK " if reach <= limit else "OVER"
+        print(f"        {flag} {reach:.0f}mm reach -> {t:.2f} kg-cm")
+    print(f"        SESAME_MASS_G is an ESTIMATE -- weigh yours and re-run")
 
     return ok
 

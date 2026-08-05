@@ -68,6 +68,8 @@ if the Pi Zero actually fails.
 | 21 | Silicone tubing + narrow nozzle | — | 3 | Aquarium airline tubing is ideal. Narrow nozzle = focused squirt at low flow |
 | 22 | Small reservoir, 50–100 ml | 1 | 3 | **Start at 50ml.** Water is 1g/ml and Sesame is small — see README "Honest hard parts" |
 
+| 22b | **Electrolytic capacitor, 1000µF+ 16V** | 2 | 0,50 ea | Bulk capacitance across the servo rail. You will want this for the motion engine — see README "Making it move like a creature" — and it's the standard fix for pump inrush too |
+
 ⚠️ **Do not run the pump off Sesame's battery without testing.** The firmware
 already staggers servo moves by 20ms because all-at-once browns out the board.
 A pump is exactly that kind of load. Give it a separate cell, or a fat

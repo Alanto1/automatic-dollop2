@@ -19,6 +19,8 @@ things to check while you're in there, because they change what you buy:
 - **ESP32-S2 Mini vs the Sesame Distro Board.** Start with the hand-wired
   S2 Mini. The custom PCB is nicer, but fabbing it adds a lead time and a
   failure mode on your critical path. Treat it as a v2 upgrade.
+- **Grab the Fusion 360 sources**, not just the STLs. You're going to restyle
+  the shell into a spider (week 4), and you want the editable files.
 
 Then star the repo and note the license. You'll cite it in the writeup, and
 "what's mine vs what's upstream" is a question you *will* be asked.
@@ -96,6 +98,19 @@ YOLOv8n over it on your laptop.
 - **This gives you real false-positive numbers before you own a robot**, which
   is the most valuable thing you can carry into the build.
 
+### Prototype the motion engine in a browser
+
+The thing that stops it looking stiff, and it needs no hardware. Draw a
+2-DOF leg on a canvas and animate it:
+
+- Compare a hard step to target vs a **cubic ease-in-out** ramp — you'll see
+  the difference instantly.
+- Add **idle breathing** (±2–3° at ~0.2 Hz) and watch it come alive.
+- Add anticipation before a lunge, overshoot-and-settle after.
+
+Same trick as `haptic_simulator.html`: get the feel right on screen, then port
+the curves to the ESP32. See README "Making it move like a creature".
+
 ### Learn Sesame's JSON API
 
 The seam between your code and the robot. Read the firmware's API, then write
@@ -125,7 +140,7 @@ Costs nothing, and it's what turns a gag into a project:
 |---|---|
 | **This week** | Read the Sesame repo. Place all five orders. Diagnose the printer. |
 | **Week 1** | Mood state machine + tests + browser visualiser. |
-| **Week 2** | Print Sesame's parts. Record desk footage; run detection on it. |
+| **Week 2** | Print Sesame's parts. Prototype easing + breathing in a browser. |
 | **Week 3** | Assemble Sesame, calibrate servos, get it walking on stock firmware. |
 | **Week 4** | Python client against the JSON API. Consent form, questionnaire, volunteers. |
 
@@ -137,9 +152,12 @@ assembling a robot and assembling a *project*.
 
 ## What not to do yet
 
-- **Don't modify Sesame's firmware or CAD until it walks stock.** Get the
-  known-good design working first, or you won't know whether a fault is yours
-  or an assembly error.
+- **Don't modify Sesame's firmware or CAD until it walks stock.** You *will*
+  modify both — the motion engine is firmware, the spider shell is CAD — but
+  get the known-good design working first, or you won't know whether a fault
+  is yours or an assembly error.
+- **Don't touch the internal frame or the leg pivot geometry.** That's the
+  part that took its author four months to get walking. Restyle the shell.
 - **Don't fab the custom PCB.** Hand-wire the S2 Mini. Add the board later.
 - **Don't mount the water rig before the state machine works.** The pump is
   the easy part; knowing *when* to fire is the hard part.

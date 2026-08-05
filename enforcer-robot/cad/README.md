@@ -77,6 +77,29 @@ Print the **payload deck first, on its own**, and check it actually straps to
 your Sesame before printing anything else. Everything downstream assumes it
 fits.
 
+## Torque budget — read this before restyling the legs
+
+`make_stl.py --test` computes how far a foot may sit from its hip before
+MG90S runs out of torque. At the default 507g loaded, that's **~48mm** — and
+50mm is already over.
+
+```
+  at 507g loaded, a foot may sit 48mm out from its hip
+     OVER 50mm reach -> 1.27 kg-cm      OVER 90mm reach -> 2.28 kg-cm
+```
+
+Torque is force × lever arm, and the lever arm is the **horizontal** distance
+from joint to foot. So longer legs *and* a wider splayed stance both cost
+linearly, and payload eats the same budget at roughly **1.2mm of reach per
+10g**.
+
+**Get the spider look from shape, not size.** Angular shell, low body,
+knees-up silhouette, spider eyes on the OLED. Long legs are the one thing
+MG90S cannot pay for.
+
+`SESAME_MASS_G` is an estimate (380g). **Weigh yours and re-run** before you
+change any leg geometry — the whole answer moves with it.
+
 ## Weight budget — read this before choosing a bottle
 
 Water is 1 g/ml. The self-test reports the fill weight for your `BOTTLE_D`:
