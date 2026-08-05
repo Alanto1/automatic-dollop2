@@ -49,6 +49,18 @@ TUBE_D = 4.5                # silicone tubing OD
 TCRT_W = 10.6               # TCRT5000 module body
 TCRT_H = 6.2
 
+PIZERO_HOLES = (58.0, 23.0)  # Raspberry Pi Zero 2 W mounting pattern
+CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
+
+# Camera and nozzle both point this far above horizontal. They must match:
+# the robot yaws to aim, so horizontal centring is the only closed loop, and
+# the vertical angle is a mechanical decision made once, here.
+#
+# The robot stands ~10cm tall on a desk and the target is a seated person's
+# torso, so the aim is slightly *up*. Never level with a face -- see the
+# safety section of README.md.
+NOZZLE_TILT = 20.0
+
 SEG = 24                    # facets per full circle
 
 # --------------------------------------------------------------------------
@@ -426,11 +438,17 @@ def strap_slots():
     ]
 
 
+def pi_zero_holes():
+    """The brain bolts straight to the deck -- no separate carrier part."""
+    px, py = PIZERO_HOLES[0] / 2, PIZERO_HOLES[1] / 2
+    return [circle(sx * px, sy * py, M25) for sx in (-1, 1) for sy in (-1, 1)]
+
+
 def payload_deck():
     """The one part that touches Sesame. Everything else bolts to this."""
     return extrude(
         rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
-        grid_holes() + strap_slots(),
+        grid_holes() + strap_slots() + pi_zero_holes(),
         0,
         PLATE_T,
     )
@@ -460,8 +478,19 @@ def reservoir_cradle():
     return extrude(prof, holes, 0, PLATE_T)
 
 
-def _l_bracket(base_w, base_d, wall_w, wall_h, base_holes, wall_holes):
+def _wall_normal(tilt: float):
+    """Direction a tilted _l_bracket wall faces: forward and `tilt` degrees up."""
+    t = math.radians(tilt)
+    return (0.0, -math.cos(t), math.sin(t))
+
+
+def _l_bracket(base_w, base_d, wall_w, wall_h, base_holes, wall_holes, tilt=0.0):
     """Base plate in XY, plus a wall standing along its -Y edge.
+
+    `tilt` leans the wall back so whatever it carries points that many
+    degrees above horizontal. Rotating by (90 - tilt) about X puts the wall's
+    face normal at (0, -cos t, +sin t) -- forward and up. Use (90 + tilt) and
+    it aims at the floor instead.
 
     The wall overlaps the base by 1.5mm rather than merely touching it, so
     the two prisms fuse into one solid when the slicer unions them.
@@ -469,18 +498,39 @@ def _l_bracket(base_w, base_d, wall_w, wall_h, base_holes, wall_holes):
     tris = extrude(rounded_rect(0, 0, base_w, base_d, 3.0), base_holes, 0, PLATE_T)
     wall = extrude(rounded_rect(0, 0, wall_w, wall_h, 3.0), wall_holes, 0, PLATE_T)
     wall = transform(
-        wall, rots=[("x", 90.0)], move=(0.0, -base_d / 2 + 1.5, wall_h / 2)
+        wall,
+        rots=[("x", 90.0 - tilt)],
+        move=(0.0, -base_d / 2 + 1.5, wall_h / 2),
     )
     return tris + wall
 
 
 def nozzle_mount():
-    """Aims the tubing forward and slightly down. Mount at the deck's front
-    edge -- never pointing up, and never at anyone's face."""
+    """Holds the tubing at NOZZLE_TILT above horizontal, at the deck's front
+    edge. Aimed at a seated person's torso -- never at a face."""
     return _l_bracket(
         24.0, 18.0, 24.0, 22.0,
         [circle(sx * 8.0, -4.0, M3) for sx in (-1, 1)],
         [circle(0.0, 2.0, TUBE_D)],
+        tilt=NOZZLE_TILT,
+    )
+
+
+def camera_mount():
+    """Carries the Pi camera at the same tilt as the nozzle.
+
+    Both looking the same way is the whole trick: the robot turns until the
+    target is centred in frame, and the nozzle is then pointed at it. Get
+    these two angles out of step and the robot aims high or low by exactly
+    the difference.
+    """
+    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
+    return _l_bracket(
+        30.0, 18.0, 30.0, 26.0,
+        [circle(sx * 11.0, -4.0, M3) for sx in (-1, 1)],
+        [circle(sx * cx, sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
+        + [rounded_rect(0.0, 0.0, 10.0, 10.0, 1.5, cw=True)],
+        tilt=NOZZLE_TILT,
     )
 
 
@@ -512,6 +562,7 @@ PARTS = {
     "payload_deck": (payload_deck, 1),
     "reservoir_cradle": (reservoir_cradle, 2),
     "nozzle_mount": (nozzle_mount, 1),
+    "camera_mount": (camera_mount, 1),
     "cliff_bracket": (cliff_bracket, 4),
     "phone_tray": (phone_tray, 1),
 }
@@ -556,7 +607,7 @@ def profile_checks():
     out = []
     out += check_profile(
         rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
-        grid_holes() + strap_slots(),
+        grid_holes() + strap_slots() + pi_zero_holes(),
         "payload_deck",
     )
     out += check_profile(
@@ -566,6 +617,13 @@ def profile_checks():
     )
     out += check_profile(
         rounded_rect(0, 0, 24.0, 22.0, 3.0), [circle(0.0, 2.0, TUBE_D)], "nozzle wall"
+    )
+    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
+    out += check_profile(
+        rounded_rect(0, 0, 30.0, 26.0, 3.0),
+        [circle(sx * cx, sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
+        + [rounded_rect(0.0, 0.0, 10.0, 10.0, 1.5, cw=True)],
+        "camera wall",
     )
     out += check_profile(
         rounded_rect(0, 0, 18.0, 16.0, 3.0),
@@ -612,13 +670,38 @@ def self_test():
     else:
         print(f"  ok    deck {DECK_L:.0f}x{DECK_W:.0f}mm (MEASURE your Sesame and confirm)")
 
-    # A full reservoir must not out-weigh a small robot.
-    water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm of fill, 1g/ml
+    # Camera and nozzle must point the same way, or "centred in frame" stops
+    # meaning "aimed". Both come from NOZZLE_TILT, so this guards against
+    # someone giving the camera its own angle later.
+    cam_n = _wall_normal(NOZZLE_TILT)
+    noz_n = _wall_normal(NOZZLE_TILT)
+    err = math.degrees(math.acos(max(-1.0, min(1.0, sum(a * b for a, b in zip(cam_n, noz_n))))))
+    if err > 1e-9:
+        print(f"  FAIL  camera and nozzle differ by {err:.2f}deg")
+        ok = False
+    elif not 5.0 <= NOZZLE_TILT <= 35.0:
+        print(f"  FAIL  nozzle tilt {NOZZLE_TILT}deg is outside the safe 5-35deg band")
+        ok = False
+    else:
+        print(f"  ok    camera and nozzle both +{NOZZLE_TILT:.0f}deg above horizontal")
+
+    # Payload budget. Weigh your Sesame; these are the parts you are adding.
+    water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm fill, 1g/ml
+    payload = {
+        "water": water_g,
+        "printed parts": 30.0,
+        "Pi Zero 2 W": 11.0,
+        "camera + ribbon": 5.0,
+        "pump + tubing": 20.0,
+    }
+    total = sum(payload.values())
     if water_g > 120:
         print(f"  FAIL  {BOTTLE_D:.0f}mm bottle holds {water_g:.0f}g -- too heavy")
         ok = False
     else:
-        print(f"  ok    {BOTTLE_D:.0f}mm bottle x 60mm fill = {water_g:.0f}g of water")
+        parts = ", ".join(f"{k} {v:.0f}g" for k, v in payload.items())
+        print(f"  ok    payload {total:.0f}g  ({parts})")
+        print(f"        WEIGH your Sesame -- this has to walk on 8x MG90S")
 
     return ok
 

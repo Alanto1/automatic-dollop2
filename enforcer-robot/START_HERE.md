@@ -32,12 +32,18 @@ Order in this sequence, because lead times differ:
 1. **AliExpress first** — ESP32-S2 Mini, SSD1306 OLED, M2 screws, tubing.
    Longest lead time, smallest cost. Order it before anything else.
 2. **roboter-bausatz** — 10× MG90S. Nobody else in Germany stocks them.
-3. **BerryBase** — Pi, camera, SD cards, pump, filament, cliff sensors.
-4. **Segor walk-in** — MOSFETs, diodes, wire, heat-shrink.
+3. **BerryBase** — Zero camera, SD cards, buck converters, pump, filament,
+   cliff sensors.
+4. **Reichelt** — Pi Zero 2 WH, MOSFETs, diodes.
+5. **Segor walk-in** — wire, heat-shrink, connectors, spare screws.
 
-**One decision gates the BerryBase order: Pi 5 2GB (€69.50) or 4GB (€118.50).**
-Recommendation is 2GB — see `PURCHASE_LIST.md`. It's a desk unit, so a later
-upgrade is swapping a board, not re-engineering a robot.
+**The brain is a Raspberry Pi Zero 2 W**, not a Pi 5 — 11g and ~2W, which is
+what Sesame can actually carry. Take the **WH** (headers pre-soldered, €22.10
+at Reichelt); you need GPIO for the pump MOSFET and for the link to the ESP32.
+
+Two stock warnings from the sourcing pass: BerryBase had the **Pi Zero out of
+stock in every variant**, so buy it at Reichelt — and the **Zero camera showed
+only 3 left**.
 
 ## Step 2 — Diagnose the printer (first 48 hours)
 
@@ -78,10 +84,15 @@ STRIKE → SMUG, driven by a `scene` object.
 
 You don't need the Pi or the camera to start. Record 20 minutes of yourself at
 a desk on your phone — working, picking up your phone, leaving — and run
-YOLOv8n + MediaPipe over it on your laptop.
+YOLOv8n over it on your laptop.
 
 - Hand-label "working" / "on phone" / "gone", then measure how often the
   detector agrees.
+- **Test at 1–2 FPS**, not full frame rate. That is what a Pi Zero 2 W will
+  actually give you, and you want to know now whether your thresholds survive
+  it. Sample every 15th frame or so.
+- Derive "head down" from **bounding-box geometry**, not MediaPipe Pose —
+  512MB alongside the detector won't take it.
 - **This gives you real false-positive numbers before you own a robot**, which
   is the most valuable thing you can carry into the build.
 
@@ -91,6 +102,10 @@ The seam between your code and the robot. Read the firmware's API, then write
 a thin Python client — `stand()`, `walk(dir)`, `turn(deg)`, `face(mood)` —
 against a **fake** robot that just logs. When real hardware arrives you swap
 the transport and everything above it already works.
+
+Keep the transport behind that seam deliberately: you'll start on WiFi
+(no firmware change) and probably move to UART later, since the two boards end
+up 5cm apart on the same robot.
 
 ### The experiment and the paperwork
 
@@ -108,7 +123,7 @@ Costs nothing, and it's what turns a gag into a project:
 
 | When | Do |
 |---|---|
-| **This week** | Read the Sesame repo. Place all four orders. Diagnose the printer. |
+| **This week** | Read the Sesame repo. Place all five orders. Diagnose the printer. |
 | **Week 1** | Mood state machine + tests + browser visualiser. |
 | **Week 2** | Print Sesame's parts. Record desk footage; run detection on it. |
 | **Week 3** | Assemble Sesame, calibrate servos, get it walking on stock firmware. |

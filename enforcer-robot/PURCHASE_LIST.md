@@ -10,56 +10,49 @@ called out where it matters.
 
 ---
 
-## Headline: adopting Sesame roughly halves the build
+## Headline: ~€197, and the brain is now sized to the robot
 
-The previous 12-servo design with the Pi riding on the robot came to **~€450**.
-This one lands at **~€265** with the 2GB Pi. Three things did that:
+The original 12-servo design with a Pi 5 riding on it came to **~€450**. This
+lands at **~€197**. Two decisions did it:
 
 | Deleted | Why | Saved |
 |---|---|---|
-| 7 of 15 servos | Sesame is 8 servos, not 12 (+3 spare) | ~€29 |
+| The whole custom body | Build Sesame instead — 8 servos, not 12+3 | ~€29 servos |
 | PCA9685 ×2 | ESP32 drives the servos directly | €13 |
-| UBEC, buck 5A, LiPo, charger, LiPo bag | Pi is on the desk on mains; robot uses Sesame's small pack | ~€70 |
-| Pan/tilt bracket + 2 servos | Aiming is turning the robot | ~€20 |
+| **Pi 5 → Pi Zero 2 W** | 11g and ~2W instead of 46g and ~6W. A Pi 5 is physically larger than Sesame | **~€99** |
+| UBEC, 5A buck, LiPo, charger, LiPo bag | One small buck off Sesame's pack feeds a 2W board | ~€70 |
+| Pan/tilt bracket + 2 servos | The robot yaws to aim; vertical is fixed in the printed mounts | ~€20 |
 
-The Pi is still the single biggest line, and the RAM decision below is still
-the biggest lever in the cart.
+**The Pi 5 RAM surge no longer matters to this build**, because you're not
+buying one. (For the record, it was real and verified at two retailers: the
+Pi 5 ladder ran €49.20 / €69.50 / €118.50 / €187.50 / €309.50 across 1–16GB
+on 2026-08-01. If you ever fall back to a desk-mounted Pi 5, buy the 2GB.)
 
-## The Raspberry Pi RAM surge (unchanged, still the key decision)
-
-Reichelt's Pi 5 ladder on 2026-08-01: €49.20 (1GB) → **€69.50 (2GB)** →
-**€118.50 (4GB)** → €187.50 (8GB) → €309.50 (16GB). That is not a normal Pi
-price curve — it's a RAM cost surge passed straight through. Verified
-independently at **two** retailers (BerryBase €118.50, Reichelt €118.50), so
-it isn't one shop's markup.
-
-- **The Pi 4 fallback is void.** Reichelt: Pi 4 4GB = €108.40 vs Pi 5 4GB =
-  €118.50. You'd save €10 for a much weaker CPU. Buy the Pi 5.
-- **The lever is RAM, not generation.** **2GB at €69.50 saves €49.** YOLOv8n
-  plus MediaPipe on headless Pi OS Lite fits in 2GB comfortably — the models
-  are tens of MB and there's no desktop competing for memory.
-- **Recommendation: 2GB.** Now more than before, because the Pi is a fixed
-  desk unit — if you ever need more, you swap a board on a desk instead of
-  re-engineering a robot's power budget.
+**What the Pi Zero costs you** is frame rate, not capability — ~1–2 FPS and
+512MB. Every trigger here is a multi-second threshold, so that's enough. See
+README "Architecture".
 
 ---
 
-## Order 1 — BerryBase (berrybase.de) · €165.90
+## Order 1 — BerryBase (berrybase.de) · €76.30
 
 | Item | Qty | Unit | Sum | Stock shown | Link |
 |---|---|---|---|---|---|
-| Raspberry Pi 5, **2GB** RAM | 1 | 69,50 | 69,50 | in stock | [link](https://www.berrybase.de/) |
-| Raspberry Pi Camera Module 3, 12MP | 1 | 28,90 | 28,90 | 100+ | [link](https://www.berrybase.de/raspberry-pi-camera-module-3-12mp) |
+| Kamera für Raspberry Pi Zero (incl. Zero ribbon) | 1 | 15,90 | 15,90 | **only 3** | [link](https://www.berrybase.de/kamera-fuer-raspberry-pi-zero) |
 | SanDisk Ultra microSDHC A1 32GB + Adapter | 2 | 15,60 | 31,20 | 100+ | [link](https://www.berrybase.de/sandisk-ultra-microsdhc-a1-120mb-s-class-10-speicherkarte-adapter-32gb) |
-| Waveshare DC-DC Buck Mini, 4A, 5–36V in, 5V out | 1 | 4,90 | 4,90 | 63 | [link](https://www.berrybase.de/waveshare-dc-dc-buck-mini-module-bis-zu-4a-500khz-5-36v-eingang-3-3v-oder-5v-ausgang) |
+| Waveshare DC-DC Buck Mini, 4A, 5–36V in, 5V out | 2 | 4,90 | 9,80 | 63 | [link](https://www.berrybase.de/waveshare-dc-dc-buck-mini-module-bis-zu-4a-500khz-5-36v-eingang-3-3v-oder-5v-ausgang) |
 | TCRT5000 IR Sensor — cliff sensors | 4 | 0,30 | 1,20 | 90 | [link](https://www.berrybase.de/tcrt5000-infrarot-sensor-lichtschranke) |
 | Adafruit submersible 3V water pump, 1m cable | 1 | 3,30 | 3,30 | 16 | [link](https://www.berrybase.de/adafruit-tauchbare-3v-dc-wasserpumpe-mit-1-meter-kabel-horizontal) |
 | Anycubic PLA Filament 1,75mm 1kg (black) | 1 | 14,90 | 14,90 | 5 | [link](https://www.berrybase.de/anycubic-pla-filament-1-75mm-1kg/farbe-schwarz) |
-| Raspberry Pi 5 USB-C PSU, 27W | 1 | 12,00 | 12,00 | in stock | [link](https://www.berrybase.de/) |
-| | | | **165,90** | | |
+| | | | **76,30** | | |
 
-*(Pi 5 2GB price is Reichelt-verified; if BerryBase differs, buy from
-whichever is cheaper — both stocked the 4GB at an identical €118.50.)*
+⚠️ **The Zero camera showed only 3 in stock.** It's the one that ships with
+the *narrow* Zero-format ribbon, which is why it's worth having rather than a
+full-size module plus an adapter. If it's gone, buy any Pi camera module plus
+Reichelt's `RPIZ CAM ADAPTER` (€1.10) — the Zero's CSI connector is narrower
+than a standard Pi's and a normal camera cable **will not fit**.
+
+Two buck converters: one for the Pi Zero, one spare (or for the pump rail).
 
 **On the pump:** it is **submersible, not self-priming** — it sits *inside*
 the reservoir, not beside it. That simplifies the plumbing (pump in the
@@ -106,16 +99,26 @@ vertical pixels, which will break Sesame's face graphics; and a Soldered
 on AliExpress rather than bodging the face — it's the highest
 personality-per-euro component in the build.
 
-## Order 4 — Reichelt · €2.35 (don't place on its own)
+## Order 4 — Reichelt (reichelt.de) · €24.45
+
+**The brain lives here.** BerryBase had the Pi Zero 2 W listed at €18.90 but
+`Artikel aktuell nicht lieferbar` in *every* variant — bare, WH, and all three
+starter kits. Reichelt stocks it.
 
 | Item | Order no. | Qty | Unit | Sum |
 |---|---|---|---|---|
+| **Raspberry Pi Zero 2 WH** (headers pre-soldered) | `RASP PI ZERO2 WH` | 1 | 22,10 | 22,10 |
 | IRLZ 44N — MOSFET, N-Ch 55V 47A, TO-220AB | `IRLZ 44N` | 3 | 0,70 | 2,10 |
 | 1N 4007 — rectifier diode 1000V 1A, DO-41 | `1N 4007` | 5 | 0,05 | 0,25 |
+| | | | | **24,45** |
 
-Shipping will exceed the order. Buy these over the counter at **Segor** (see
-below) or fold them into a Reichelt order you're already placing — the prices
-are here to pin the reference.
+Take the **WH** (€22.10) over the bare **W** (€19.40). €2.70 buys you
+pre-soldered headers, and you need GPIO for the pump MOSFET and the UART link
+to the ESP32 — soldering a 40-pin header to a board you can't replace quickly
+is a bad trade.
+
+Also on the shelf if you need it: `RPIZ CAM ADAPTER` (15-pin CSI → Zero),
+€1.10.
 
 ---
 
@@ -140,15 +143,13 @@ Budget **~€20–30**. Mind the 13:30–14:30 lunch closure.
 
 | Block | € |
 |---|---|
-| Order 1 — BerryBase | 165,90 |
+| Order 1 — BerryBase | 76,30 |
 | Order 2 — servos | 41,60 |
 | Order 3 — AliExpress | ~15 |
-| Order 4 — semiconductors (buy at Segor) | 2,35 |
+| Order 4 — Reichelt (Pi Zero 2 WH + semiconductors) | 24,45 |
 | Segor walk-in bag | ~25 |
-| Battery + charger (2S ~800mAh, still to source) | ~15 |
-| **Total** | **~265** |
-
-With the **4GB** Pi instead of 2GB: **~314**.
+| Battery + charger (2S, still to source) | ~15 |
+| **Total** | **~197** |
 
 Shipping on top: ~€5–7 each for BerryBase and roboter-bausatz.
 

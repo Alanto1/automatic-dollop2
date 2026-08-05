@@ -31,11 +31,15 @@ now "build Sesame as documented."
 - [x] ~~Sourcing pass~~ — done, see [`PURCHASE_LIST.md`](PURCHASE_LIST.md)
 - [x] ~~Hexapod vs quadruped~~ — **quadruped**
 - [x] ~~Design the body~~ — **no: build Sesame** (8 servos, 2 per leg)
-- [ ] Decide **Pi 5 2GB (€69,50) vs 4GB (€118,50)** — gates the BerryBase order
+- [x] ~~Pi 5 2GB vs 4GB~~ — **neither: Pi Zero 2 W**, which is the largest
+      brain that fits Sesame's weight and power budget
 - [ ] Place the **AliExpress** order FIRST (ESP32-S2 Mini, SSD1306, M2 screws,
       tubing) — longest lead time, smallest cost
 - [ ] Place **roboter-bausatz** (10× MG90S — nobody else in Germany stocks them)
-- [ ] Place **BerryBase** (Pi, camera, SD ×2, pump, cliff sensors, filament, PSU)
+- [ ] Place **BerryBase** (Zero camera, SD ×2, buck ×2, pump, cliff sensors,
+      filament) — the Zero camera showed **only 3 in stock**
+- [ ] Place **Reichelt** (Pi Zero 2 **WH**, MOSFETs, diodes) — BerryBase had
+      the Pi Zero out of stock in every variant
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
 - [ ] Check the battery physically fits Sesame's undercarriage before buying
 
@@ -69,12 +73,15 @@ That's already a robot on a table.
 
 ---
 
-## Week 3 — Weigh it, then decide the water rig
+## Week 3 — Weigh it, then decide the payload
 
 Do this **before** designing anything around the reservoir.
 
 - [ ] Weigh the finished Sesame
-- [ ] Tape a 50ml water bottle to it. Does it still walk? Now 100ml?
+- [ ] The Enforcer payload is **~127g**: water 61g, printed parts 30g, Pi Zero
+      11g, camera 5g, pump + tubing 20g (`make_stl.py --test` prints this)
+- [ ] Tape that much dead weight to it. Does it still walk? Then try 50ml of
+      water vs 100ml
 - [ ] **Decide reservoir size from that measurement**, not from hope
 - [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
       and that's a fine project
@@ -87,10 +94,12 @@ Do this **before** designing anything around the reservoir.
 
 ## Week 4 — Perception
 
-- [ ] Camera on the desk, streaming into OpenCV on the Pi
-- [ ] Person + `cell_phone` detection (YOLOv8n)
-- [ ] Head-pitch / presence via MediaPipe
-- [ ] Detect the **robot** in frame too — you need its position to aim it
+- [ ] Pi Zero 2 W on the payload deck; camera on its mount, forward-facing
+- [ ] Camera streaming into OpenCV on the Pi Zero
+- [ ] Person + `cell_phone` detection (YOLOv8n, 320×320, NCNN or ONNX)
+- [ ] Head-down from bounding-box geometry — **not** MediaPipe Pose, which is
+      likely too heavy for 512MB alongside the detector
+- [ ] Measure your real frame rate. 1–2 FPS is expected and is enough
 - [ ] Wrap it all into one `scene` object the state machine reads
 - [ ] **Tune against false positives.** It must NOT fire while you work
 
@@ -109,7 +118,8 @@ Do this **before** designing anything around the reservoir.
 
 ## Week 6 — Squirt mode, end to end
 
-- [ ] Aiming: from the desk camera, turn the robot until it faces the target
+- [ ] Aiming: turn until the target is **horizontally** centred in frame, then
+      fire. Vertical is fixed at +20° in the printed mounts — nothing to tune
 - [ ] Full loop: detect slacking → escalate through moods → aim → fire
 - [ ] Safety pass: nozzle outward and slightly down, **never** the face;
       consent framing ready
@@ -120,7 +130,7 @@ Do this **before** designing anything around the reservoir.
 ## Week 7 — Autonomous walking
 
 - [ ] **Cliff sensors first** — it must refuse to step off the desk edge
-- [ ] Walk toward a target under closed-loop control from the desk camera
+- [ ] Walk toward a target under closed-loop control from the onboard camera
 - [ ] Tune until it crosses a desk without stumbling
 - [ ] Note: 2 DOF per leg — it turns by differential gait, not by hip swivel
 
@@ -141,8 +151,8 @@ Do this **before** designing anything around the reservoir.
 - [ ] One-hour continuous run; log and fix every crash
 - [ ] Servo temperature after sustained walking
 - [ ] Watchdog: a hung subsystem recovers instead of freezing mid-demo
-- [ ] **WiFi failure behaviour** — new risk in this architecture. The robot
-      must fail *safe and still*, not last-command-forever, if the Pi drops off
+- [ ] **Link failure behaviour** — if the Pi Zero → ESP32 link drops, the robot
+      must fail *safe and still*, not last-command-forever
 - [ ] Water-safety recheck; cable strain relief
 - [ ] Battery runtime measured and written down
 
@@ -177,6 +187,7 @@ Do this **before** designing anything around the reservoir.
   people try to beat it.
 - The jury wants **rigor**: live detection view on a screen, experiment
   numbers ready, and a clean answer to "what did you actually build?"
-- **Bring your own WiFi** (phone hotspot or a travel router). The whole
-  architecture depends on the Pi reaching the robot — do not trust venue WiFi.
+- **If the Pi↔ESP32 link is still WiFi, bring your own** (phone hotspot or a
+  travel router) and never trust venue WiFi. Moving that link to UART before
+  demo day removes the whole risk.
 - Bring a **towel** and a target cup. Obvious, and everyone forgets.

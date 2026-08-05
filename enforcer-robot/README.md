@@ -66,50 +66,74 @@ brackets."
 
 ---
 
-## Architecture
+## Architecture — everything rides on the robot
 
-The one hard constraint: **an ESP32-S2 cannot run computer vision.** So the
-brain is a Raspberry Pi, and it talks to Sesame over the WiFi JSON API that
-Sesame already has.
+The robot has to carry its own eyes. A camera on a tripod driving a puppet is
+not an embodied agent, it breaks the moment the robot walks out of frame, and
+it throws away the best idea in the design: **camera and nozzle point the same
+way, so centring the target *is* aiming.**
+
+The real constraint isn't "onboard vs off-board", it's **which brain fits**. A
+Pi 5 is 85 × 56mm and ~6W — physically larger than Sesame and far past its
+power budget. A **Pi Zero 2 W** is 65 × 30mm, **11g**, and ~2W. That fits.
 
 ```
-   ┌─────────── on your desk ────────────┐        ┌──── the robot (Sesame) ────┐
-   │  Raspberry Pi 5 + camera            │        │  ESP32-S2                  │
-   │                                     │        │                            │
-   │  perception:                        │        │   ┌── 8 × MG90S servos     │
-   │   • person + phone (YOLOv8n)        │  WiFi  │   ├── SSD1306 OLED face    │
-   │   • head pose / presence (MediaPipe)│ ─JSON─►│   └── GPIO ─► MOSFET ─► 💦 │
-   │            │                        │        │                            │
-   │            ▼                        │        │  runs stock Sesame         │
-   │   MOOD STATE MACHINE                │        │  firmware + one added      │
-   │   CHILL→SUSPICIOUS→WARNING→         │        │  endpoint for the pump     │
-   │        STRIKE→SMUG                  │        └────────────────────────────┘
-   │            │                        │
-   │            └─► "turn left", "creep", │
-   │                "face", "FIRE"        │
-   └─────────────────────────────────────┘
+        ┌──────────────────── the robot ────────────────────┐
+        │                                                   │
+        │  ┌─ Pi Zero 2 W (on the payload deck) ─────────┐   │
+        │  │  camera ─► YOLOv8n: person + cell_phone     │   │
+        │  │              │                              │   │
+        │  │              ▼                              │   │
+        │  │   MOOD STATE MACHINE                        │   │
+        │  │   CHILL→SUSPICIOUS→WARNING→STRIKE→SMUG      │   │
+        │  │       │                        │            │   │
+        │  └───────┼────────────────────────┼────────────┘   │
+        │          │ UART / WiFi            │ GPIO           │
+        │          ▼                        ▼                │
+        │  ┌─ ESP32-S2 (stock Sesame) ─┐   MOSFET ─► pump ─► │💦
+        │  │  8 × MG90S · OLED face    │                     │
+        │  │  gaits, poses, animations │   camera + nozzle   │
+        │  └───────────────────────────┘   share one tilt    │
+        └───────────────────────────────────────────────────┘
 ```
 
-**Why the Pi sits on the desk rather than on the robot.** Sesame is a small
-robot on an 800mAh battery. A Pi 5 plus its power draw would wreck both its
-weight budget and its runtime, and you'd be redesigning the body you just
-decided not to design. Keeping the Pi off-board means **Sesame stays exactly
-as documented** — no modifications, no fork, no re-print.
+**Two brains, one job each.** The ESP32 keeps running stock Sesame firmware —
+servos, face, gaits — so you never fork it. The Pi Zero does the thinking and
+fires the pump. Start the link over **WiFi** (Sesame's JSON API already exists,
+zero firmware change); move to **UART** if it's flaky. They're 5cm apart, so
+UART is the better end state.
 
-It also fixes the aiming problem more cleanly than the original plan did. A
-desk camera sees **both you and the robot**, third-person. So "aim" becomes
-"turn the robot until it's pointing at the target," commanded from outside —
-no pan/tilt head, no onboard camera, no visual servoing loop on a
-microcontroller. One camera also gives you the footage the *experiment* needs
-for counting phone pickups.
+### Aiming is yaw-only, and that simplifies everything
 
-**The honest cost of this choice:** the robot is not self-contained, and a
-jury may ask about that. The answer is that a commitment device for desk work
-lives on the desk by definition — and that the Pi can move onboard later
-without changing a line of the state machine, because the seam is the JSON
-API. Say it before they ask.
+Sesame can turn but it can't tilt. So there is exactly **one** closed loop:
+turn until the target is horizontally centred in frame, then fire. The
+**vertical** angle is a mechanical decision made once — both camera and nozzle
+are fixed at **+20° above horizontal** on their printed mounts, aimed at a
+seated person's torso from desk height.
 
----
+That's why `cad/make_stl.py` derives both mounts from a single `NOZZLE_TILT`
+and has a test asserting they match. If those two angles drift apart, the
+robot aims high or low by exactly the difference, and no amount of software
+will find it.
+
+### What this costs you, honestly
+
+- **~1–2 FPS.** YOLOv8n on a Pi Zero 2 W is slow. It's *enough*: every trigger
+  in this project is a multi-second threshold ("phone visible > 3s"), so 4–5
+  frames of evidence is plenty. It also matches the actuation rate — Sesame
+  turns in discrete steps of roughly a second, so a faster camera would just
+  wait on the legs.
+- **512MB RAM.** Tight. Headless Pi OS Lite, YOLOv8n via NCNN or ONNX at
+  320×320. **Plan on the detector only** — MediaPipe Pose on top is likely too
+  much, so derive "head down" from bounding-box geometry rather than full pose.
+  If 512MB genuinely bites, a Radxa Zero 3W or Orange Pi Zero 2W is the same
+  size with up to 4GB.
+- **Runtime.** The Pi Zero adds ~2W to an 800mAh pack. Measure it, and expect
+  to want a larger battery than stock Sesame ships with.
+
+If the onboard route fails outright, the fallback is a Pi 5 on the desk
+driving the robot over the same API — the seam doesn't move. But try onboard
+first: it's the version that's actually a robot.
 
 ## Why this isn't "ChatGPT on legs"
 
@@ -236,6 +260,9 @@ focus experiment." That alone wins a room.
 1. ~~Hexapod or quadruped?~~ **Quadruped** — Sesame, 8 servos, 2 per leg.
 2. ~~Three modes?~~ **Two** — Squirt and Warden.
 3. ~~Design the body?~~ **No — build Sesame.**
-4. **Pi 5 4GB (€118.50) or 2GB (€69.50)?** Open, and it gates the order.
-   See `PURCHASE_LIST.md`.
-5. **Reservoir size** — decide after you weigh the build.
+4. ~~Pi 5 4GB or 2GB?~~ **Neither — Pi Zero 2 W**, onboard. It's the largest
+   brain that fits Sesame's weight and power budget.
+5. **Reservoir size** — decide after you weigh the build. The payload is
+   ~127g at a 36mm bottle; `cad/make_stl.py --test` prints the breakdown.
+6. **Pi ↔ ESP32 link: WiFi or UART?** Start WiFi (no firmware change), move to
+   UART once it works. They end up 5cm apart.

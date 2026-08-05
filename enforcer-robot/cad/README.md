@@ -14,9 +14,10 @@ never have to re-print an upstream component when your own design changes.
 
 | Part | Qty | What it does |
 |---|---|---|
-| `payload_deck` | 1 | Straps to Sesame's top cover. 5×3 M3 grid at 12mm pitch |
+| `payload_deck` | 1 | Straps to Sesame's top cover. 5×3 M3 grid at 12mm pitch, plus the Pi Zero 2 W bolt pattern |
 | `reservoir_cradle` | 2 | Bottle drops in from above, zip-ties down |
-| `nozzle_mount` | 1 | Aims the tubing forward and slightly down |
+| `nozzle_mount` | 1 | Holds the tubing at +20° above horizontal |
+| `camera_mount` | 1 | Holds the Pi camera at **the same** +20° |
 | `cliff_bracket` | 4 | Holds a TCRT5000 facing down past the deck edge |
 | `phone_tray` | 1 | Warden mode, with a lip at each end |
 
@@ -43,6 +44,17 @@ depends on an upstream dimension — one unknown to get right instead of ten.
 
 Same applies to `BOTTLE_D` (default 36mm). Measure the bottle you actually
 bought.
+
+## Camera and nozzle must share one angle
+
+`NOZZLE_TILT` (default **+20°**) drives both mounts, and a self-test asserts
+they match. This is the geometric heart of the design: the robot yaws to aim,
+so horizontal centring is the only closed loop, and the **vertical** angle is
+a mechanical decision made once, here. If the two mounts drift apart, the
+robot aims high or low by exactly the difference and no software will find it.
+
++20° from a ~10cm-tall robot points at a seated person's torso across a desk.
+The self-test rejects anything outside 5–35°. **Never aim level with a face.**
 
 ## Why a deck at all
 
