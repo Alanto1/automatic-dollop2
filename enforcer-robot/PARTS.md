@@ -1,125 +1,121 @@
-# Parts list — The Enforcer
+# Parts — The Enforcer
 
-Budget target: **~€180–250** for the quadruped, including spares. (The
-hexapod option is gone — the build is a 12-servo quadruped, decided.)
+Two shopping lists, because this is two projects stacked:
 
-## Read this first
+- **A. Sesame** — the body. Buy exactly what
+  [its BOM](https://github.com/dorianborian/sesame-robot/blob/main/hardware/bom/README.md)
+  says. Don't improvise here; it's a known-good design and substitutions are
+  how you end up debugging someone else's robot.
+- **B. The Enforcer layer** — the brain, the eyes, and the water. This is
+  your project.
 
-**These are specifications. For real prices, read
-[`PURCHASE_LIST.md`](PURCHASE_LIST.md).** The sourcing pass was done on
-**2026-08-01** against German retailers, and it found the budget below to be
-roughly **half** the real cost — mostly because of one part. The €-columns
-here are kept as the original spec estimates so the gap stays visible; treat
-`PURCHASE_LIST.md` as the number that matters.
+Verified German prices and stock: [`PURCHASE_LIST.md`](PURCHASE_LIST.md).
 
-The short version of what changed:
+---
 
-- **Raspberry Pi 5 4GB is €118.50, not €65** (confirmed at two retailers) —
-  a RAM price surge, passed straight through. The **2GB at €69.50** is now
-  the sensible buy.
-- The **Pi 4 fallback below is void**: Pi 4 4GB is €108.40, so it saves €10,
-  not €20, for a much weaker CPU.
-- Realistic quadruped total: **~€450**, or ~€380 with the 2GB Pi and a USB
-  webcam.
+## A. Sesame (the body) — ~$50–60 / ~€60–75
 
-**Order once, early, with spares** — shipping is the long pole, and the
-AliExpress items (buck converter, pan/tilt, chassis) are the longest at 2–4
-weeks.
+From the upstream BOM, checked 2026-08-05:
 
-## Core electronics
+| # | Item | Qty | Notes |
+|---|---|---|---|
+| 1 | **MG90S all-metal micro servo, 180°** | **8** (+2 spare) | The hip/leg actuators. Metal gear is not optional — plastic SG90s strip under leg load |
+| 2 | **SSD1306 OLED, 0.96", 128×64, I2C** | 1 | The face. Monochrome is fine and actually *helps* — two crisp eyes read better than a fuzzy colour blob |
+| 3 | **Lolin/WeMos ESP32-S2 Mini** | 1 | Or the custom *Sesame Distro Board V3* PCB (cleaner, needs fabbing) |
+| 4 | Small protoboard + 3-pin headers | 1 set | For the hand-wired harness (Option A) |
+| 5 | **Buck converter, 5V/3A** | 1 | |
+| 6 | **7.4V Li-ion pack, ~800mAh** + matching charger | 1 | Upstream specifies a Bambu Lab 14500. Any 2S pack of that size works — check it physically fits the undercarriage |
+| 7 | XH2.54 female pigtail | 1 | Battery connector |
+| 8 | KCD1 rocker power switch, panel mount | 1 | |
+| 9 | 22AWG + 30AWG silicone wire, heat-shrink, zip ties | — | |
+| 10 | **M2 × 5mm self-threading screws** | ~40 | Buy 60. You will lose some |
+| 11 | M2.5 × 5mm machine screws | 10 | |
+| 12 | PLA filament | ~1 kg | 11 printed parts, "minimal supports" |
 
-| # | Item | Qty | ~€ | Notes |
-|---|---|---|---|---|
-| 1 | **MG90S metal-gear servo** | **12 legs + 3 spare** | 38 | Metal gear is not optional — plastic SG90s strip under leg load. Buy spares. |
-| 2 | **PCA9685 16-ch PWM driver** | **1** (+1 spare) | 8 | I2C. 16 channels covers 12 legs + 2 head with 2 to spare — one board is enough. |
-| 3 | **Raspberry Pi 5 (4GB)** | 1 | ~~65~~ **118,50** | Runs the camera + a small detector in real time. ~~Pi 4 works, saves ~€20.~~ Pi 4 now saves only €10 — don't. Consider the **2GB at €69,50** instead. |
-| 4 | microSD 32GB A2 | 1 (+1 spare) | 14 | The spare is real advice; cards die at the worst moment. |
-| 5 | **Camera** (Pi Camera Module 3 or USB webcam) | 1 | 15–25 | Module 3 has autofocus; USB is simpler on a moving robot. |
-| 6 | **Rectangular SPI LCD** (the face) — 1.3"–2.0" IPS, ST7789/ILI9341 | 1 | 8–13 | Highest personality-per-euro part in the build. **Rectangular, not round:** you want *two* eyes side by side, which reads as a face. Mounts on the body front, not the head — see README. |
-| 7 | Pan/tilt bracket + 2 servos | 1 | 10 | Carries the camera **and** the nozzle so aiming = centering. |
+**Two parts German maker shops don't stock** (checked BerryBase + Reichelt):
+the **ESP32-S2 Mini** and the **0.96" SSD1306**. Both are routine, cheap
+AliExpress/Amazon items. See `PURCHASE_LIST.md` for what *is* stocked and the
+substitutions that work.
 
-## The water rig (the signature)
+## B. The Enforcer layer (yours)
 
-| # | Item | Qty | ~€ | Notes |
-|---|---|---|---|---|
-| 8 | **Mini diaphragm water pump, 3–6V** | 1 (+1 spare) | 8 | Small self-priming pump. Draws ~200–500mA — needs a MOSFET, not a GPIO. |
-| 9 | **Logic-level MOSFET** (e.g. IRLZ44N) | 2 | 2 | Your wristband's transistor+diode motor driver, scaled up for the pump's current. |
-| 10 | **Flyback diode** (1N4007) | 2 | 1 | Across the pump, same role as the 1N4148 on your vibration motor. |
-| 11 | Silicone tubing + nozzle | — | 3 | A narrow nozzle = a focused squirt at low flow. |
-| 12 | Water reservoir (~100–250ml) | 1 | 3 | Small bottle; mount at the front, low. |
-
-## Sensing & audio
+### The brain — lives on the desk, not on the robot
 
 | # | Item | Qty | ~€ | Notes |
 |---|---|---|---|---|
-| 13 | **Cliff sensors** (TCRT5000 down-facing IR) | 4 | 4 | Mandatory for Warden mode. Detect the desk edge before a leg goes over it. |
-| 14 | **VL53L0X ToF** (proximity/obstacle) | 1–2 | 8 | You already know this sensor and its library from the wristband. |
-| 15 | MAX98357A I2S amp + small speaker | 1 | 8 | For taunts. Or any small USB speaker. |
+| 13 | **Raspberry Pi 5** | 1 | 69,50 (2GB) / 118,50 (4GB) | Runs YOLOv8n + MediaPipe + the state machine. **Not** on the robot — see README architecture |
+| 14 | **Camera** (Pi Camera Module 3 or USB webcam) | 1 | 15–29 | Sees you *and* the robot. A fixed desk camera can use the ribbon happily — no cable fatigue, since it doesn't move |
+| 15 | microSD 32GB | 1 (+1 spare) | 15,60 ea | The spare is real advice; cards die at the worst moment |
+| 16 | Pi PSU (USB-C) | 1 | 12 | It's on a desk — mains is fine here, unlike on the robot |
 
-## Power (get this right or nothing works)
+Because the Pi is stationary and mains-powered, **it needs none of the power
+engineering the robot does.** That deletes the UBEC, the second rail, the
+common-ground problem, and the brownout risk from the original design. This
+is the single biggest simplification in the whole rework.
 
-| # | Item | Qty | ~€ | Notes |
-|---|---|---|---|---|
-| 16 | **2S LiPo 7.4V, 2200mAh+, XT60** | 1 | 22 | The servo rail. Capacity = demo runtime. |
-| 17 | **UBEC 5–6V, 6A+** | 1 | 8 | Regulates the servo rail. Do NOT run servos off the Pi. |
-| 18 | Buck converter 5V/5A | 1 | 6 | Separate logic rail for the Pi. **Common ground** with the servo rail. |
-| 19 | LiPo balance charger + LiPo-safe bag | 1 | 18 | Non-negotiable safety. |
-| 20 | Switch + inline fuse (10A) | 1 | 3 | The fuse stands between a shorted servo lead and a fire. |
-
-## Structure & consumables
+### The water rig — the signature
 
 | # | Item | Qty | ~€ | Notes |
 |---|---|---|---|---|
-| 21 | PLA/PETG filament OR kit chassis | — | 20–60 | See "printer" note below. |
-| 22 | M2/M3 screws + standoffs | 1 set | 8 | You'll use more than you think. |
-| 23 | Silicone wire (18AWG servo rail, 22AWG logic), JST, heatshrink | — | 8 | |
+| 17 | **Mini water pump, 3–6V** | 1 (+1 spare) | 3–8 | Submersible ones sit *inside* the bottle; self-priming ones sit beside it. Affects the bracket — decide before printing |
+| 18 | **Logic-level MOSFET** (IRLZ44N) | 3 | 0,70 ea | Your wristband's transistor driver, scaled up for the pump's current |
+| 19 | **Flyback diode** (1N4007) | 5 | 0,05 ea | Across the pump. Same role as the 1N4148 on your vibration motor |
+| 20 | Silicone tubing + narrow nozzle | — | 3 | Aquarium airline tubing is ideal. Narrow nozzle = focused squirt at low flow |
+| 21 | Small reservoir, 50–100 ml | 1 | 3 | **Start at 50ml.** Water is 1g/ml and Sesame is small — see README "Honest hard parts" |
 
-**Rough total (original spec estimate):** quadruped ~€230.
+⚠️ **Do not run the pump off Sesame's battery without testing.** The firmware
+already staggers servo moves by 20ms because all-at-once browns out the board.
+A pump is exactly that kind of load. Give it a separate cell, or a fat
+capacitor, and re-test.
 
-**Actual, sourced 2026-08-01:** quadruped **~€450** — or **~€380** with the
-2GB Pi and a USB webcam. See [`PURCHASE_LIST.md`](PURCHASE_LIST.md) for the
-line-by-line cart, stock counts, and which shop.
+### Sensors
 
-## Optional accelerator
+| # | Item | Qty | ~€ | Notes |
+|---|---|---|---|---|
+| 22 | **TCRT5000 down-facing IR** (cliff) | 4 | 0,30 ea | Mandatory before any autonomous walking |
+| 23 | **VL53L0X ToF** | 1–2 | 8–19 | Optional. You know this sensor and its library from the wristband |
 
-- **Coral USB / Hailo accelerator (~€60–70)** — only if on-device detection is
-  too slow on the Pi 5. Try without it first.
+### What to skip
 
-## Power wiring (one place, get it right in week 4)
+- **PCA9685** — not needed. The ESP32 drives all 8 servos directly; that's
+  what Sesame's firmware does. (The old 12-servo design needed one.)
+- **Pan/tilt bracket** — not needed. Aiming is turning the robot, commanded
+  from the desk camera. See README.
+- **UBEC / second power rail** — not needed once the Pi is off-board.
+- **IMU/gyro** — Sesame doesn't use one. Don't add complexity it doesn't need.
+- **Coral/Hailo accelerator** — try the Pi alone first. ~€60–70 for a problem
+  you may not have.
+- **Local LLM** — you don't need conversation. The personality is the state
+  machine, not a chatbot.
 
-```
-2S LiPo ──┬── fuse ── switch ──┬── UBEC 6V/6A ──► PCA9685 V+ ──► leg + head servos
-          │                    │
-          │                    └── buck 5V/5A ──► Raspberry Pi ──► Pi GPIO ─► MOSFET ─► pump
-          │
-          └── balance lead ──► charger (when off the robot)
+## Rough total
 
-   servo GND ──┬── Pi GND ──┬── pump/MOSFET GND     ← single common ground
-```
+| | € |
+|---|---|
+| A. Sesame body | ~60–75 |
+| B. Brain (Pi 2GB + camera + cards) | ~115–135 |
+| B. Water rig + sensors | ~20 |
+| **Total** | **~195–230** |
 
-Two rails, one ground, one fuse. The pump and servos on the battery side; the
-Pi on its own regulated rail. The MOSFET gate is driven by a Pi GPIO, source to
-common ground, pump between V+ and drain, flyback diode across the pump.
+With the 4GB Pi instead: **~245–280**.
+
+Compare against the previous 12-servo, Pi-on-board design, which came out at
+**~€450**. Adopting Sesame roughly **halves the build cost** — mostly by
+deleting the power engineering and the parts that existed to carry a Pi
+around.
 
 ## The 3D printer situation
 
-Your printer is broken — diagnose it in the first 48 hours, because the fix
-may need a part with the same shipping lead time as everything else, and it
-should ride in the same order.
+Sesame is **11 printed parts** in PLA with minimal supports, and its parts are
+deliberately oriented to print without support material. That's the good news.
 
-- **Mechanical fault** (nozzle, belts, bed, PTFE): cheap, fix locally this week.
-- **Electronic fault** (driver, thermistor, board): order the part in the
-  week-0 order.
+Your printer is broken — diagnose it in the first 48 hours:
+
+- **Mechanical** (nozzle, belts, bed, PTFE): cheap, fix locally this week.
+- **Electronic** (driver, thermistor, board): order the part in the same
+  order as everything else, or shipping serialises your whole schedule.
 - **Hard gate:** if it isn't printing dimensionally-accurate parts by end of
-  week 2, **buy a kit chassis** (a "12-DOF quadruped/spider robot frame,"
-  ~€30–60, sometimes bundled with servos — check they're metal-gear). Buying
-  the frame is not defeat; it moves your effort to the AI and the water rig,
-  which is where the originality is.
-
-## What to skip
-
-- **IMU/gyro** — unnecessary with a statically-stable gait (three feet always
-  down). Add only if you attempt a dynamic trot later.
-- **Smart serial servos** — nicer, ~3× the price. Not at this budget.
-- **Local LLM** — you don't need conversation. The personality is the state
-  machine, not a chatbot.
+  week 2, pay a print service. Sesame's parts are small; a print shop quote
+  for 11 parts is cheap against losing three weeks. Print a 20mm calibration
+  cube first — if it's not within ~0.3mm, the printer isn't ready for parts
+  that have to hold servo splines.

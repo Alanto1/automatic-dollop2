@@ -4,191 +4,179 @@ One rule, same as your wristband: **never be in a state where nothing works.**
 Every phase ends in something you could demo that day. If you run out of time,
 you still have a show.
 
-Specs: [`PARTS.md`](PARTS.md). Concept, safety, experiment:
-[`README.md`](README.md). Printable parts and dimensions:
-[`cad/`](cad/).
+Concept and architecture: [`README.md`](README.md). What to buy:
+[`PARTS.md`](PARTS.md) and [`PURCHASE_LIST.md`](PURCHASE_LIST.md). What to do
+before parts arrive: [`START_HERE.md`](START_HERE.md).
 
-**Buying from Kazakhstan?** Start with
-[`START_HERE_KAZAKHSTAN.md`](START_HERE_KAZAKHSTAN.md) — the weeks below
-assume 1–3 day shipping, which is not your situation. AliExpress to KZ is
-2–5 weeks, so the design and simulation work has to run *while* parts ship.
+**Order of attack:** get **Sesame walking on stock firmware** first, then
+**Squirt mode stationary** end-to-end, then combine, then Warden.
 
-Order of attack: get **Squirt mode working stationary first** (detect →
-escalate → aim → fire), then add walking, then Warden.
+The plan is shorter than it used to be, because you're no longer designing a
+body. Weeks 0–4 of the old plan (leg IK, one leg, all legs, power rails) are
+now "build Sesame as documented."
 
 ---
 
-## Days 1–2 — Diagnose the printer
+## Days 1–2 — Printer + upstream repo
 
-- [ ] Mechanical or electronic fault? (see PARTS.md)
-- [ ] Electronic → add the replacement part to the Week 0 order
-- [ ] Print a 20mm calibration cube; if not within ~0.3mm, the printer isn't
-      ready for structural parts
-- [ ] Sticky-note the gate: *no accurate parts by end of week 2 → buy the chassis*
+- [ ] Read <https://github.com/dorianborian/sesame-robot> — build guide, BOM,
+      printing notes
+- [ ] Print a 20mm calibration cube; not within ~0.3mm → printer isn't ready
+- [ ] Mechanical or electronic fault? Electronic → the part rides in this
+      week's order
+- [ ] Gate: *no accurate parts by end of week 2 → pay a print service*
 
-## Week 0 — Order everything, build the simulator
+## Week 0 — Order everything, start the state machine
 
-Procurement is the long pole. Nothing else matters until the order is placed.
-
-- [x] ~~Sourcing pass~~ — **done 2026-08-01**, see [`PURCHASE_LIST.md`](PURCHASE_LIST.md)
-- [x] ~~Decide: hexapod vs quadruped~~ — **quadruped (12 servos)**
-- [ ] Decide **Pi 5 4GB (€118,50) vs 2GB (€69,50)** — new, and now the
-      biggest line in the build (PURCHASE_LIST "Decisions this forces")
-- [ ] Place the **AliExpress** order FIRST — buck converter, pan/tilt, and
-      the chassis if the printer gate looks bad. 2–4 week lead time makes
-      this the long pole, longer than anything German.
-- [ ] Place the **BerryBase** order — and don't dawdle: the PCA9685 showed
-      **only 4 in stock**, and no rectangular face display was stocked at all
-- [ ] Place the **roboter-bausatz** order (15× MG90S — nobody else stocks them)
-- [ ] Source the **power block** (LiPo, UBEC, charger, LiPo bag) at an RC
-      retailer — the one block no maker shop carries, and still unpriced
+- [x] ~~Sourcing pass~~ — done, see [`PURCHASE_LIST.md`](PURCHASE_LIST.md)
+- [x] ~~Hexapod vs quadruped~~ — **quadruped**
+- [x] ~~Design the body~~ — **no: build Sesame** (8 servos, 2 per leg)
+- [ ] Decide **Pi 5 2GB (€69,50) vs 4GB (€118,50)** — gates the BerryBase order
+- [ ] Place the **AliExpress** order FIRST (ESP32-S2 Mini, SSD1306, M2 screws,
+      tubing) — longest lead time, smallest cost
+- [ ] Place **roboter-bausatz** (10× MG90S — nobody else in Germany stocks them)
+- [ ] Place **BerryBase** (Pi, camera, SD ×2, pump, cliff sensors, filament, PSU)
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
-      for MOSFET, diode, fuse, switch, wire, heatshrink, screws
-- [ ] Note the delivery window somewhere visible
+- [ ] Check the battery physically fits Sesame's undercarriage before buying
 
 Meanwhile, zero hardware:
 
-- [ ] **Leg IK simulator** in the browser or Python — drag a foot target,
-      watch the 3 joint angles solve. `cad/make_stl.py` already has a tested
-      `leg_ik()`/`leg_fk()` pair — port those, don't rewrite them
-- [ ] **Unit-test the IK** (known target → known angles; unreachable case)
-- [ ] Use the real link lengths: coxa 28, femur 50, tibia 55 (see `cad/`)
-- [ ] **Mood state-machine simulator** — feed it fake "scene" events
-      (phone/head-down/absent) and watch it walk CHILL → SUSPICIOUS →
-      WARNING → STRIKE → SMUG, with the hysteresis/timers tuned. Test it.
+- [ ] **Mood state machine** — fake `scene` events (phone / head-down /
+      absent) → CHILL → SUSPICIOUS → WARNING → STRIKE → SMUG
+- [ ] **Test it**: 2s phone → no fire; 4s → escalate; person returns
+      mid-escalation → de-escalates cleanly, never stuck
+- [ ] Browser visualiser, like `haptic_simulator.html`
 
-This is the `HapticMapper` + `haptic_simulator.html` move again: debug the
-logic before hardware exists.
-
-**Demoable:** the two simulators.
+**Demoable:** the state machine, on screen, with attitude.
 
 ---
 
-## Weeks 2–3 — One leg, then the body
+## Weeks 1–2 — Print and assemble Sesame
 
-- [ ] Assemble one leg (3 servos); Pi set up (SSH, Wi-Fi, servo library)
-- [ ] PCA9685 over I2C, one servo sweeping
-- [ ] **Center every servo before bolting on horns** (or you fight offsets forever)
-- [ ] Port IK from the sim; verify against the same test cases
-- [ ] Per-servo min/max/center offsets in one config file
-- [ ] Remaining legs assembled + calibrated
+Follow the upstream build guide. Don't improvise.
 
-**Demoable:** a foot traces a circle; the body stands and shifts its weight.
+- [ ] Print the 11-part set in PLA
+- [ ] **Centre every servo before installing a single horn** — upstream says
+      it, your old checklist said it, and it's still the #1 way to lose a day
+- [ ] Hand-wire the ESP32-S2 Mini harness (skip the custom PCB for now)
+- [ ] Install OLED + power switch in the top cover
+- [ ] Main assembly, route wires into the underside channels
+- [ ] Flash stock firmware; run the motor tester; fix any wrong-slot motors
+- [ ] Calibrate
 
----
-
-## Week 4 — Power (the make-or-break week)
-
-- [ ] Build both rails: UBEC (servos) + buck (Pi), **common ground**, inline fuse
-- [ ] **Brownout test:** drive all servos to a stall pose — the Pi must NOT reboot
-- [ ] Wire the **pump via MOSFET + flyback diode** off a GPIO; fire it dry, then wet
-- [ ] Measure battery runtime; write it down
-
-**Demoable:** it stands on its own power and squirts on command.
+**Demoable:** it walks, poses, and pulls faces, driven from the web page.
+That's already a robot on a table.
 
 ---
 
-## Week 5 — Perception (the AI)
+## Week 3 — Weigh it, then decide the water rig
 
-- [ ] Camera streaming into OpenCV
-- [ ] Person + `cell_phone` detection (YOLOv8n / MobileNet-SSD / MediaPipe)
-- [ ] Head-pitch (looking down) via MediaPipe Face/Pose
-- [ ] "No person at desk" detection
-- [ ] Wrap all of it into a single `scene` object the state machine reads
-- [ ] **Tune against false positives** — it must NOT fire while you're working.
-      Add hysteresis + time thresholds (e.g. phone visible > 3s)
+Do this **before** designing anything around the reservoir.
 
-**Demoable:** on a screen, it correctly labels "working" vs "on phone" vs "gone."
+- [ ] Weigh the finished Sesame
+- [ ] Tape a 50ml water bottle to it. Does it still walk? Now 100ml?
+- [ ] **Decide reservoir size from that measurement**, not from hope
+- [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
+      and that's a fine project
+- [ ] Wire the pump via **MOSFET + flyback diode**; fire it dry, then wet
+- [ ] ⚠️ **Brownout test:** pump + all servos moving at once. Sesame's firmware
+      already staggers servos by 20ms because of this. If it browns out, give
+      the pump its own cell
 
----
+**Demoable:** it squirts on command.
 
-## Week 6 — Personality
+## Week 4 — Perception
 
-- [ ] Face display: chill / suspicious / alarmed / smug expressions — two
-      eyes side by side, as in the reference build
-- [ ] Body language on the legs: perk-up, creep-in, victory bounce, cooldown settle
+- [ ] Camera on the desk, streaming into OpenCV on the Pi
+- [ ] Person + `cell_phone` detection (YOLOv8n)
+- [ ] Head-pitch / presence via MediaPipe
+- [ ] Detect the **robot** in frame too — you need its position to aim it
+- [ ] Wrap it all into one `scene` object the state machine reads
+- [ ] **Tune against false positives.** It must NOT fire while you work
+
+**Demoable:** on screen, correct labels for "working" / "on phone" / "gone."
+
+## Week 5 — Wire the brain to the body
+
+- [ ] Python client for Sesame's JSON API: `stand`, `walk`, `turn`, `face`
+- [ ] Mood → face expression mapping (Sesame ships faces; add your own)
+- [ ] Mood → body language via **Sesame Studio**: perk-up, creep-in, victory
+      bounce, cooldown settle
+- [ ] Randomise timing so it never loops identically
 - [ ] Speaker + a handful of pre-recorded taunt clips
-- [ ] Wire the state machine's mood → face + body + sound; randomize timing
 
-**Demoable:** it *reacts* with attitude to what it sees — still no squirt needed to impress.
+**Demoable:** it *reacts* with attitude to what it sees — no squirt needed.
 
----
+## Week 6 — Squirt mode, end to end
 
-## Week 7 — Squirt mode, end to end
+- [ ] Aiming: from the desk camera, turn the robot until it faces the target
+- [ ] Full loop: detect slacking → escalate through moods → aim → fire
+- [ ] Safety pass: nozzle outward and slightly down, **never** the face;
+      consent framing ready
+- [ ] Add a hardware disable — a switch that makes it physically unable to fire
 
-- [ ] Camera + nozzle on the pan/tilt head
-- [ ] **Visual servoing:** PID on pan/tilt to center the target; fire when
-      centered + in STRIKE
-- [ ] Full loop: detect slacking → escalate through moods → aim → pulse pump
-- [ ] Safety pass: nozzle aims outward/down, never face; consent framing ready
+**Demoable: the flagship works.** This alone is a complete project.
 
-**Demoable: the flagship works.** This is already a complete, room-stopping project.
+## Week 7 — Autonomous walking
 
----
-
-## Week 8 — Walking
-
-- [ ] Statically-stable crawl gait: shift the body's weight over three feet,
-      step the fourth, repeat. A quadruped **cannot** simply keep three feet
-      down the way a hexapod can — the weight shift *is* the gait, not a detail
-- [ ] Turn in place
-- [ ] Walk toward a target under visual servoing
+- [ ] **Cliff sensors first** — it must refuse to step off the desk edge
+- [ ] Walk toward a target under closed-loop control from the desk camera
 - [ ] Tune until it crosses a desk without stumbling
+- [ ] Note: 2 DOF per leg — it turns by differential gait, not by hip swivel
 
-**Demoable:** it walks to you, *then* squirts you. Flagship plus legs.
+**Demoable:** it walks to you, *then* squirts you.
 
----
+## Week 8 — Warden mode
 
-## Week 9 — Warden / run-away mode
-
-- [ ] **Cliff sensors** first — it must refuse to step off the desk edge
+- [ ] Phone-on-tray test; if payload fails, switch to guard-and-block
 - [ ] Reactive avoidance: hand approaches → walk away from it
-- [ ] Phone-on-tray test; if payload fails, switch to guard-and-block (README)
 - [ ] Session timer state machine (locked until time's up)
 
-**Demoable:** hand off phone, try to grab it back, chase the fleeing spider.
+**Demoable:** hand over your phone, try to grab it back, chase the robot.
 
 ---
 
-## Week 10 — Harden it
+## Week 9 — Harden it
 
 - [ ] One-hour continuous run; log and fix every crash
 - [ ] Servo temperature after sustained walking
 - [ ] Watchdog: a hung subsystem recovers instead of freezing mid-demo
-- [ ] Water-safety recheck; cable strain relief (moving legs eat wires)
-- [ ] Threadlock / recheck every mechanical joint
+- [ ] **WiFi failure behaviour** — new risk in this architecture. The robot
+      must fail *safe and still*, not last-command-forever, if the Pi drops off
+- [ ] Water-safety recheck; cable strain relief
+- [ ] Battery runtime measured and written down
 
----
+## Week 10 — The experiment
 
-## Week 11 — The experiment + rehearsal
-
-- [ ] Run the focus study: 8–15 volunteers, timer-vs-Enforcer, counterbalanced
-      (see README "The experiment"); written consent
+- [ ] Run it: 8–15 volunteers, timer-vs-Enforcer, counterbalanced, written
+      consent (see README "The experiment")
 - [ ] Log phone pickups, on-task minutes, questionnaire
-- [ ] Analyze; write up honestly (including acceptability trade-off)
-- [ ] Demo it to 5 people who aren't you; fix what confuses them
-- [ ] Rehearse failures: someone works normally (no false squirt), network off,
+- [ ] Analyse; write up honestly, including the acceptability trade-off
+
+## Week 11 — Rehearsal
+
+- [ ] Demo to 5 people who aren't you; fix what confuses them
+- [ ] Rehearse failures: someone works normally (no false squirt), WiFi off,
       a stranger tries to fool it
 - [ ] Charge spare battery; flash + test spare SD card
-
----
+- [ ] Photos + video of it working, taken **before** demo day
 
 ## Week 12 — Buffer + submit
 
 - [ ] Whatever broke in week 11
-- [ ] Writeup: what's yours, what's a kit/library, what it can't do
-- [ ] Photos + video of it working, taken **before** demo day
-- [ ] **Competition registration** (confirm which fair, and its real deadline —
-      see START_HERE_KAZAKHSTAN.md if you are not entering in Germany)
+- [ ] **Writeup: what's Sesame's, what's yours, what it can't do.** The table
+      in README is the answer — have it on a slide
+- [ ] Credit Sesame (Apache 2.0) clearly, in the writeup *and* on the poster
+- [ ] Competition registration (confirm which fair and its real deadline)
 
 ---
 
-## Demo-day rules (both audiences)
+## Demo-day rules
 
-- The room wants **comedy**: a volunteer sneaks a phone, gets soaked. Let people
-  try to beat it.
-- The jury wants **rigor**: have the live detection view on a screen, and your
-  experiment's numbers ready.
-- **Phone hotspot** if any cloud is involved; hard-code offline behavior so it's
-  never mute/frozen.
+- The room wants **comedy**: a volunteer sneaks a phone, gets soaked. Let
+  people try to beat it.
+- The jury wants **rigor**: live detection view on a screen, experiment
+  numbers ready, and a clean answer to "what did you actually build?"
+- **Bring your own WiFi** (phone hotspot or a travel router). The whole
+  architecture depends on the Pi reaching the robot — do not trust venue WiFi.
 - Bring a **towel** and a target cup. Obvious, and everyone forgets.

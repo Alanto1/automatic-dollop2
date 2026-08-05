@@ -27,38 +27,27 @@ import sys
 # Hardware the geometry has to fit
 # --------------------------------------------------------------------------
 
-# MG90S metal-gear servo, the one part every bracket is dimensioned around.
-SERVO_BODY_L = 22.8
-SERVO_BODY_W = 12.2
-SERVO_BODY_H = 22.5
-SERVO_FLANGE_L = 32.2       # tip to tip across the mounting ears
-SERVO_HOLE_SPAN = 27.8      # centre-to-centre of the two mounting holes
-SERVO_HOLE_D = 2.2          # M2 clearance
-SERVO_SHAFT_FROM_END = 6.0  # output shaft inset from the body end
-
-FIT = 0.6                   # printed-pocket clearance, total across a slot
-POCKET_L = SERVO_BODY_L + FIT
-POCKET_W = SERVO_BODY_W + FIT
+# Sesame provides the body. These are the dimensions of the *add-on* parts.
+#
+# !!! MEASURE YOUR PRINTED SESAME AND SET THESE TWO !!!
+# Everything bolts to one payload deck, so the top cover footprint is the
+# only upstream dimension this file depends on. One unknown, not ten.
+DECK_L = 90.0               # along the robot's spine
+DECK_W = 60.0               # across
 
 PLATE_T = 3.0               # standard printed plate thickness
-HORN_SCREW_D = 1.8          # self-tapping into a servo horn
-M2 = 2.2
+M2 = 2.2                    # clearance holes
 M25 = 2.7
+M3 = 3.2
 
-# Link geometry. These three numbers are the robot's kinematics -- the leg IK
-# simulator must use exactly these.
-COXA_LEN = 28.0             # vertical hip axis -> femur axis
-FEMUR_LEN = 50.0            # femur axis -> knee axis
-TIBIA_LEN = 55.0            # knee axis -> foot tip
-STAND_H = 70.0              # design ride height, foot below the femur axis
-STAND_REACH = 10.0          # foot's horizontal offset out from the femur axis
+GRID_PITCH = 12.0           # mounting grid on the deck
+GRID_COLS = 5
+GRID_ROWS = 3
 
-BODY_L = 130.0
-BODY_W = 95.0
-HIP_X = 46.0                # hip positions, +-HIP_X by +-HIP_Y
-HIP_Y = 32.0
-
-PI5_HOLES = (58.0, 49.0)    # Raspberry Pi 5 mounting hole pattern
+BOTTLE_D = 36.0             # reservoir diameter -- measure your bottle
+TUBE_D = 4.5                # silicone tubing OD
+TCRT_W = 10.6               # TCRT5000 module body
+TCRT_H = 6.2
 
 SEG = 24                    # facets per full circle
 
@@ -145,27 +134,6 @@ def signed_area(poly) -> float:
         x1, y1 = poly[(i + 1) % n]
         s += x0 * y1 - x1 * y0
     return s / 2.0
-
-
-def servo_pocket(cx, cy, angle):
-    """Body cutout + the two mounting holes, for a servo dropped through a plate."""
-    a = math.radians(angle)
-    ux, uy = math.cos(a), math.sin(a)
-    off = SERVO_HOLE_SPAN / 2.0
-    return [
-        rect(cx, cy, POCKET_L, POCKET_W, angle, cw=True),
-        circle(cx + ux * off, cy + uy * off, SERVO_HOLE_D),
-        circle(cx - ux * off, cy - uy * off, SERVO_HOLE_D),
-    ]
-
-
-def horn_holes(cx, cy, r=7.0, n=4, d=HORN_SCREW_D):
-    """Bolt circle matching a round servo horn, plus the central shaft clearance."""
-    out = [circle(cx, cy, 8.0)]
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        out.append(circle(cx + r * math.cos(a), cy + r * math.sin(a), d))
-    return out
 
 
 # --------------------------------------------------------------------------
@@ -423,155 +391,134 @@ def is_watertight(tris, tol=5):
     return True, "ok"
 
 
+
 # --------------------------------------------------------------------------
 # The parts
+#
+# Sesame supplies the body, the legs, and the face. These are the pieces it
+# does not have, because it was never meant to carry water: a payload deck
+# that straps to its top cover, and the Enforcer hardware that bolts to that
+# deck. Nothing here modifies a Sesame part, so its build guide stays valid
+# and you never have to re-print an upstream component.
 # --------------------------------------------------------------------------
 
 
-def hip_positions():
+def grid_holes(cols=GRID_COLS, rows=GRID_ROWS, pitch=GRID_PITCH, d=M3):
+    """Mounting grid. Every add-on lines up to this, so the reservoir can move
+    fore/aft after you weigh the robot and find the balance point."""
+    out = []
+    for i in range(cols):
+        for j in range(rows):
+            x = (i - (cols - 1) / 2) * pitch
+            y = (j - (rows - 1) / 2) * pitch
+            out.append(circle(x, y, d))
+    return out
+
+
+def strap_slots():
+    """Zip-tie slots. Sesame's own build uses zip ties and underside channels,
+    so strapping the deck on matches how the robot is already assembled --
+    and it means no screws into upstream parts."""
     return [
-        (HIP_X, HIP_Y, 45.0),    # front-left
-        (HIP_X, -HIP_Y, -45.0),  # front-right
-        (-HIP_X, HIP_Y, 135.0),  # rear-left
-        (-HIP_X, -HIP_Y, -135.0),
+        rounded_rect(sx * 30.0, sy * 26.0, 14.0, 3.5, 1.7, cw=True)
+        for sx in (-1, 1)
+        for sy in (-1, 1)
     ]
 
 
-def chassis_plate():
-    """Main body plate: four coxa servos drop through it, Pi bolts on top."""
-    outer = rounded_rect(0, 0, BODY_L, BODY_W, 8.0)
-    holes = []
-    for hx, hy, ang in hip_positions():
-        holes += servo_pocket(hx, hy, ang)
-    px, py = PI5_HOLES[0] / 2, PI5_HOLES[1] / 2
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            holes.append(circle(sx * px, sy * py, M25))
-    # Cable pass-throughs fore and aft of the electronics.
-    holes.append(rounded_rect(0, 38.0, 30.0, 6.0, 3.0, cw=True))
-    holes.append(rounded_rect(0, -38.0, 30.0, 6.0, 3.0, cw=True))
-    return extrude(outer, holes, 0, PLATE_T)
-
-
-# Coxa bracket wall. Height is set by the servo's screw spacing, not by the
-# link length: the holes sit +-13.9mm from the pocket centre, so anything
-# under ~34mm tall pushes a mounting hole off the edge of the part.
-COXA_WALL_H = 40.0
-_SHAFT_OFF = POCKET_L / 2 - SERVO_SHAFT_FROM_END  # pocket centre -> output shaft
-
-
-def coxa_bracket():
-    """L-bracket: bolts to the coxa horn, carries the femur servo vertically."""
-    base = extrude(rounded_rect(0, 0, 30.0, 26.0, 4.0), horn_holes(0, 0), 0, PLATE_T)
-
-    # In wall-local coordinates +y becomes +z once stood up, so place the
-    # pocket such that the femur servo's shaft lands COXA_LEN above the base.
-    pocket_cy = (COXA_LEN - COXA_WALL_H / 2) - _SHAFT_OFF
-    wall = extrude(
-        rounded_rect(0, 0, 30.0, COXA_WALL_H, 4.0),
-        servo_pocket(0, pocket_cy, 90.0),
+def payload_deck():
+    """The one part that touches Sesame. Everything else bolts to this."""
+    return extrude(
+        rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
+        grid_holes() + strap_slots(),
         0,
         PLATE_T,
     )
-    # Stand it along the -Y edge, overlapping the base by 1.5mm so the two
-    # prisms fuse into one solid at slice time instead of merely touching.
+
+
+def _cradle_profile(w, h, bottle_d, seg=20):
+    """Rectangle with a semicircular bite out of the top edge, CCW.
+
+    Built as an outline rather than as a hole: the bottle drops in from
+    above, so the notch has to be open at the top.
+    """
+    r = bottle_d / 2.0
+    cy = h / 2.0
+    pts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2)]
+    # arc from the right lip down through the notch and up to the left lip
+    for i in range(seg + 1):
+        a = 2 * math.pi * (i / seg) * 0.5  # 0 .. pi
+        pts.append((r * math.cos(a), cy - r * math.sin(a)))
+    pts.append((-w / 2, h / 2))
+    return pts
+
+
+def reservoir_cradle():
+    """Print 2. Bottle drops in and gets zip-tied down through the slots."""
+    prof = _cradle_profile(50.0, 30.0, BOTTLE_D)
+    holes = [circle(sx * 20.0, -8.0, M3) for sx in (-1, 1)]
+    return extrude(prof, holes, 0, PLATE_T)
+
+
+def _l_bracket(base_w, base_d, wall_w, wall_h, base_holes, wall_holes):
+    """Base plate in XY, plus a wall standing along its -Y edge.
+
+    The wall overlaps the base by 1.5mm rather than merely touching it, so
+    the two prisms fuse into one solid when the slicer unions them.
+    """
+    tris = extrude(rounded_rect(0, 0, base_w, base_d, 3.0), base_holes, 0, PLATE_T)
+    wall = extrude(rounded_rect(0, 0, wall_w, wall_h, 3.0), wall_holes, 0, PLATE_T)
     wall = transform(
-        wall, rots=[("x", 90.0)], move=(0.0, -13.0 + 1.5, COXA_WALL_H / 2)
+        wall, rots=[("x", 90.0)], move=(0.0, -base_d / 2 + 1.5, wall_h / 2)
     )
-    return base + wall
+    return tris + wall
 
 
-def femur():
-    """Thigh: femur horn at one end, knee servo pocket at the other."""
-    outer = capsule(0, 0, FEMUR_LEN, 0, 24.0)
-    holes = horn_holes(0, 0)
-    holes += servo_pocket(FEMUR_LEN - SERVO_SHAFT_FROM_END + 2.0, 0, 0.0)
-    return extrude(outer, holes, 0, PLATE_T)
+def nozzle_mount():
+    """Aims the tubing forward and slightly down. Mount at the deck's front
+    edge -- never pointing up, and never at anyone's face."""
+    return _l_bracket(
+        24.0, 18.0, 24.0, 22.0,
+        [circle(sx * 8.0, -4.0, M3) for sx in (-1, 1)],
+        [circle(0.0, 2.0, TUBE_D)],
+    )
 
 
-def tibia():
-    """Shin: knee horn at the top, tapering to a foot."""
-    outer = capsule(0, 0, TIBIA_LEN, 0, 20.0)
-    holes = horn_holes(0, 0)
-    # Lightening slot down the middle of the shin.
-    holes.append(capsule(22.0, 0, TIBIA_LEN - 16.0, 0, 7.0, cw=True))
-    return extrude(outer, holes, 0, PLATE_T)
+def cliff_bracket():
+    """Print 4. Holds a TCRT5000 facing down past the edge of the deck."""
+    return _l_bracket(
+        18.0, 14.0, 18.0, 16.0,
+        [circle(sx * 5.5, -3.5, M2) for sx in (-1, 1)],
+        [rounded_rect(0.0, 1.0, TCRT_W, TCRT_H, 1.0, cw=True)],
+    )
 
 
-def face_bezel():
-    """Front panel: window for the rectangular display, two camera-side slots."""
-    outer = rounded_rect(0, 0, 52.0, 38.0, 4.0)
-    holes = [rounded_rect(0, 0, 30.0, 22.0, 2.0, cw=True)]
+def phone_tray():
+    """Warden mode. A lip at each end so the phone can't slide off when the
+    robot walks away with it."""
+    tris = extrude(rounded_rect(0, 0, 85.0, 48.0, 4.0), grid_holes(3, 2, 20.0), 0, PLATE_T)
     for sx in (-1, 1):
-        for sy in (-1, 1):
-            holes.append(circle(sx * 22.0, sy * 15.0, M2))
-    return extrude(outer, holes, 0, PLATE_T)
+        lip = extrude(rounded_rect(0, 0, 48.0, 10.0, 2.0), [], 0, PLATE_T)
+        lip = transform(
+            lip,
+            rots=[("x", 90.0), ("z", 90.0)],
+            move=(sx * (85.0 / 2 - 1.5), 0.0, 5.0),
+        )
+        tris += lip
+    return tris
 
 
 PARTS = {
-    "chassis_plate": (chassis_plate, 1),
-    "coxa_bracket": (coxa_bracket, 4),
-    "femur": (femur, 4),
-    "tibia": (tibia, 4),
-    "face_bezel": (face_bezel, 1),
+    "payload_deck": (payload_deck, 1),
+    "reservoir_cradle": (reservoir_cradle, 2),
+    "nozzle_mount": (nozzle_mount, 1),
+    "cliff_bracket": (cliff_bracket, 4),
+    "phone_tray": (phone_tray, 1),
 }
 
 
-def leg_ik(reach: float, drop: float, l1: float = FEMUR_LEN, l2: float = TIBIA_LEN):
-    """Two-link IK in the vertical plane of one leg.
-
-    `reach` is the foot's horizontal distance out from the femur axis and
-    `drop` is how far it sits below that axis. Returns (femur, knee) in
-    degrees, both measured downward: femur below horizontal, knee as the
-    angle the tibia is folded back from the femur's line.
-
-    This is the same solve the walking gait needs, so the leg-IK simulator
-    should be checked against it -- and against the same three link lengths.
-    """
-    d = math.hypot(reach, drop)
-    if d > l1 + l2:
-        raise ValueError(f"foot {d:.1f}mm away exceeds leg reach {l1 + l2:.1f}mm")
-    if d < abs(l1 - l2):
-        raise ValueError(f"foot {d:.1f}mm away is inside the leg's dead zone")
-    clamp = lambda v: max(-1.0, min(1.0, v))
-    knee_inner = math.acos(clamp((l1 * l1 + l2 * l2 - d * d) / (2 * l1 * l2)))
-    off = math.acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d)))
-    femur = math.atan2(drop, reach) - off
-    return math.degrees(femur), math.degrees(math.pi - knee_inner)
-
-
-def leg_fk(femur_deg: float, knee_deg: float, l1: float = FEMUR_LEN, l2: float = TIBIA_LEN):
-    """Foot position (reach, drop) from joint angles -- the inverse of leg_ik."""
-    a1 = math.radians(femur_deg)
-    a2 = math.radians(femur_deg + knee_deg)
-    return (l1 * math.cos(a1) + l2 * math.cos(a2), l1 * math.sin(a1) + l2 * math.sin(a2))
-
-
-def assembly(reach: float = STAND_REACH, drop: float = STAND_H):
-    """Posed whole robot, standing on its feet. For looking at, not printing."""
-    femur_a, knee_a = leg_ik(reach, drop)
-    tris = list(chassis_plate())
-
-    for hx, hy, ang in hip_positions():
-        leg = list(coxa_bracket())
-        # Femur pivots about the axis COXA_LEN out from the hip, at wall height.
-        f = transform(femur(), rots=[("y", femur_a)], move=(COXA_LEN, 0.0, COXA_LEN))
-        kx = COXA_LEN + FEMUR_LEN * math.cos(math.radians(femur_a))
-        kz = COXA_LEN - FEMUR_LEN * math.sin(math.radians(femur_a))
-        t = transform(tibia(), rots=[("y", femur_a + knee_a)], move=(kx, 0.0, kz))
-        leg += f + t
-        tris += transform(leg, rots=[("z", ang)], move=(hx, hy, PLATE_T))
-
-    tris += transform(
-        face_bezel(),
-        rots=[("x", 90.0), ("z", 90.0)],
-        move=(BODY_L / 2 - 4.0, 0.0, 22.0),
-    )
-    # Drop the whole robot so the feet rest on z = 0.
-    low = min(p[2] for tri in tris for p in tri)
-    return transform(tris, move=(0.0, 0.0, -low))
-
-
+# --------------------------------------------------------------------------
+# Checks
 # --------------------------------------------------------------------------
 
 
@@ -588,10 +535,10 @@ def _point_in_ring(p, ring) -> bool:
 
 
 def check_profile(outer, holes, label):
-    """Every hole must lie wholly inside the outer ring, and holes must not
-    overlap each other. Both are design errors -- a screw hole that runs off
-    the edge of a bracket, or two features that merge into one slot -- and
-    they surface as an unhelpful triangulation exception if left unchecked."""
+    """Every hole must lie wholly inside the outline, and holes must not
+    overlap each other. Both are design errors -- a screw hole running off the
+    edge of a bracket, or two features merging into one slot -- and they
+    otherwise surface as an unhelpful triangulation exception."""
     problems = []
     for i, h in enumerate(holes):
         if not all(_point_in_ring(p, outer) for p in h):
@@ -606,36 +553,28 @@ def check_profile(outer, holes, label):
 
 
 def profile_checks():
-    """Design-rule checks on the raw profiles, before any meshing."""
     out = []
-
-    outer = rounded_rect(0, 0, BODY_L, BODY_W, 8.0)
-    holes = []
-    for hx, hy, ang in hip_positions():
-        holes += servo_pocket(hx, hy, ang)
-    px, py = PI5_HOLES[0] / 2, PI5_HOLES[1] / 2
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            holes.append(circle(sx * px, sy * py, M25))
-    holes.append(rounded_rect(0, 38.0, 30.0, 6.0, 3.0, cw=True))
-    holes.append(rounded_rect(0, -38.0, 30.0, 6.0, 3.0, cw=True))
-    out += check_profile(outer, holes, "chassis_plate")
-
-    pocket_cy = (COXA_LEN - COXA_WALL_H / 2) - _SHAFT_OFF
     out += check_profile(
-        rounded_rect(0, 0, 30.0, COXA_WALL_H, 4.0),
-        servo_pocket(0, pocket_cy, 90.0),
-        "coxa_bracket wall",
+        rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
+        grid_holes() + strap_slots(),
+        "payload_deck",
     )
     out += check_profile(
-        rounded_rect(0, 0, 30.0, 26.0, 4.0), horn_holes(0, 0), "coxa_bracket base"
+        _cradle_profile(50.0, 30.0, BOTTLE_D),
+        [circle(sx * 20.0, -8.0, M3) for sx in (-1, 1)],
+        "reservoir_cradle",
     )
-
-    fh = horn_holes(0, 0) + servo_pocket(FEMUR_LEN - SERVO_SHAFT_FROM_END + 2.0, 0, 0.0)
-    out += check_profile(capsule(0, 0, FEMUR_LEN, 0, 24.0), fh, "femur")
-
-    th = horn_holes(0, 0) + [capsule(22.0, 0, TIBIA_LEN - 16.0, 0, 7.0, cw=True)]
-    out += check_profile(capsule(0, 0, TIBIA_LEN, 0, 20.0), th, "tibia")
+    out += check_profile(
+        rounded_rect(0, 0, 24.0, 22.0, 3.0), [circle(0.0, 2.0, TUBE_D)], "nozzle wall"
+    )
+    out += check_profile(
+        rounded_rect(0, 0, 18.0, 16.0, 3.0),
+        [rounded_rect(0.0, 1.0, TCRT_W, TCRT_H, 1.0, cw=True)],
+        "cliff wall",
+    )
+    out += check_profile(
+        rounded_rect(0, 0, 85.0, 48.0, 4.0), grid_holes(3, 2, 20.0), "phone_tray"
+    )
     return out
 
 
@@ -650,7 +589,6 @@ def self_test():
     else:
         print("  ok    all profiles: holes inside outline, no overlaps")
 
-    # Triangulated area must equal outer area minus hole areas.
     outer = rounded_rect(0, 0, 60, 40, 5)
     holes = [circle(-15, 0, 8), circle(15, 0, 8), rect(0, 12, 10, 6, 30, cw=True)]
     want = abs(signed_area(outer)) - sum(abs(signed_area(h)) for h in holes)
@@ -661,53 +599,26 @@ def self_test():
     else:
         print(f"  ok    triangulation area {got:.2f} mm^2 matches analytic")
 
-    # Every part must be a closed manifold.
     for name, (fn, _) in PARTS.items():
         tris = fn()
         good, why = is_watertight(tris)
         print(f"  {'ok   ' if good else 'FAIL '} {name}: {len(tris)} triangles, {why}")
         ok = ok and good
 
-    # IK must round-trip through FK across the whole working envelope.
-    worst = 0.0
-    for r in (-20.0, 0.0, 10.0, 30.0, 60.0):
-        for d in (30.0, 55.0, 70.0, 90.0):
-            try:
-                a1, a2 = leg_ik(r, d)
-            except ValueError:
-                continue
-            fr, fd = leg_fk(a1, a2)
-            worst = max(worst, math.hypot(fr - r, fd - d))
-    if worst > 1e-9:
-        print(f"  FAIL  IK/FK round-trip off by {worst:.2e}mm")
+    # The deck must not be wider than the robot it straps to.
+    if DECK_L > 140 or DECK_W > 100:
+        print(f"  FAIL  deck {DECK_L}x{DECK_W} is implausibly large for a mini quadruped")
         ok = False
     else:
-        print(f"  ok    IK/FK round-trip exact over the working envelope")
+        print(f"  ok    deck {DECK_L:.0f}x{DECK_W:.0f}mm (MEASURE your Sesame and confirm)")
 
-    # The design stance must be reachable, and not at full stretch -- a leg
-    # standing at full extension has no travel left to lift or push with.
-    span = FEMUR_LEN + TIBIA_LEN
-    need = math.hypot(STAND_REACH, STAND_H)
-    if need > 0.92 * span:
-        print(f"  FAIL  stance needs {need:.1f}mm of a {span:.0f}mm leg -- too straight")
+    # A full reservoir must not out-weigh a small robot.
+    water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm of fill, 1g/ml
+    if water_g > 120:
+        print(f"  FAIL  {BOTTLE_D:.0f}mm bottle holds {water_g:.0f}g -- too heavy")
         ok = False
     else:
-        a1, a2 = leg_ik(STAND_REACH, STAND_H)
-        print(
-            f"  ok    stance {need:.0f}mm of {span:.0f}mm reach "
-            f"(femur {a1:.0f}deg, knee {a2:.0f}deg)"
-        )
-
-    # Servo pockets must not run off the plate.
-    for hx, hy, ang in hip_positions():
-        for ring in servo_pocket(hx, hy, ang):
-            for x, y in ring:
-                if abs(x) > BODY_L / 2 - 1 or abs(y) > BODY_W / 2 - 1:
-                    print(f"  FAIL  hip pocket at ({hx},{hy}) runs off the plate")
-                    ok = False
-                    break
-    else:
-        print(f"  ok    all four hip pockets inside the {BODY_L:.0f}x{BODY_W:.0f} plate")
+        print(f"  ok    {BOTTLE_D:.0f}mm bottle x 60mm fill = {water_g:.0f}g of water")
 
     return ok
 
@@ -729,16 +640,10 @@ def main():
     total = 0
     for name, (fn, qty) in PARTS.items():
         tris = fn()
-        path = os.path.join(out, f"{name}.stl")
-        n = write_stl(path, tris, name)
+        n = write_stl(os.path.join(out, f"{name}.stl"), tris, name)
         total += n
         print(f"  {name+'.stl':24} {n:6d} triangles   print {qty}x")
-
-    tris = assembly()
-    path = os.path.join(out, "assembly_preview.stl")
-    n = write_stl(path, tris, "enforcer assembly")
-    print(f"  {'assembly_preview.stl':24} {n:6d} triangles   (view only)")
-    print(f"\n{total + n} triangles total in {out}")
+    print(f"\n{total} triangles total in {out}")
 
 
 if __name__ == "__main__":
