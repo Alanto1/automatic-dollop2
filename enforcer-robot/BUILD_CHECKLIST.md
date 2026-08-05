@@ -4,11 +4,17 @@ One rule, same as your wristband: **never be in a state where nothing works.**
 Every phase ends in something you could demo that day. If you run out of time,
 you still have a show.
 
-Specs/prices: [`PARTS.md`](PARTS.md). Concept, safety, experiment:
-[`README.md`](README.md).
+Specs: [`PARTS.md`](PARTS.md). Concept, safety, experiment:
+[`README.md`](README.md). Printable parts and dimensions:
+[`cad/`](cad/).
+
+**Buying from Kazakhstan?** Start with
+[`START_HERE_KAZAKHSTAN.md`](START_HERE_KAZAKHSTAN.md) — the weeks below
+assume 1–3 day shipping, which is not your situation. AliExpress to KZ is
+2–5 weeks, so the design and simulation work has to run *while* parts ship.
 
 Order of attack: get **Squirt mode working stationary first** (detect →
-escalate → aim → fire), then add walking, then the other two modes.
+escalate → aim → fire), then add walking, then Warden.
 
 ---
 
@@ -32,7 +38,7 @@ Procurement is the long pole. Nothing else matters until the order is placed.
       the chassis if the printer gate looks bad. 2–4 week lead time makes
       this the long pole, longer than anything German.
 - [ ] Place the **BerryBase** order — and don't dawdle: the PCA9685 showed
-      **only 4 in stock** and the GC9A01 eye only 5
+      **only 4 in stock**, and no rectangular face display was stocked at all
 - [ ] Place the **roboter-bausatz** order (15× MG90S — nobody else stocks them)
 - [ ] Source the **power block** (LiPo, UBEC, charger, LiPo bag) at an RC
       retailer — the one block no maker shop carries, and still unpriced
@@ -43,8 +49,10 @@ Procurement is the long pole. Nothing else matters until the order is placed.
 Meanwhile, zero hardware:
 
 - [ ] **Leg IK simulator** in the browser or Python — drag a foot target,
-      watch the 3 joint angles solve
+      watch the 3 joint angles solve. `cad/make_stl.py` already has a tested
+      `leg_ik()`/`leg_fk()` pair — port those, don't rewrite them
 - [ ] **Unit-test the IK** (known target → known angles; unreachable case)
+- [ ] Use the real link lengths: coxa 28, femur 50, tibia 55 (see `cad/`)
 - [ ] **Mood state-machine simulator** — feed it fake "scene" events
       (phone/head-down/absent) and watch it walk CHILL → SUSPICIOUS →
       WARNING → STRIKE → SMUG, with the hysteresis/timers tuned. Test it.
@@ -96,10 +104,11 @@ logic before hardware exists.
 
 ## Week 6 — Personality
 
-- [ ] GC9A01 eye: chill / suspicious / alarmed / smug expressions
+- [ ] Face display: chill / suspicious / alarmed / smug expressions — two
+      eyes side by side, as in the reference build
 - [ ] Body language on the legs: perk-up, creep-in, victory bounce, cooldown settle
 - [ ] Speaker + a handful of pre-recorded taunt clips
-- [ ] Wire the state machine's mood → eye + body + sound; randomize timing
+- [ ] Wire the state machine's mood → face + body + sound; randomize timing
 
 **Demoable:** it *reacts* with attitude to what it sees — still no squirt needed to impress.
 
@@ -117,13 +126,16 @@ logic before hardware exists.
 
 ---
 
-## Week 8 — Posture Sheriff mode
+## Week 8 — Walking
 
-- [ ] Neck/torso angle from a side view (MediaPipe Pose)
-- [ ] Slouch threshold + hold time → escalate → respond
-- [ ] Add it as a **Mode** object alongside Squirt (shared pipeline)
+- [ ] Statically-stable crawl gait: shift the body's weight over three feet,
+      step the fourth, repeat. A quadruped **cannot** simply keep three feet
+      down the way a hexapod can — the weight shift *is* the gait, not a detail
+- [ ] Turn in place
+- [ ] Walk toward a target under visual servoing
+- [ ] Tune until it crosses a desk without stumbling
 
-**Demoable:** slouch → it busts you; sit up → it approves.
+**Demoable:** it walks to you, *then* squirts you. Flagship plus legs.
 
 ---
 
@@ -166,7 +178,8 @@ logic before hardware exists.
 - [ ] Whatever broke in week 11
 - [ ] Writeup: what's yours, what's a kit/library, what it can't do
 - [ ] Photos + video of it working, taken **before** demo day
-- [ ] **Jugend forscht registration** (confirm the deadline early!)
+- [ ] **Competition registration** (confirm which fair, and its real deadline —
+      see START_HERE_KAZAKHSTAN.md if you are not entering in Germany)
 
 ---
 

@@ -1,5 +1,12 @@
 # Purchase list — Berlin / Germany, quadruped build
 
+> **If you are buying from Kazakhstan, read
+> [`START_HERE_KAZAKHSTAN.md`](START_HERE_KAZAKHSTAN.md) instead.** This file
+> prices the build against German retailers and is only the right list if you
+> are competing in Germany. Two findings here still transfer: the Raspberry Pi
+> RAM price surge, and the fact that no rectangular face display was in stock
+> anywhere — which is an argument for the AliExpress route either way.
+
 Sourcing pass against `PARTS.md`, checked **2026-08-01**. Decision taken:
 **quadruped (12 servos)**, so everything below is costed for 12 legs + 2 head
 servos, not 18.
@@ -25,7 +32,7 @@ in 1–3 days, and only the passives are worth a walk-in trip (see
 | 12× MG90S + 3 spare | €38 | €62.40 | +€24.40 |
 | microSD 32GB ×2 | €14 | €31.20 | +€17.20 |
 | Camera | €15–25 | €28.90 | +€4 |
-| GC9A01 eye | €8 | €12.80 | +€4.80 |
+| Face display | €8 | €12.80 | +€4.80 |
 | VL53L0X | €8 | €8.50–19.95 | +€0.50–12 |
 | TCRT5000 ×4 | €4 | €1.20 | **−€2.80** |
 | MOSFET + diode | €3 | €2.35 | −€0.65 |
@@ -50,23 +57,24 @@ project needs, because the model is small and there's no desktop. See
 
 ---
 
-## Order 1 — BerryBase (berrybase.de) · €231.40
+## Order 1 — BerryBase (berrybase.de) · €218.60
 
-The backbone order. Everything below was showing **"Sofort verfügbar ·
-1-3 Tage"** on 2026-08-01.
+The backbone order. Every line except the face display was showing **"Sofort
+verfügbar · 1-3 Tage"** on 2026-08-01; the display is the one item with no
+stocked option, and is excluded from the total — budget ~€8 for it elsewhere.
 
 | Item | Qty | Unit | Sum | Stock shown | Link |
 |---|---|---|---|---|---|
 | Raspberry Pi 5, 4GB RAM | 1 | 118,50 | 118,50 | 100+ | [link](https://www.berrybase.de/raspberry-pi-5-4gb-ram) |
 | Raspberry Pi Camera Module 3, 12MP | 1 | 28,90 | 28,90 | 100+ | [link](https://www.berrybase.de/raspberry-pi-camera-module-3-12mp) |
 | BerryBase 16-Kanal PWM Servo Treiber (PCA9685) | 2 | 6,50 | 13,00 | **only 4** | [link](https://www.berrybase.de/berrybase-16-kanal-pwm-servo-treiber-board-pca9685-i2c-12bit-1-6khz-3-3-5v) |
-| 1.28" 240×240 rundes LCD, SPI (GC9A01) — the eye | 1 | 12,80 | 12,80 | 5 | [link](https://www.berrybase.de/1.28-240x240-rundes-lcd-display-modul-65k-rgb-spi-interface) |
+| Face display — **rectangular wanted, none in stock**, see note | 1 | 7,90–17,20 | — | **0** | see note below |
 | SparkFun I2S Audio Breakout, MAX98357A | 1 | 7,60 | 7,60 | 9 | [link](https://www.berrybase.de/sparkfun-i2s-audio-breakout-max98357a) |
 | TCRT5000 IR Sensor — cliff sensors | 4 | 0,30 | 1,20 | 90 | [link](https://www.berrybase.de/tcrt5000-infrarot-sensor-lichtschranke) |
 | Adafruit tauchbare 3V DC-Wasserpumpe, 1m Kabel | 1 | 3,30 | 3,30 | 16 | [link](https://www.berrybase.de/adafruit-tauchbare-3v-dc-wasserpumpe-mit-1-meter-kabel-horizontal) |
 | SanDisk Ultra microSDHC A1 32GB + Adapter | 2 | 15,60 | 31,20 | 100+ | [link](https://www.berrybase.de/sandisk-ultra-microsdhc-a1-120mb-s-class-10-speicherkarte-adapter-32gb) |
 | Anycubic PLA Filament 1,75mm 1kg (schwarz) | 1 | 14,90 | 14,90 | 5 | [link](https://www.berrybase.de/anycubic-pla-filament-1-75mm-1kg/farbe-schwarz) |
-| | | | **231,40** | | |
+| | | | **218,60** | | |
 
 **Two stock warnings, both real:**
 
@@ -75,9 +83,19 @@ The backbone order. Everything below was showing **"Sofort verfügbar ·
   channels, so **one board is electrically enough** — the second is a spare,
   and at €6.50 it's the cheapest insurance in this whole build. Order both,
   now, before someone else clears the shelf.
-- **GC9A01 eye — 5 in stock.** Highest personality-per-euro part in the
-  build, per `PARTS.md`. If it's gone, the Waveshare 1,28" round IPS at
-  €19,90 (14 in stock) is the drop-in, +€7.10.
+- **Face display — every rectangular option is out of stock.** The design
+  calls for a rectangle (two eyes side by side = a face). At BerryBase on
+  2026-08-01, *all* of them were `Artikel aktuell nicht lieferbar`: the 1.3"
+  240×240 (€7,90), the 1,83" 240×280 (€10,90), the Adafruit 1,69" 280×240
+  (€17,20), the 1,14" 240×135 (€5,90). The only stocked SPI display is the
+  **round** 1.28" at €12,80 — and it dropped from 5 units to **3** between two
+  checks the same day, so it is moving.
+  **Three ways out**, in order of preference: (1) buy it on AliExpress, where
+  a 1.3" ST7789 is ~$4 and always in stock — you're ordering there anyway for
+  the buck converter and pan/tilt; (2) wait for BerryBase restock, which risks
+  your schedule for a €8 part; (3) take the round one as a fallback and run a
+  one-eye face. Option 3 works, it just gives up the two-eye read that makes
+  the reference build's face land.
 
 **Two deliberate substitutions:**
 
@@ -196,7 +214,7 @@ anything German. Order it the same day you decide the chassis question.
 
 | Block | € |
 |---|---|
-| Order 1 — BerryBase | 231,40 |
+| Order 1 — BerryBase | 218,60 |
 | Order 2 — roboter-bausatz (servos) | 62,40 |
 | Order 3 — semiconductors (buy at Segor) | 2,35 |
 | Segor walk-in bag (wire, fuse, switch, screws) | ~30 |

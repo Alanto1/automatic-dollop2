@@ -1,7 +1,7 @@
 # Parts list — The Enforcer
 
-Budget target: **€250–350** for the hexapod, **~€180–250** for the quadruped
-version. Both include spares.
+Budget target: **~€180–250** for the quadruped, including spares. (The
+hexapod option is gone — the build is a 12-servo quadruped, decided.)
 
 ## Read this first
 
@@ -30,12 +30,12 @@ weeks.
 
 | # | Item | Qty | ~€ | Notes |
 |---|---|---|---|---|
-| 1 | **MG90S metal-gear servo** | 18 (+3 spare) / 12 for quad | 55 / 38 | Metal gear is not optional — plastic SG90s strip under leg load. Buy spares. |
-| 2 | **PCA9685 16-ch PWM driver** | 2 (1 for quad) | 8 | Chainable over I2C. 2 boards = 32 channels (18 legs + 2 head + spare). |
+| 1 | **MG90S metal-gear servo** | **12 legs + 3 spare** | 38 | Metal gear is not optional — plastic SG90s strip under leg load. Buy spares. |
+| 2 | **PCA9685 16-ch PWM driver** | **1** (+1 spare) | 8 | I2C. 16 channels covers 12 legs + 2 head with 2 to spare — one board is enough. |
 | 3 | **Raspberry Pi 5 (4GB)** | 1 | ~~65~~ **118,50** | Runs the camera + a small detector in real time. ~~Pi 4 works, saves ~€20.~~ Pi 4 now saves only €10 — don't. Consider the **2GB at €69,50** instead. |
 | 4 | microSD 32GB A2 | 1 (+1 spare) | 14 | The spare is real advice; cards die at the worst moment. |
 | 5 | **Camera** (Pi Camera Module 3 or USB webcam) | 1 | 15–25 | Module 3 has autofocus; USB is simpler on a moving robot. |
-| 6 | **GC9A01 round SPI LCD** (the eye) | 1 | 8 | Highest personality-per-euro part in the build. |
+| 6 | **Rectangular SPI LCD** (the face) — 1.3"–2.0" IPS, ST7789/ILI9341 | 1 | 8–13 | Highest personality-per-euro part in the build. **Rectangular, not round:** you want *two* eyes side by side, which reads as a face. Mounts on the body front, not the head — see README. |
 | 7 | Pan/tilt bracket + 2 servos | 1 | 10 | Carries the camera **and** the nozzle so aiming = centering. |
 
 ## The water rig (the signature)
@@ -74,7 +74,7 @@ weeks.
 | 22 | M2/M3 screws + standoffs | 1 set | 8 | You'll use more than you think. |
 | 23 | Silicone wire (18AWG servo rail, 22AWG logic), JST, heatshrink | — | 8 | |
 
-**Rough total (original spec estimate):** hexapod ~€320, quadruped ~€230.
+**Rough total (original spec estimate):** quadruped ~€230.
 
 **Actual, sourced 2026-08-01:** quadruped **~€450** — or **~€380** with the
 2GB Pi and a USB webcam. See [`PURCHASE_LIST.md`](PURCHASE_LIST.md) for the
@@ -111,7 +111,7 @@ should ride in the same order.
 - **Electronic fault** (driver, thermistor, board): order the part in the
   week-0 order.
 - **Hard gate:** if it isn't printing dimensionally-accurate parts by end of
-  week 2, **buy a kit chassis** (a "12/18-DOF quadruped/hexapod frame,"
+  week 2, **buy a kit chassis** (a "12-DOF quadruped/spider robot frame,"
   ~€30–60, sometimes bundled with servos — check they're metal-gear). Buying
   the frame is not defeat; it moves your effort to the AI and the water rig,
   which is where the originality is.

@@ -1,21 +1,62 @@
 # The Enforcer — an AI spider robot that holds you accountable
 
-A six-legged desk robot with a camera, a personality, and consequences. It
-watches you work. Slack off — pick up your phone, slouch, wander away — and
-it doesn't beep politely. It notices, gives you attitude, stalks toward you,
-and **squirts you with water**. Get back on task and it backs off, smug.
+A four-legged desk robot with a camera, a face, and consequences. It watches
+you work. Slack off — pick up your phone, wander away — and it doesn't beep
+politely. It notices, gives you attitude, stalks toward you, and **squirts
+you with water**. Get back on task and it backs off, smug.
 
-One robot, three "personalities" (modes):
+One robot, two "personalities" (modes):
 
 | Mode | Detects | What it does |
 |---|---|---|
 | **Squirt** (flagship) | phone in your hand / head down / you left the desk | escalates, then squirts you |
 | **Warden** | you reaching for your phone during a focus session | flees across the desk with your phone so you can't cheat |
-| **Posture Sheriff** | you slouching / "tech neck" | sasses and escalates until you sit up |
 
-All three share one body, one camera, one brain. They differ only in *what
-counts as bad behavior* and *what the robot does about it*. So this is **one
-project with three demo modes**, not three robots.
+Both share one body, one camera, one brain. They differ only in *what counts
+as bad behavior* and *what the robot does about it*. So this is **one project
+with two demo modes**, not two robots.
+
+## What it looks like
+
+The build target is the classic 3-DOF quadruped: a flat chassis plate, four
+legs splayed out spider-style, and a **rectangular face display** on the front
+of the body. Printed shells in a loud colour over black servo bodies — the
+colour is not vanity, it reads as a *creature* on a demo table and photographs
+well for the writeup.
+
+See [`cad/SKETCH.svg`](cad/SKETCH.svg) for dimensioned front/side/top views and
+the leg-joint diagram, and [`cad/stl/`](cad/stl/) for printable parts.
+
+```
+        front view                          side view (one leg)
+
+     ┌──────────────┐                     coxa    femur      tibia
+     │  ( ●  ▭  ● ) │  ← face display    ○──────○           knee
+     └──────────────┘                     │       \         ○
+   ╱─┴─╲          ╱─┴─╲                   │        \       ╱
+  ╱     ╲        ╱     ╲                 body       \     ╱
+ │       │      │       │                            \   ╱
+  ╲     ╱        ╲     ╱                              ╲ ╱
+   ▔▔▔▔            ▔▔▔▔                                ▼ foot
+```
+
+Three joints per leg × four legs = **12 servos**, all MG90S:
+
+| Joint | Axis | Does |
+|---|---|---|
+| **Coxa** (hip yaw) | vertical | swings the leg forward/back — this is what walks |
+| **Femur** (hip pitch) | horizontal | lifts the leg off the desk |
+| **Tibia** (knee) | horizontal | extends/folds the foot, sets body height |
+
+Plus **2 servos** on a pan/tilt head carrying the camera and the water nozzle.
+14 servos total, all on one PCA9685 (16 channels).
+
+**One deliberate change from the reference photo:** the face display stays on
+the *body*, while the camera and nozzle ride the *pan/tilt head*. Putting the
+face on the head would mean it looks away from you at the exact moment it aims
+at you — the aiming motion would hide the personality. Splitting them lets it
+glare at you while it lines up the shot, which is both funnier and better
+engineering.
 
 ## Why this isn't "ChatGPT on legs"
 
@@ -25,7 +66,7 @@ strikes. That's the whole point, and it's what makes the AI + the legs both
 *essential* instead of decorative:
 
 - The **AI** has to actually understand the scene (are you working or on your
-  phone? are you slouching?) — real computer vision, not a scripted toy.
+  phone? are you even there?) — real computer vision, not a scripted toy.
 - The **legs** are justified because it comes to find you, lines up a shot,
   and (in Warden mode) *runs away* — a wheeled robot falls off the desk.
 
@@ -43,7 +84,7 @@ Two real ideas hold this up when a jury pushes on it:
    notification. This is well documented in human-robot interaction research.
 
 Together they give you the research question that turns a water gag into a
-Jugend-forscht entry:
+competition entry:
 
 > **Does an embodied enforcer with real consequences improve focus more than
 > a passive phone timer — and will people actually tolerate it?**
@@ -58,19 +99,19 @@ question.
                          ┌──────────────── Raspberry Pi ─────────────────┐
    camera (on the head) ►│  perception:                                  │
                          │   • person + phone detection (YOLO/MobileNet) │
-                         │   • pose / head angle (MediaPipe)             │
+                         │   • head pose / presence (MediaPipe)          │
                          │            │                                  │
                          │            ▼                                  │
                          │   MOOD STATE MACHINE  (the personality)       │
                          │   CHILL → SUSPICIOUS → WARNING → STRIKE → SMUG│
                          │       │              │            │           │
                          │       ▼              ▼            ▼           │
-                         │  eye display     body language   fire!        │
+                         │  face display    body language   fire!        │
                          └───────┬───────────────┬───────────┬──────────┘
                                  │ SPI           │ I2C        │ GPIO
                                  ▼               ▼            ▼
-                            eye (GC9A01)   PCA9685 ×2 ──► 18 leg servos
-                                                    └──► 2 head servos (pan/tilt)
+                          face display     PCA9685 ──┬──► 12 leg servos
+                          (on the body)              └──► 2 head servos (pan/tilt)
                                                            │
                                    camera + water nozzle ride on the head,
                                    so "center the target in frame" == "aimed"
@@ -84,31 +125,32 @@ same pan/tilt head.** Then aiming is just *visual servoing* — turn the head
 until the target is centered in the camera image, and the nozzle is now
 pointed at them. Fire.
 
-## The three modes, in engineering terms
+## The two modes, in engineering terms
 
 They're the same pipeline with a different **trigger** and **response**:
 
 - **Squirt** — trigger: `cell_phone` detected near the person's hands, OR head
   pitched down for > N seconds, OR no person at the desk for > N seconds.
   Response: escalate through moods, then pulse the pump.
-- **Posture Sheriff** — trigger: neck/torso angle past a threshold (from a
-  side view) held for > N seconds. Response: escalate, then squirt (or a
-  gentler nudge — your call).
 - **Warden** — the phone rides on a tray on the robot's back. Trigger: a hand
   approaching the robot/phone during a locked focus session. Response: walk
   away from the hand (reactive avoidance) while avoiding desk edges.
 
 Design the software so a **Mode** is a small object with
-`should_trigger(scene)` and `respond()` — then adding a mode is ~30 lines,
-not a rewrite.
+`should_trigger(scene)` and `respond()` — then adding a mode later is ~30
+lines, not a rewrite. (This is also the clean way to bring back a third mode
+if you ever want one.)
 
 ## The personality — how "attitude" is actually built
 
-Personality here = **moods expressed through motion, an eye, and sound**, driven
-by the state machine. No dialogue required.
+Personality here = **moods expressed through motion, a face, and sound**,
+driven by the state machine. No dialogue required.
 
-- **Eye display** (round LCD): narrow/suspicious, wide/alarmed, a smug
-  half-lid. One cheap part does most of the "it's alive" work.
+- **Face display** (rectangular LCD on the body front): two eyes that narrow
+  when suspicious, go wide when alarmed, and half-lid smugly after a hit. One
+  cheap part does most of the "it's alive" work. A rectangle gives you *two*
+  eyes side by side, which reads as a face far more directly than a single
+  round eye — the reference build is right about this.
 - **Body language** (the legs): perk up when suspicious, crouch low and creep
   in warning, a little victory bounce after a strike, a slow "cooldown"
   settle. This is why legs beat a static gadget for personality.
@@ -149,12 +191,15 @@ wristband README already applies to test users.
 
 ## Honest hard parts (where the time actually goes)
 
-1. **Walking reliably** — not the AI. Budget real time for gait tuning.
-2. **Power** — 18 servos can brown out the Pi. Separate rails, common ground,
-   a fuse. Solve this in week 4, not week 11.
+1. **Walking reliably** — not the AI. Budget real time for gait tuning. A
+   quadruped is *harder* to walk than a hexapod, because it can't keep three
+   feet planted at all times; it has to shift its weight before each step.
+   This is the trade you accepted for cheaper and simpler power.
+2. **Power** — 12 servos can still brown out the Pi. Separate rails, common
+   ground, a fuse. Solve this in week 4, not week 11.
 3. **"On-task vs slacking" detection** that doesn't false-fire — a robot that
    squirts you while you're working is a *bad* robot. Tune with hysteresis.
-4. **Warden payload** — a phone (~180g) is heavy for a small hexapod. If it
+4. **Warden payload** — a phone (~180g) is heavy for a small quadruped. If it
    can't carry it and still flee, fall back to "guards the phone on a pad and
    blocks/squirts you" instead of carrying it. Decide after you measure your
    build's payload.
@@ -166,7 +211,7 @@ wristband README already applies to test users.
 | Walking isn't reliable by week 5 | **Stationary Squirt sniper** — bolted down, pan/tilt aims, still hilarious and complete |
 | Only one mode comes together | Squirt mode alone is a full project |
 | Warden payload fails | Guard-and-block version (no carrying) |
-| Behind at week 10 | Cut Posture + Warden; polish Squirt + run the experiment |
+| Behind at week 10 | Cut Warden; polish Squirt + run the experiment |
 
 The floor of this project is "a stationary robot that catches you on your
 phone and squirts you, with a focus experiment." That alone wins a room.
@@ -188,36 +233,33 @@ phone and squirts you, with a focus experiment." That alone wins a room.
 ## Files in this project
 
 - `README.md` — this overview
+- `START_HERE_KAZAKHSTAN.md` — **what to actually do right now**, with no
+  parts and nothing built
 - `PARTS.md` — bill of materials, wiring, and what each part is for
-- `PURCHASE_LIST.md` — **the real cart**: verified 2026-08-01 prices, stock
-  counts, which shop, and the budget corrections
-- `BUILD_CHECKLIST.md` — week-by-week plan to the Jugend forscht window
+- `PURCHASE_LIST.md` — sourcing pass with verified prices and stock
+- `BUILD_CHECKLIST.md` — week-by-week plan once parts arrive
+- `cad/SKETCH.svg` — dimensioned views of the robot
+- `cad/enforcer.scad` — parametric source for every printed part
+- `cad/stl/` — ready-to-slice STLs
+- `cad/make_stl.py` — the generator, if you want to change dimensions
 
-## How to start (in your next session)
-
-1. Open a new session in this repo and read these three files.
-2. Make the **two decisions** in "Open decisions" below.
-3. Start at **Week 0** in `BUILD_CHECKLIST.md`: place one parts order
-   (with spares), fix or replace the 3D printer, and build the leg-IK +
-   state-machine simulator while parts ship.
-
-## Open decisions to make first
+## Open decisions
 
 1. ~~**Hexapod (18 servos) or quadruped (12)?**~~ **DECIDED: quadruped
-   (12 servos).** Less power drama, cheaper, reads as a creature just as
-   well, and the software is identical either way.
-   [`PURCHASE_LIST.md`](PURCHASE_LIST.md) is costed for 12 legs + 2 head
-   servos.
-2. **Which mode first?** Recommendation: **Squirt**, stationary, end-to-end
+   (12 servos)**, matching the reference build.
+2. ~~**Three modes or fewer?**~~ **DECIDED: two** — Squirt and Warden. The
+   slouch-detection mode is dropped; it was the weakest of the three (a
+   side-view camera angle it would rarely have, and the least funny payoff).
+3. **Which mode first?** Recommendation: **Squirt**, stationary, end-to-end
    (detect → escalate → aim → fire) before you add walking. Earliest complete
    demo.
-3. **Detection on-device or phone-offloaded?** Start on-device on a Pi 5 with
-   a small model; only offload if it's too slow.
+4. **Pi 5 4GB or 2GB?** Open, and it gates the order — see `PURCHASE_LIST.md`.
+5. **Detection on-device or phone-offloaded?** Start on-device with a small
+   model; only offload if it's too slow.
 
 ## Timeline anchor
 
-Today is early August. Jugend forscht registration is typically **~30
-November**, with Berlin regional competitions Feb–March (confirm current
-dates). A ~12–13 week build starting now lands you at registration with
-results and a rehearsed demo. Week 0 is procurement — that's the long pole
-because of shipping, so do it first.
+A ~12–13 week build. Week 0 is procurement and design — and from Kazakhstan,
+shipping is a **3–6 week** long pole, not 1–3 days, so the design and
+simulation work has to happen *while* parts are in transit. That's what
+`START_HERE_KAZAKHSTAN.md` is for.
