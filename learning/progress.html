@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Theory Plan — Progress Tracker</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #10141b;
+    --surface: #171d27;
+    --surface-2: #1e2530;
+    --border: #2a3341;
+    --text: #e8ecf2;
+    --text-muted: #8b96a8;
+    --accent: #4fd8c4;
+    --accent-dim: #2a6b62;
+    --math: #c084fc;
+    --ee: #f59e0b;
+    --ce: #60a5fa;
+    --mech: #4ade80;
+    --proj: #f87171;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f1ede6; --surface: #fffdfa; --surface-2: #ece6db; --border: #ddd4c2;
+      --text: #1d1a14; --text-muted: #6b6255; --accent: #0e8c7a; --accent-dim: #9ad3c9;
+      --math: #7c3aed; --ee: #b45309; --ce: #1d4ed8; --mech: #15803d; --proj: #b91c1c;
+      --shadow: rgba(60, 50, 30, 0.12);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10141b; --surface: #171d27; --surface-2: #1e2530; --border: #2a3341;
+    --text: #e8ecf2; --text-muted: #8b96a8; --accent: #4fd8c4; --accent-dim: #2a6b62;
+    --math: #c084fc; --ee: #f59e0b; --ce: #60a5fa; --mech: #4ade80; --proj: #f87171;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f1ede6; --surface: #fffdfa; --surface-2: #ece6db; --border: #ddd4c2;
+    --text: #1d1a14; --text-muted: #6b6255; --accent: #0e8c7a; --accent-dim: #9ad3c9;
+    --math: #7c3aed; --ee: #b45309; --ce: #1d4ed8; --mech: #15803d; --proj: #b91c1c;
+    --shadow: rgba(60, 50, 30, 0.12);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    padding: 0 0 4rem;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 1rem; }
+
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.9rem 0 0.75rem;
+  }
+  .titlerow { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+  h1 { font-size: 1.15rem; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--text-muted); font-size: 0.8rem; }
+  .spacer { flex: 1 1 auto; }
+  .btns { display: flex; gap: 0.4rem; flex: 0 0 auto; }
+
+  button {
+    font-family: inherit; font-size: 0.78rem; cursor: pointer;
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 0.3rem 0.6rem;
+  }
+  button:hover { border-color: var(--accent); }
+
+  .overall { margin-top: 0.7rem; }
+  .bar { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+  .bar > i { display: block; height: 100%; background: var(--accent); width: 0%; transition: width 0.25s ease; }
+  .barlabel {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--text-muted);
+    margin-bottom: 0.3rem; font-family: var(--font-mono);
+  }
+
+  .focus {
+    margin-top: 0.7rem; padding: 0.55rem 0.7rem;
+    background: var(--surface); border: 1px solid var(--accent-dim);
+    border-left: 3px solid var(--accent); border-radius: 7px;
+    font-size: 0.82rem;
+  }
+  .focus b { color: var(--accent); font-weight: 600; }
+
+  .legend {
+    display: flex; gap: 0.9rem; flex-wrap: wrap;
+    font-size: 0.72rem; color: var(--text-muted);
+    margin: 1.2rem 0 0.4rem; font-family: var(--font-mono);
+  }
+  .legend span::before {
+    content: ""; display: inline-block; width: 8px; height: 8px;
+    border-radius: 2px; margin-right: 0.35rem; vertical-align: 1px;
+  }
+  .l-math::before { background: var(--math); }
+  .l-ee::before   { background: var(--ee); }
+  .l-ce::before   { background: var(--ce); }
+  .l-mech::before { background: var(--mech); }
+  .l-proj::before { background: var(--proj); }
+
+  section.phase {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 11px; margin: 1rem 0; overflow: hidden;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .phasehead {
+    padding: 0.8rem 1rem; background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+  }
+  .phasehead h2 { font-size: 0.95rem; margin: 0; }
+  .phasemeta { font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono); }
+  .pbar { flex: 1 1 120px; min-width: 100px; height: 5px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+  .pbar > i { display: block; height: 100%; background: var(--accent); width: 0%; transition: width 0.25s ease; }
+
+  ul.items { list-style: none; margin: 0; padding: 0.35rem 0; }
+  li.item { border-bottom: 1px solid transparent; }
+  li.item + li.item { border-top: 1px solid var(--border); }
+
+  .row { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 1rem; }
+  .row:hover { background: var(--surface-2); }
+  input[type=checkbox] {
+    appearance: none; -webkit-appearance: none;
+    width: 17px; height: 17px; flex: 0 0 17px; margin-top: 2px;
+    border: 1.5px solid var(--border); border-radius: 4px;
+    background: var(--bg); cursor: pointer; position: relative;
+  }
+  input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+  input[type=checkbox]:checked::after {
+    content: "✓"; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg); font-size: 12px; font-weight: 800;
+  }
+  .lbl { flex: 1 1 auto; font-size: 0.87rem; cursor: pointer; }
+  .lbl .ref { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
+  .done .lbl > .txt { text-decoration: line-through; opacity: 0.5; }
+  .tag {
+    font-family: var(--font-mono); font-size: 0.63rem; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 0.1rem 0.36rem; border-radius: 4px;
+    flex: 0 0 auto; margin-top: 3px; border: 1px solid currentColor; opacity: 0.85;
+  }
+  .t-math { color: var(--math); } .t-ee { color: var(--ee); }
+  .t-ce { color: var(--ce); }     .t-mech { color: var(--mech); }
+  .t-proj { color: var(--proj); }
+  .noteBtn { background: none; border: none; color: var(--text-muted); padding: 0 0.25rem; font-size: 0.9rem; }
+  .noteBtn:hover { color: var(--accent); }
+  .noteBtn.has { color: var(--accent); }
+  textarea {
+    display: none; width: calc(100% - 2rem); margin: 0 1rem 0.6rem 1rem;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 0.5rem 0.6rem; font-family: var(--font-sans); font-size: 0.82rem;
+    min-height: 4.5rem; resize: vertical; line-height: 1.45;
+  }
+  textarea.open { display: block; }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  footer { color: var(--text-muted); font-size: 0.76rem; margin-top: 1.6rem; line-height: 1.6; }
+  footer a { color: var(--accent); }
+  code { font-family: var(--font-mono); font-size: 0.85em; background: var(--surface-2); padding: 0.05rem 0.3rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="titlerow">
+      <h1>Theory plan — progress</h1>
+      <span class="sub">mechatronics / EE / computer engineering</span>
+      <span class="spacer"></span>
+      <span class="btns">
+        <button id="themeBtn" type="button">theme</button>
+        <button id="resetBtn" type="button">reset</button>
+      </span>
+    </div>
+    <div class="overall">
+      <div class="barlabel"><span id="ovText">0 / 0 done</span><span id="ovPct">0%</span></div>
+      <div class="bar"><i id="ovBar"></i></div>
+    </div>
+    <div class="focus" id="focus"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="legend">
+    <span class="l-math">math</span>
+    <span class="l-ee">electrical</span>
+    <span class="l-ce">computer</span>
+    <span class="l-mech">mechanical</span>
+    <span class="l-proj">project</span>
+  </div>
+
+  <div id="phases"></div>
+
+  <footer>
+    <p><strong>How to use this.</strong> Tick an item only after you've done
+    the module's lab <em>and</em> passed its self-check closed-book. Use the
+    ✎ button to write the topic in your own words in three sentences — if you
+    can't compress it, you don't have it yet.</p>
+    <p>Progress and notes are stored in this browser's <code>localStorage</code>.
+    Nothing is uploaded anywhere. Opening this file from a different browser or
+    device gives you a separate, empty tracker. <strong>Export your notes
+    periodically</strong> by copying them into the repo if they're worth keeping —
+    clearing browser data will wipe this.</p>
+    <p>Plan details live in the markdown files alongside this one:
+    <code>README.md</code>, <code>00-math-backbone.md</code> …
+    <code>06-mechanics-motors-sensors.md</code>, <code>PROJECTS.md</code>,
+    <code>RESOURCES.md</code>.</p>
+  </footer>
+</div>
+
+<script>
+const PLAN = [
+  {
+    id: "p1", name: "Phase 1 — Foundations", meta: "~4 months @ 8h/wk",
+    items: [
+      ["m1",   "math", "Algebra & trigonometry repair",                    "00 §1"],
+      ["m2",   "math", "Calculus I — derivatives",                         "00 §2"],
+      ["e1",   "ee",   "KCL/KVL, Ohm, voltage is a difference",            "01 §1.1–1.2"],
+      ["e2",   "ee",   "Series/parallel, the voltage divider",             "01 §1.3"],
+      ["e3",   "ee",   "Thevenin & Norton, output impedance",              "01 §1.4"],
+      ["e4",   "ee",   "Power, ratings, non-ideal components",             "01 §1.5–1.6"],
+      ["e5",   "ee",   "Semiconductors & the diode",                       "02 §2.1–2.2"],
+      ["e6",   "ee",   "BJT & MOSFET as switches — derive your base resistor", "02 §2.3"],
+      ["c1",   "ce",   "Boolean algebra, De Morgan, K-maps",               "03 §3.1"],
+      ["c2",   "ce",   "Number representation, two's complement, rollover","03 §3.2"],
+      ["c3",   "ce",   "Combinational logic — adders & the speed/area tradeoff", "03 §3.3"],
+      ["c4",   "ce",   "Sequential logic, flip-flops, setup/hold, f_max",  "03 §3.4"],
+      ["c5",   "ce",   "Finite state machines, Moore vs Mealy",            "03 §3.5"],
+      ["k1",   "mech", "Statics & free-body diagrams",                     "06 §6.1"],
+      ["k2",   "mech", "Materials, stress concentration, FDM anisotropy",  "06 §6.2"],
+      ["k3",   "mech", "Kinematics & dynamics, mass-spring-damper",        "06 §6.3"],
+      ["j1",   "proj", "PROJECT 1 — component curve tracer",               "PROJECTS"],
+      ["w1",   "proj", "Wristband: hysteresis at zone boundaries + tests", "Track B"]
+    ]
+  },
+  {
+    id: "p2", name: "Phase 2 — The analog & digital core", meta: "~5 months @ 8h/wk",
+    items: [
+      ["m3",   "math", "Calculus II — integrals, RMS, energy",             "00 §3"],
+      ["m4",   "math", "Complex numbers & phasors",                        "00 §4"],
+      ["m5",   "math", "Ordinary differential equations, ζ and ω_n",       "00 §5"],
+      ["e7",   "ee",   "Impedance — every DC tool, now on AC",             "01 §1.7"],
+      ["e8",   "ee",   "RC in both domains; τ and f_c are one fact",       "01 §1.8"],
+      ["e9",   "ee",   "I2C rise-time budget on your own bus",             "01 §1.9"],
+      ["e10",  "ee",   "Resonance, RLC, Q",                                "01 §1.10"],
+      ["e11",  "ee",   "Small-signal analysis & linearisation",            "02 §2.4"],
+      ["e12",  "ee",   "Op-amps — derive every configuration",             "02 §2.5"],
+      ["e13",  "ee",   "Linear vs switching regulation, dropout, CC/CV",   "02 §2.6"],
+      ["e14",  "ee",   "Noise, grounding, decoupling",                     "02 §2.7"],
+      ["c6",   "ce",   "HDL basics — Verilog simulation",                  "03 §3.6"],
+      ["c7",   "ce",   "Harvard vs von Neumann; why PROGMEM exists",       "03 §3.7"],
+      ["c8",   "ce",   "ISA, datapath, control, pipelining, hazards",      "03 §3.8–3.9"],
+      ["c9",   "ce",   "Memory hierarchy & caches",                        "03 §3.10"],
+      ["c10",  "ce",   "MCU peripherals; write bare-metal register code",  "03 §3.11"],
+      ["c11",  "ce",   "Timers & PWM generation on real hardware",         "03 §3.12"],
+      ["c12",  "ce",   "Interrupts, volatile, atomicity, torn reads",      "03 §3.13"],
+      ["c13",  "ce",   "Real-time systems, superloop vs RTOS, watchdogs",  "03 §3.14"],
+      ["c14",  "ce",   "UART / I2C / SPI compared",                        "03 §3.15"],
+      ["k4",   "mech", "The DC motor model — K_t, K_e, torque-speed",      "06 §6.4"],
+      ["k5",   "mech", "Your ERM motor: the ω² law & startup threshold",   "06 §6.5"],
+      ["k6",   "mech", "Steppers, servos, BLDC, H-bridges, gearing",       "06 §6.6–6.7"],
+      ["j2",   "proj", "PROJECT 2 — power & driver board for the wristband","PROJECTS"],
+      ["w2",   "proj", "Wristband: PWM → 31 kHz, I2C pull-ups, R3 fix",    "Track B"],
+      ["w3",   "proj", "Wristband: re-pick PWM duties for the ω² law",     "Track B"]
+    ]
+  },
+  {
+    id: "p3", name: "Phase 3 — Systems", meta: "~6 months @ 8h/wk",
+    items: [
+      ["m6",   "math", "Laplace transform & partial fractions",            "00 §6"],
+      ["m7",   "math", "Fourier series & transform",                       "00 §7"],
+      ["m8",   "math", "Linear algebra (Strang)",                          "00 §8"],
+      ["m9",   "math", "Probability & statistics; √N noise reduction",     "00 §9"],
+      ["s1",   "ee",   "LTI, impulse response, convolution",               "04 §4.1–4.2"],
+      ["s2",   "ee",   "The eigenfunction property — why sinusoids",       "04 §4.3"],
+      ["s3",   "ee",   "Frequency domain, convolution theorem, duality",   "04 §4.4"],
+      ["s4",   "ee",   "Transfer functions, poles, zeros, stability",      "04 §4.5"],
+      ["s5",   "ee",   "Bode plots — sketch by hand before by computer",   "04 §4.6"],
+      ["s6",   "ee",   "Sampling, Nyquist, aliasing, anti-alias filtering","04 §4.7"],
+      ["s7",   "ee",   "Analog filters & the sharpness/delay tradeoff",    "04 §4.8"],
+      ["s8",   "ee",   "Digital filters; compute your own lag budget",     "04 §4.9"],
+      ["s9",   "ee",   "The z-transform & the unit circle",                "04 §4.10"],
+      ["t1",   "mech", "Open vs closed loop; T = G/(1+GH)",                "05 §5.1–5.2"],
+      ["t2",   "mech", "Performance specs from ζ and ω_n",                 "05 §5.3"],
+      ["t3",   "mech", "PID — each term, windup, derivative kick",         "05 §5.4"],
+      ["t4",   "mech", "Stability & Routh–Hurwitz",                        "05 §5.5"],
+      ["t5",   "mech", "Root locus, gain & phase margin, Nyquist",         "05 §5.6"],
+      ["t6",   "mech", "Digital control — write the PID you'd ship",       "05 §5.7"],
+      ["t7",   "mech", "State space, controllability, observers, LQR",     "05 §5.8"],
+      ["t8",   "mech", "Nonlinearity, saturation, transport delay",        "05 §5.9"],
+      ["k7",   "mech", "Sensor characteristics; accuracy vs precision",    "06 §6.8–6.9"],
+      ["k8",   "mech", "How your ToF sensor really works, and its limits", "06 §6.10"],
+      ["k9",   "mech", "Signal conditioning, complementary filter, Kalman","06 §6.11"],
+      ["j3",   "proj", "PROJECT 3a — PID temperature controller",          "PROJECTS"],
+      ["j4",   "proj", "PROJECT 3b — closed-loop motor speed controller",  "PROJECTS"],
+      ["w4",   "proj", "Wristband: median-of-3 filter, with tests",        "Track B"],
+      ["w5",   "proj", "Wristband: document real sensor failure modes",    "Track B"],
+      ["w6",   "proj", "Wristband: compute the reaction-time margin",      "Track B"]
+    ]
+  },
+  {
+    id: "p4", name: "Phase 4 — Depth", meta: "ongoing",
+    items: [
+      ["d1",   "proj", "Choose a specialisation",                          "PROJECTS"],
+      ["d2",   "proj", "PROJECT 4 — specialisation build",                 "PROJECTS"],
+      ["d3",   "proj", "CAPSTONE — wristband v2, or a balancing robot",    "Track C"]
+    ]
+  }
+];
+
+const KEY = "theoryPlanProgress.v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) { state = {}; }
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+const phasesEl = document.getElementById("phases");
+
+PLAN.forEach(phase => {
+  const sec = document.createElement("section");
+  sec.className = "phase";
+
+  const head = document.createElement("div");
+  head.className = "phasehead";
+  head.innerHTML =
+    '<h2>' + phase.name + '</h2>' +
+    '<span class="phasemeta" data-count></span>' +
+    '<span class="pbar"><i></i></span>' +
+    '<span class="phasemeta">' + phase.meta + '</span>';
+  sec.appendChild(head);
+
+  const ul = document.createElement("ul");
+  ul.className = "items";
+
+  phase.items.forEach(([id, track, text, ref]) => {
+    const li = document.createElement("li");
+    li.className = "item";
+    li.dataset.id = id;
+    li.dataset.phase = phase.id;
+
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "cb-" + id;
+    cb.checked = !!(state[id] && state[id].done);
+
+    const lbl = document.createElement("label");
+    lbl.className = "lbl";
+    lbl.htmlFor = cb.id;
+    lbl.innerHTML = '<span class="txt">' + text + '</span> <span class="ref">' + ref + '</span>';
+
+    const tag = document.createElement("span");
+    tag.className = "tag t-" + track;
+    tag.textContent = track;
+
+    const nb = document.createElement("button");
+    nb.type = "button";
+    nb.className = "noteBtn";
+    nb.textContent = "✎";
+    nb.title = "Notes — write it in your own words";
+
+    const ta = document.createElement("textarea");
+    ta.placeholder = "In your own words, in three sentences…";
+    ta.value = (state[id] && state[id].note) || "";
+    if (ta.value) nb.classList.add("has");
+
+    row.append(cb, lbl, tag, nb);
+    li.append(row, ta);
+    ul.appendChild(li);
+
+    cb.addEventListener("change", () => {
+      state[id] = state[id] || {};
+      state[id].done = cb.checked;
+      li.classList.toggle("done", cb.checked);
+      save(); refresh();
+    });
+    nb.addEventListener("click", () => {
+      ta.classList.toggle("open");
+      if (ta.classList.contains("open")) ta.focus();
+    });
+    ta.addEventListener("input", () => {
+      state[id] = state[id] || {};
+      state[id].note = ta.value;
+      nb.classList.toggle("has", !!ta.value.trim());
+      save();
+    });
+
+    li.classList.toggle("done", cb.checked);
+  });
+
+  sec.appendChild(ul);
+  phasesEl.appendChild(sec);
+});
+
+function refresh() {
+  let total = 0, done = 0, nextItem = null;
+
+  PLAN.forEach(phase => {
+    let pt = 0, pd = 0;
+    phase.items.forEach(([id, , text, ref]) => {
+      pt++; total++;
+      if (state[id] && state[id].done) { pd++; done++; }
+      else if (!nextItem) nextItem = { text: text, ref: ref, phase: phase.name };
+    });
+    const sec = [...phasesEl.children][PLAN.indexOf(phase)];
+    sec.querySelector("[data-count]").textContent = pd + "/" + pt;
+    sec.querySelector(".pbar > i").style.width = (pt ? (pd / pt) * 100 : 0) + "%";
+  });
+
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById("ovBar").style.width = pct + "%";
+  document.getElementById("ovPct").textContent = pct + "%";
+  document.getElementById("ovText").textContent = done + " / " + total + " done";
+
+  const f = document.getElementById("focus");
+  if (nextItem) {
+    f.innerHTML = "Next up — <b>" + nextItem.text + "</b> &nbsp;<span class='sub'>" +
+                  nextItem.ref + " · " + nextItem.phase + "</span>";
+  } else {
+    f.innerHTML = "<b>Every item complete.</b> Time to pick a harder capstone.";
+  }
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Clear all progress and notes? This cannot be undone.")) return;
+  state = {}; save();
+  document.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = false; });
+  document.querySelectorAll("textarea").forEach(t => { t.value = ""; t.classList.remove("open"); });
+  document.querySelectorAll(".noteBtn").forEach(b => b.classList.remove("has"));
+  document.querySelectorAll("li.item").forEach(l => l.classList.remove("done"));
+  refresh();
+});
+
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : cur === "light" ? "" : "dark";
+  if (next) document.documentElement.setAttribute("data-theme", next);
+  else document.documentElement.removeAttribute("data-theme");
+  try { localStorage.setItem(KEY + ".theme", next); } catch (_) {}
+});
+try {
+  const th = localStorage.getItem(KEY + ".theme");
+  if (th) document.documentElement.setAttribute("data-theme", th);
+} catch (_) {}
+
+refresh();
+</script>
+</body>
+</html>
