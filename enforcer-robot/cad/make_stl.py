@@ -73,6 +73,8 @@ SESAME_MASS_G = 380.0
 # so one leg momentarily carries roughly half the machine.
 WORST_LEG_SHARE = 0.5
 
+PHONE_G = 180.0             # a typical phone -- roughly half of Sesame again
+
 SEG = 24                    # facets per full circle
 
 # --------------------------------------------------------------------------
@@ -445,6 +447,26 @@ def max_reach_mm(mass_g: float, share: float = WORST_LEG_SHARE) -> float:
     return budget / (mass_g * share / 1000.0) * 10.0
 
 
+def payload_cases():
+    """Loaded mass and reach limit for each way the robot can be configured.
+
+    This is the table that decides whether Warden can carry a phone. It
+    cannot: a phone is ~half of Sesame's own mass, and the torque needed at
+    any usable stance is past what MG90S can hold. See BEHAVIOURS.md.
+    """
+    deck_pi_cam = 30.0 + 11.0 + 5.0     # printed parts, Pi Zero, camera
+    rig = 20.0                          # pump + tubing
+    water = lambda ml: float(ml)        # 1 g/ml
+    return [
+        ("bare Sesame", 0.0),
+        ("+ deck, Pi Zero, camera", deck_pi_cam),
+        ("+ water rig, 50ml", deck_pi_cam + rig + water(50)),
+        ("+ water rig, 100ml", deck_pi_cam + rig + water(100)),
+        ("Warden CARRYING a phone", deck_pi_cam + PHONE_G),
+        ("Warden carrying phone + 50ml", deck_pi_cam + rig + water(50) + PHONE_G),
+    ]
+
+
 def grid_holes(cols=GRID_COLS, rows=GRID_ROWS, pitch=GRID_PITCH, d=M3):
     """Mounting grid. Every add-on lines up to this, so the reservoir can move
     fore/aft after you weigh the robot and find the balance point."""
@@ -746,6 +768,25 @@ def self_test():
         flag = "OK " if reach <= limit else "OVER"
         print(f"        {flag} {reach:.0f}mm reach -> {t:.2f} kg-cm")
     print(f"        SESAME_MASS_G is an ESTIMATE -- weigh yours and re-run")
+
+    # Which configurations the servos can actually hold up.
+    budget = MG90S_STALL_KGCM * SERVO_DERATE
+    print(f"  --    payload cases (budget {budget:.2f} kg-cm at 48mm reach):")
+    warden_carry_fails = False
+    for name, extra in payload_cases():
+        m = SESAME_MASS_G + extra
+        t = joint_torque_kgcm(m, 48.0)
+        over = t > budget
+        if over and "CARRYING" in name:
+            warden_carry_fails = True
+        print(f"        {'OVER' if over else 'ok  '} {name:32} {m:5.0f}g  "
+              f"reach<={max_reach_mm(m):4.0f}mm  {t:.2f} kg-cm")
+    if not warden_carry_fails:
+        print("  FAIL  the phone-carrying case is supposed to be over budget --")
+        print("        if it now passes, BEHAVIOURS.md's Warden design is stale")
+        ok = False
+    else:
+        print("  ok    phone-carrying is over budget, so Warden is guard-and-block")
 
     return ok
 

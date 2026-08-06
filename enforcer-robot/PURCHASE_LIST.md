@@ -10,10 +10,10 @@ called out where it matters.
 
 ---
 
-## Headline: ~€197, and the brain is now sized to the robot
+## Headline: ~€204, and the brain is now sized to the robot
 
 The original 12-servo design with a Pi 5 riding on it came to **~€450**. This
-lands at **~€197**. Two decisions did it:
+lands at **~€204**. Two decisions did it:
 
 | Deleted | Why | Saved |
 |---|---|---|
@@ -79,7 +79,7 @@ source with quantity tiers.
 **Spares are not optional.** You will strip or burn one during calibration,
 and a dead servo mid-build costs you a shipping cycle.
 
-## Order 3 — AliExpress / Amazon · ~€15
+## Order 3 — AliExpress / Amazon · ~€22
 
 The two Sesame parts German maker retailers simply don't carry, plus the
 consumables. Order these **first** — they're the longest lead time in the cart.
@@ -90,6 +90,8 @@ consumables. Order these **first** — they're the longest lead time in the cart
 | **SSD1306 OLED 0.96" 128×64 I2C** | 1 (+1 spare) | ~4 ea | See the stock note below |
 | M2 × 5mm self-threading screws | 60 | ~4 | Sesame needs ~40. Buy 60 |
 | Silicone tubing + narrow nozzle | — | ~3 | Aquarium airline tubing works |
+| **VL53L0X ToF (GY-530)** | 2 | ~3 ea | Range band + Warden proximity trip. German options are €8.50–19.95; the generic board is the same sensor |
+| Electrolytic 1000µF 16V | 2 | ~1 | Bulk capacitance for the motion engine and pump inrush |
 | XH2.54 pigtails, KCD1 switch, zip ties | — | ~4 | |
 
 ⚠️ **The 0.96" SSD1306 was out of stock at BerryBase.** What they had:
@@ -145,11 +147,11 @@ Budget **~€20–30**. Mind the 13:30–14:30 lunch closure.
 |---|---|
 | Order 1 — BerryBase | 76,30 |
 | Order 2 — servos | 41,60 |
-| Order 3 — AliExpress | ~15 |
+| Order 3 — AliExpress | ~22 |
 | Order 4 — Reichelt (Pi Zero 2 WH + semiconductors) | 24,45 |
 | Segor walk-in bag | ~25 |
 | Battery + charger (2S, still to source) | ~15 |
-| **Total** | **~197** |
+| **Total** | **~204** |
 
 Shipping on top: ~€5–7 each for BerryBase and roboter-bausatz.
 

@@ -77,10 +77,13 @@ capacitor, and re-test.
 
 ### Sensors
 
+Both of these are **reflex** sensors read by the ESP32, not the Pi — see
+[`BEHAVIOURS.md`](BEHAVIOURS.md) for why that split is not negotiable.
+
 | # | Item | Qty | ~€ | Notes |
 |---|---|---|---|---|
 | 23 | **TCRT5000 down-facing IR** (cliff) | 4 | 0,30 ea | Mandatory before any autonomous walking |
-| 24 | **VL53L0X ToF** | 1–2 | 8–19 | Optional. You know this sensor and its library from the wristband |
+| 24 | **VL53L0X ToF**, forward-facing | **2** (1 + spare) | 3–19 | **Required, and it does two jobs**: measures range so the robot only fires inside its calibrated band, *and* is the proximity trip for Warden. Vision at 1–2 FPS cannot catch a reaching hand. You already know this sensor from the wristband |
 
 ### What to skip
 

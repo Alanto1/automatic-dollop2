@@ -4,7 +4,8 @@ One rule, same as your wristband: **never be in a state where nothing works.**
 Every phase ends in something you could demo that day. If you run out of time,
 you still have a show.
 
-Concept and architecture: [`README.md`](README.md). What to buy:
+Concept and architecture: [`README.md`](README.md). How each behaviour works
+end to end: [`BEHAVIOURS.md`](BEHAVIOURS.md). What to buy:
 [`PARTS.md`](PARTS.md) and [`PURCHASE_LIST.md`](PURCHASE_LIST.md). What to do
 before parts arrive: [`START_HERE.md`](START_HERE.md).
 
@@ -124,6 +125,10 @@ Do this **before** designing anything around the reservoir.
 - [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
       and that's a fine project
 - [ ] Wire the pump via **MOSFET + flyback diode**; fire it dry, then wet
+- [ ] ⚠️ **Range calibration.** Fire a 200ms pulse at 40/50/60/70/80cm onto
+      paper, mark each landing height, and hard-code `RANGE_MIN`/`RANGE_MAX`
+      for where it hits a seated torso. Fixed +20° elevation means distance
+      *is* the vertical aim (BEHAVIOURS.md)
 - [ ] ⚠️ **Brownout test:** pump + all servos moving at once. Sesame's firmware
       already staggers servos by 20ms because of this. If it browns out, give
       the pump its own cell
@@ -157,31 +162,50 @@ Do this **before** designing anything around the reservoir.
 
 ## Week 8 — Squirt mode, end to end
 
-- [ ] Aiming: turn until the target is **horizontally** centred in frame, then
-      fire. Vertical is fixed at +20° in the printed mounts — nothing to tune
+- [ ] Calibrate **degrees per pixel** — put a marker at a known angle, see
+      which pixel it lands on. Every aiming decision scales by this constant
+- [ ] Aiming: turn until horizontal error is inside a ~5° deadband for **two
+      consecutive frames**. Vertical is fixed at +20° — nothing to tune
 - [ ] Full loop: detect slacking → escalate through moods → aim → fire
-- [ ] Safety pass: nozzle outward and slightly down, **never** the face;
-      consent framing ready
-- [ ] Add a hardware disable — a switch that makes it physically unable to fire
+- [ ] **The five firing interlocks, in firmware** (BEHAVIOURS.md): person
+      detected · state is STRIKE · range inside the calibrated band · command
+      <1s old · hardware disable switch closed
+- [ ] Add the **hardware disable** — a physical switch in series with the pump
 
 **Demoable: the flagship works.** This alone is a complete project.
 
 ## Week 9 — Autonomous walking
 
-- [ ] **Cliff sensors first** — it must refuse to step off the desk edge
+- [ ] **The arbitration stack first** (BEHAVIOURS.md): cliff reflex > flee >
+      Pi intent > idle breathing. Cliff must pre-empt *everything*
+- [ ] **Cliff sensors** on the ESP32, polled fast — a 1–2 FPS brain cannot
+      catch a fall. Calibrate on your actual desk; a dark matte surface is the
+      classic false trigger
 - [ ] Walk toward a target under closed-loop control from the onboard camera
 - [ ] Tune until it crosses a desk without stumbling
-- [ ] Note: 2 DOF per leg — it turns by differential gait, not by hip swivel
+- [ ] Note: 2 DOF per leg — it turns by differential gait, no strafing
 
 **Demoable:** it walks to you, *then* squirts you.
 
-## Week 10 — Warden mode
+## Week 10 — Warden mode (guard-and-block)
 
-- [ ] Phone-on-tray test; if payload fails, switch to guard-and-block
-- [ ] Reactive avoidance: hand approaches → walk away from it
+The robot **does not carry the phone** — settled by the torque numbers, not
+by experiment. A phone is ~180g against Sesame's ~380g, which busts the
+budget at any walkable stance. The phone stays on the desk and the robot
+defends it. See BEHAVIOURS.md.
+
+- [ ] **VL53L0X proximity trip on the ESP32** — anything inside ~15cm is a
+      reaching hand. This is a reflex; vision is far too slow to dodge
+- [ ] Back away from the hand **while staying between it and the phone**
+- [ ] Escalate face → taunt → squirt if the hand persists
+- [ ] ⚠️ **Cliff outranks flee.** Backing away from a hand is exactly how a
+      robot reverses off a table. If they disagree, it stops and stands its
+      ground. Losing the phone is recoverable; a fall is not
 - [ ] Session timer state machine (locked until time's up)
+- [ ] Optional, for video only: the fleeing shot with an **empty tray or a
+      light dummy** — and say so in the writeup
 
-**Demoable:** hand over your phone, try to grab it back, chase the robot.
+**Demoable:** put your phone down, try to take it back, get squirted.
 
 ---
 
@@ -191,7 +215,9 @@ Do this **before** designing anything around the reservoir.
 - [ ] Servo temperature after sustained walking
 - [ ] Watchdog: a hung subsystem recovers instead of freezing mid-demo
 - [ ] **Link failure behaviour** — if the Pi Zero → ESP32 link drops, the robot
-      must fail *safe and still*, not last-command-forever
+      **stops and stands**, never last-command-forever
+- [ ] Walk the whole failure table in BEHAVIOURS.md: empty reservoir, person
+      lost mid-escalation, robot picked up mid-strike, dark-desk false cliff
 - [ ] Water-safety recheck; cable strain relief
 - [ ] Battery runtime measured and written down
 

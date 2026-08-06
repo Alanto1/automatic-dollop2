@@ -11,7 +11,7 @@ One robot, two "personalities" (modes):
 | Mode | Detects | What it does |
 |---|---|---|
 | **Squirt** (flagship) | phone in your hand / head down / you left the desk | escalates, then squirts you |
-| **Warden** | you reaching for your phone during a focus session | walks off with your phone so you can't cheat |
+| **Warden** | you reaching for your phone during a focus session | stands over it, backs off the hand, and squirts you |
 
 Both share one body, one camera, one brain. They differ only in *what counts
 as bad behavior* and *what the robot does about it*. Design a **Mode** as a
@@ -140,6 +140,9 @@ writeup.
 
 ## Architecture — everything rides on the robot
 
+> Behaviour-level detail — the arbitration stack, the firing interlocks, the
+> range calibration — lives in [`BEHAVIOURS.md`](BEHAVIOURS.md).
+
 The robot has to carry its own eyes. A camera on a tripod driving a puppet is
 not an embodied agent, it breaks the moment the robot walks out of frame, and
 it throws away the best idea in the design: **camera and nozzle point the same
@@ -214,8 +217,9 @@ needs to hold a chat to be impressive — it hunts, taunts, and strikes:
 
 - The **AI** has to actually understand the scene (are you working or on your
   phone? are you even there?) — real computer vision, not a scripted toy.
-- The **legs** are justified because it comes to find you and (in Warden
-  mode) *runs away* — a wheeled robot falls off the desk.
+- The **legs** are justified because it comes to find you, and because it has
+  to hold ground and back off a reaching hand on a cluttered desk — a wheeled
+  robot falls off the edge.
 
 ## The serious backbone (this is what makes it a *project*, not a gag)
 
@@ -309,7 +313,7 @@ Consent in writing, and anyone can stop any time.
 |---|---|
 | Sesame isn't walking reliably | **Stationary Squirt sniper** — it poses, breathes and emotes, doesn't walk. Still complete |
 | The pump browns out the ESP32 | Separate pump battery, or a solenoid + gravity feed |
-| Payload fails | Guard-and-block Warden (no carrying), or a 30ml reservoir |
+| 100ml is too heavy to walk with | 50ml reservoir — 496g still fits the torque budget |
 | The shell restyle is eating weeks | Ship Sesame's stock shell + your face and motion. Identity mostly lives in *how it moves* anyway |
 | Behind at week 11 | Cut Warden. Polish Squirt, keep the motion engine, run the experiment |
 
@@ -337,6 +341,7 @@ you, with a focus experiment." That alone wins a room.
 - `PARTS.md` — what to buy and why, Sesame BOM + the Enforcer additions
 - `PURCHASE_LIST.md` — the German cart with verified prices and stock
 - `BUILD_CHECKLIST.md` — week-by-week plan
+- `BEHAVIOURS.md` — **how it moves, shoots and defends the phone**, end to end
 - `cad/` — the Enforcer's *additional* printed parts, and the torque budget
   that constrains how far you can restyle the legs
 

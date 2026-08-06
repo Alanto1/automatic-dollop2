@@ -25,14 +25,18 @@ things to check while you're in there, because they change what you buy:
 Then star the repo and note the license. You'll cite it in the writeup, and
 "what's mine vs what's upstream" is a question you *will* be asked.
 
+Then read [`BEHAVIOURS.md`](BEHAVIOURS.md) — what the robot actually does,
+and what the state machine you're about to write has to drive.
+
 ## Step 1 — Place the orders (this week)
 
 Full cart with prices and stock: [`PURCHASE_LIST.md`](PURCHASE_LIST.md).
 
 Order in this sequence, because lead times differ:
 
-1. **AliExpress first** — ESP32-S2 Mini, SSD1306 OLED, M2 screws, tubing.
-   Longest lead time, smallest cost. Order it before anything else.
+1. **AliExpress first** — ESP32-S2 Mini, SSD1306 OLED, **2× VL53L0X**, M2
+   screws, tubing, 1000µF caps. Longest lead time, smallest cost. Order it
+   before anything else.
 2. **roboter-bausatz** — 10× MG90S. Nobody else in Germany stocks them.
 3. **BerryBase** — Zero camera, SD cards, buck converters, pump, filament,
    cliff sensors.
@@ -75,6 +79,8 @@ The personality *is* this state machine. CHILL → SUSPICIOUS → WARNING →
 STRIKE → SMUG, driven by a `scene` object.
 
 - Feed it **fake** scene events: `phone_visible`, `head_down`, `no_person`.
+- Emit **intents**, not joint angles: `turn(deg)`, `walk(steps)`, `face(mood)`,
+  `fire(ms)`. That seam is the whole architecture (BEHAVIOURS.md).
 - Get the **timers and hysteresis** right. This is the hard part, it needs
   zero hardware, and it is the entire difference between "impressive" and
   "annoying." A robot that squirts you while you're working is a bad robot.
