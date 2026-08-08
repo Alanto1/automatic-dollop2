@@ -96,6 +96,19 @@ smallest useful one needs 400MB on its own. It runs on a laptop over WiFi.
 `LLM_VOICE.md` has the full RAM budget and the rule that keeps the LLM out of
 the firing path.
 
+### Tools you actually need
+
+Not parts, but the build stalls without them. Easy to forget when costing a
+project.
+
+| Item | ~€ | Why it's not optional |
+|---|---|---|
+| **Digital caliper** | ~5 | `DECK_L`/`DECK_W` from Sesame's top cover, `BOTTLE_D` from your reservoir, and checking the 20mm calibration cube — three blocking measurements |
+| **Multimeter** | ~25 | The week-3 brownout test, checking both rails, continuity on the harness. You cannot debug power without one |
+| Temperature-controlled soldering iron | ~38 | ~40 servo/harness joints |
+| Solder, flux, desoldering braid | ~15 | |
+| Hot glue gun | ~12 | Strain relief — moving legs eat wires |
+
 ### What to skip
 
 - **PCA9685** — not needed. The ESP32 drives all 8 servos directly; that's
