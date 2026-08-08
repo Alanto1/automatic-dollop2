@@ -24,7 +24,7 @@ From the upstream BOM, checked 2026-08-05:
 | 3 | **Lolin/WeMos ESP32-S2 Mini** | 1 | Or the custom *Sesame Distro Board V3* PCB (cleaner, needs fabbing) |
 | 4 | Small protoboard + 3-pin headers | 1 set | For the hand-wired harness (Option A) |
 | 5 | **Buck converter, 5V/3A** | 1 | |
-| 6 | **7.4V Li-ion pack, ~800mAh** + matching charger | 1 | Upstream specifies a Bambu Lab 14500. Any 2S pack of that size works — check it physically fits the undercarriage |
+| 6 | **Bambu Lab 14500, 7.4V 800mAh Li-ion** + its **XH2.54 charger** | 1 (buy 2 packs) | Buy this exact pair. The pack has a BMS and a **2-pin** XH2.54 plug — so it needs a plain 8.4V charger, **not** a balance charger. Bare-LiPo balance chargers physically cannot connect to it |
 | 7 | XH2.54 female pigtail | 1 | Battery connector |
 | 8 | KCD1 rocker power switch, panel mount | 1 | |
 | 9 | 22AWG + 30AWG silicone wire, heat-shrink, zip ties | — | |
@@ -66,9 +66,8 @@ if the Pi Zero actually fails.
 | 19 | **Logic-level MOSFET** (IRLZ44N) | 3 | 0,70 ea | Your wristband's transistor driver, scaled up for the pump's current |
 | 20 | **Flyback diode** (1N4007) | 5 | 0,05 ea | Across the pump. Same role as the 1N4148 on your vibration motor |
 | 21 | Silicone tubing + narrow nozzle | — | 3 | Aquarium airline tubing is ideal. Narrow nozzle = focused squirt at low flow |
-| 22 | Small reservoir, 50–100 ml | 1 | 3 | **Start at 50ml.** Water is 1g/ml and Sesame is small — see README "Honest hard parts" |
-
-| 22b | **Electrolytic capacitor, 1000µF+ 16V** | 2 | 0,50 ea | Bulk capacitance across the servo rail. You will want this for the motion engine — see README "Making it move like a creature" — and it's the standard fix for pump inrush too |
+| 22 | **Wide-mouth bottle, ~60 ml** | 1 | 3 | Opening ≥26mm so the 23.5mm pump drops in. **Fill to 30ml**, not 60 — that's 29mm of depth in a 36mm bottle, enough to keep the intake covered at only 30g |
+| 22b | **Electrolytic capacitor, 1000µF+ 16V** | 2 | 0,50 ea | Bulk capacitance across the servo rail. Needed for the motion engine — see README "Making it move like a creature" — and the standard fix for pump inrush |
 
 ⚠️ **Do not run the pump off Sesame's battery without testing.** The firmware
 already staggers servo moves by 20ms because all-at-once browns out the board.
@@ -84,6 +83,18 @@ Both of these are **reflex** sensors read by the ESP32, not the Pi — see
 |---|---|---|---|---|
 | 23 | **TCRT5000 down-facing IR** (cliff) | 4 | 0,30 ea | Mandatory before any autonomous walking |
 | 24 | **VL53L0X ToF**, forward-facing | **2** (1 + spare) | 3–19 | **Required, and it does two jobs**: measures range so the robot only fires inside its calibrated band, *and* is the proximity trip for Warden. Vision at 1–2 FPS cannot catch a reaching hand. You already know this sensor from the wristband |
+
+### Voice (optional layer — see [`LLM_VOICE.md`](LLM_VOICE.md))
+
+| # | Item | Qty | ~€ | Notes |
+|---|---|---|---|---|
+| 25 | **MAX98357A I2S amp** + small 8Ω speaker | 1 | ~8 | Taunt clips. Pre-recorded clips need no LLM and no mic |
+| 26 | **INMP441 I2S MEMS microphone** | 1 | ~4 | Only if you want it to *hear*. Shares the I2S bus with the amp |
+
+**The LLM does not run on the robot** — 512MB can't hold a model, and the
+smallest useful one needs 400MB on its own. It runs on a laptop over WiFi.
+`LLM_VOICE.md` has the full RAM budget and the rule that keeps the LLM out of
+the firing path.
 
 ### What to skip
 
@@ -109,8 +120,8 @@ Both of these are **reflex** sensors read by the ESP32, not the Pi — see
 | B. Water rig + sensors | ~20 |
 | **Total** | **~155–170** |
 
-The real cart, including the walk-in bag and consumables, comes to **~€197** —
-see [`PURCHASE_LIST.md`](PURCHASE_LIST.md).
+For what was actually bought, what was wrong with it and why, see
+[`PURCHASE_LIST.md`](PURCHASE_LIST.md).
 
 Against the original 12-servo, Pi-5-on-board design at **~€450**. Two
 decisions did that: building Sesame instead of a body, and picking a brain

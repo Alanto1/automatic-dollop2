@@ -37,12 +37,12 @@ an assembly error.
 - [ ] Place the **AliExpress** order FIRST (ESP32-S2 Mini, SSD1306, M2 screws,
       tubing) — longest lead time, smallest cost
 - [ ] Place **roboter-bausatz** (10× MG90S — nobody else in Germany stocks them)
-- [ ] Place **BerryBase** (Zero camera, SD ×2, buck ×2, pump, cliff sensors,
-      filament) — the Zero camera showed **only 3 in stock**
-- [ ] Place **Reichelt** (Pi Zero 2 **WH**, MOSFETs, diodes) — BerryBase had
-      the Pi Zero out of stock in every variant
+- [ ] Place **BerryBase** (Zero camera, SD ×2, buck ×2, pump, TCRT5000 ×4,
+      filament)
+- [ ] Place **Reichelt** (Pi Zero 2 **WH**, MOSFETs, diodes)
+- [ ] Place **Bambu Lab EU** — 2× 14500 pack + the **XH2.54 charger** (€4.49).
+      A balance charger cannot charge this pack; see PURCHASE_LIST
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
-- [ ] Check the battery physically fits Sesame's undercarriage before buying
 
 Meanwhile, zero hardware:
 
@@ -119,16 +119,19 @@ Do this **before** designing anything around the reservoir.
 - [ ] Weigh the finished Sesame
 - [ ] The Enforcer payload is **~127g**: water 61g, printed parts 30g, Pi Zero
       11g, camera 5g, pump + tubing 20g (`make_stl.py --test` prints this)
-- [ ] Tape that much dead weight to it. Does it still walk? Then try 50ml of
-      water vs 100ml
+- [ ] Tape that much dead weight to it. Does it still walk? Then try **30ml**
+      of water (the budgeted figure) and 50ml
 - [ ] **Decide reservoir size from that measurement**, not from hope
+- [ ] Measure the bottle's internal diameter, set `BOTTLE_D`, re-run the test
 - [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
       and that's a fine project
 - [ ] Wire the pump via **MOSFET + flyback diode**; fire it dry, then wet
-- [ ] ⚠️ **Range calibration.** Fire a 200ms pulse at 40/50/60/70/80cm onto
-      paper, mark each landing height, and hard-code `RANGE_MIN`/`RANGE_MAX`
-      for where it hits a seated torso. Fixed +20° elevation means distance
-      *is* the vertical aim (BEHAVIOURS.md)
+- [ ] ⚠️ **Range calibration.** Fire a 200ms pulse at 30/40/50/60cm onto paper
+      laid on the desk; mark each landing point. Theory says a 20–56cm band.
+      Set `PUMP_HEAD_M` from what you measure, then hard-code
+      `RANGE_MIN`/`RANGE_MAX`. Fixed +20° means distance *is* the vertical
+      aim, and the target is the **hands on the desk**, never the torso
+      (BEHAVIOURS.md)
 - [ ] ⚠️ **Brownout test:** pump + all servos moving at once. Sesame's firmware
       already staggers servos by 20ms because of this. If it browns out, give
       the pump its own cell
@@ -156,7 +159,9 @@ Do this **before** designing anything around the reservoir.
       settle — authored in **Sesame Studio**, played through *your* motion
       engine so they come out smooth rather than staccato
 - [ ] Randomise timing so it never loops identically
-- [ ] Speaker + a handful of pre-recorded taunt clips
+- [ ] Speaker + a handful of pre-recorded taunt clips (MAX98357A + 8Ω).
+      **No mic and no LLM needed for this** — it gets most of the "it talks"
+      effect for free. See [`LLM_VOICE.md`](LLM_VOICE.md)
 
 **Demoable:** it *reacts* with attitude to what it sees — no squirt needed.
 
@@ -220,6 +225,22 @@ defends it. See BEHAVIOURS.md.
       lost mid-escalation, robot picked up mid-strike, dark-desk false cliff
 - [ ] Water-safety recheck; cable strain relief
 - [ ] Battery runtime measured and written down
+
+## Optional — voice and an LLM (only after the core works)
+
+Slot this in wherever there's slack, and **cut it first** if there isn't. It
+adds 2–3 weeks. Full design in [`LLM_VOICE.md`](LLM_VOICE.md).
+
+- [ ] INMP441 mic on the I2S bus alongside the MAX98357A
+- [ ] Wake word on the Pi (openWakeWord, ~40MB — this part *does* fit)
+- [ ] Whisper + Ollama + Piper on your laptop; robot streams audio over WiFi
+- [ ] ⚠️ **The LLM writes taunts only. It must never reach the pump.** Scene
+      facts go to it; only audio comes back. The five firing interlocks stay
+      in firmware
+- [ ] Feed it the *scene* ("phone visible 4m12s, 23:40, 3rd offence") so the
+      taunts are specific — that's the version worth writing up
+
+**Demoable:** it insults you, personally, about what it just saw.
 
 ## Week 12 — The experiment
 

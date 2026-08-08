@@ -1,179 +1,126 @@
-# Purchase list — Germany
+# Purchase list — what's actually bought
 
-The cart for a **Sesame body + Enforcer layer** build. Prices are what each
-retailer's own site listed, VAT included; German maker retailers ship in 1–3
-days. BerryBase and Reichelt checked **2026-08-01**, the Sesame-specific parts
-**2026-08-05**.
+Verified against the real listings, **2026-08-08**. This is no longer a
+proposed cart: it's what's in the basket, what was wrong with it, and what's
+still missing.
 
-Stock counts are what the shop showed. Several are in single digits and are
-called out where it matters.
+Design rationale for each part: [`PARTS.md`](PARTS.md).
 
 ---
 
-## Headline: ~€204, and the brain is now sized to the robot
+## ✅ Bought and verified correct
 
-The original 12-servo design with a Pi 5 riding on it came to **~€450**. This
-lands at **~€204**. Two decisions did it:
+### The body (Sesame)
 
-| Deleted | Why | Saved |
+| Item | Qty | Note |
 |---|---|---|
-| The whole custom body | Build Sesame instead — 8 servos, not 12+3 | ~€29 servos |
-| PCA9685 ×2 | ESP32 drives the servos directly | €13 |
-| **Pi 5 → Pi Zero 2 W** | 11g and ~2W instead of 46g and ~6W. A Pi 5 is physically larger than Sesame | **~€99** |
-| UBEC, 5A buck, LiPo, charger, LiPo bag | One small buck off Sesame's pack feeds a 2W board | ~€70 |
-| Pan/tilt bracket + 2 servos | The robot yaws to aim; vertical is fixed in the printed mounts | ~€20 |
+| **MG90S metal-gear servo** — roboter-bausatz.de | 10 | 8 + 2 spares, €4.16 in the 5–19 tier. Nobody else in Germany stocks MG90S |
+| **XTVTX ESP32-S2 Mini, 4MB flash / 2MB PSRAM** | 3 | Correct board for Sesame's frame, with spares |
+| **APKLVSR 0.96" OLED, I2C, 128×64** | 3 | Right resolution. This was out of stock at every German retailer — good catch getting three |
+| **Bambu Lab 14500, 7.4V 800mAh Li-ion** | 1 | The exact pack Sesame's BOM names. XH2.54 2-pin, BMS inside, fits the printed bay |
+| KCD1 rocker switches, 10A | 8 | |
+| Lyeteung JST XH 2.54 2-pin + 150mm 22AWG | 30 prs | Matches the BOM's XH2.54 pigtail |
+| GTIWUNG JST 2.0 PH 2-pin + 80mm wire | 20 prs | |
+| SCHDRA **22 AWG** silicone wire, 6 colours, 4m ea | 1 | Power wiring, per BOM |
+| Fermerry **30 AWG** silicone wire, 6 colours | 1 | Signal wiring, per BOM |
+| Self-tapping screws M2/M2.3/M2.6/M3 | 500 | ⚠️ confirm the set actually contains **M2 × 5mm** — Sesame needs ~40 |
+| ALAHUGYEF machine screws M2/M2.5/M3 | 500 | |
+| TASKTACKER zip ties, 100–300mm | 200 | |
+| VooGenzek PCB kit — perfboard, headers, standoffs | 46 pc | |
+| 2.54mm breakaway header strips, 40-pin | 20 | |
+| Anycubic PLA 1.75mm 1kg, white | 1 | Colour is taste; 1kg is plenty for 11 parts |
 
-**The Pi 5 RAM surge no longer matters to this build**, because you're not
-buying one. (For the record, it was real and verified at two retailers: the
-Pi 5 ladder ran €49.20 / €69.50 / €118.50 / €187.50 / €309.50 across 1–16GB
-on 2026-08-01. If you ever fall back to a desk-mounted Pi 5, buy the 2GB.)
+### The brain and sensors
 
-**What the Pi Zero costs you** is frame rate, not capability — ~1–2 FPS and
-512MB. Every trigger here is a multi-second threshold, so that's enough. See
-README "Architecture".
+| Item | Qty | Note |
+|---|---|---|
+| **Raspberry Pi Zero 2 WH** (pre-ordered) | 1 | ✅ the **2** matters — see the correction below |
+| Camera for Raspberry Pi Zero — BerryBase, €15.90 | 1 | Ships with the narrow Zero ribbon, so **no CSI adapter needed**. Was down to 3 in stock |
+| SanDisk Ultra microSDHC A1 32GB | 2 | A1 is fine — the detector loads once at boot |
+| Waveshare DC-DC Buck Mini, 4A, 5–36V→5V | 2 | One for Sesame's rail, **one dedicated to the Pi Zero** |
+| **TCRT5000 bare sensor** — BerryBase, €0.30 | 4 | Bare, not the module — this is what `cliff_bracket` is cut for. Threshold in software beats a trim pot |
+| **AZDelivery VL53L0X ToF** | 1 | Range band **and** the Warden proximity trip |
 
----
+### The water rig
 
-## Order 1 — BerryBase (berrybase.de) · €76.30
+| Item | Qty | Note |
+|---|---|---|
+| Adafruit submersible 3V pump, 100mA | 1 | ~30–50cm of head → a **20–56cm** firing band. Enough; the robot walks closer |
+| **iMeistek silicone 6mm ID × 9mm OD, 6m** | 1 | Main line. 6mm ID is what Adafruit pairs with this pump |
+| iMeistek silicone 2mm ID × 4mm OD, 4m | 1 | **The nozzle tip** — slides inside the 6mm line as a free reducer. A narrow orifice is what turns a weak pump into a jet |
+| **UMETASS 60ml HDPE wide-mouth bottles** | 5 | Wide mouth so the 23.5mm pump drops in. **Run 30ml**, not 60 |
+| IRLZ44N logic-level MOSFET | 10 | Overkill for 100mA, fine at this price |
+| AUKENIEN 1N4007 diode | 200 | ⚠️ **you ordered this twice** — cancel one |
+| Innfeeltech 1000µF 16V electrolytic | 50 | Bulk capacitance for the motion engine *and* pump inrush |
+| BOJACK resistor kit, 25 values | 1000 | Pull-ups for the bare TCRT5000s |
 
-| Item | Qty | Unit | Sum | Stock shown | Link |
-|---|---|---|---|---|---|
-| Kamera für Raspberry Pi Zero (incl. Zero ribbon) | 1 | 15,90 | 15,90 | **only 3** | [link](https://www.berrybase.de/kamera-fuer-raspberry-pi-zero) |
-| SanDisk Ultra microSDHC A1 32GB + Adapter | 2 | 15,60 | 31,20 | 100+ | [link](https://www.berrybase.de/sandisk-ultra-microsdhc-a1-120mb-s-class-10-speicherkarte-adapter-32gb) |
-| Waveshare DC-DC Buck Mini, 4A, 5–36V in, 5V out | 2 | 4,90 | 9,80 | 63 | [link](https://www.berrybase.de/waveshare-dc-dc-buck-mini-module-bis-zu-4a-500khz-5-36v-eingang-3-3v-oder-5v-ausgang) |
-| TCRT5000 IR Sensor — cliff sensors | 4 | 0,30 | 1,20 | 90 | [link](https://www.berrybase.de/tcrt5000-infrarot-sensor-lichtschranke) |
-| Adafruit submersible 3V water pump, 1m cable | 1 | 3,30 | 3,30 | 16 | [link](https://www.berrybase.de/adafruit-tauchbare-3v-dc-wasserpumpe-mit-1-meter-kabel-horizontal) |
-| Anycubic PLA Filament 1,75mm 1kg (black) | 1 | 14,90 | 14,90 | 5 | [link](https://www.berrybase.de/anycubic-pla-filament-1-75mm-1kg/farbe-schwarz) |
-| | | | **76,30** | | |
+### Voice + tools
 
-⚠️ **The Zero camera showed only 3 in stock.** It's the one that ships with
-the *narrow* Zero-format ribbon, which is why it's worth having rather than a
-full-size module plus an adapter. If it's gone, buy any Pi camera module plus
-Reichelt's `RPIZ CAM ADAPTER` (€1.10) — the Zero's CSI connector is narrower
-than a standard Pi's and a normal camera cable **will not fit**.
-
-Two buck converters: one for the Pi Zero, one spare (or for the pump rail).
-
-**On the pump:** it is **submersible, not self-priming** — it sits *inside*
-the reservoir, not beside it. That simplifies the plumbing (pump in the
-bottle, one tube to the nozzle) but fixes where the reservoir mounts. Decide
-this before printing the bracket.
-
-**On the microSD:** A1, not A2. No A2 32GB was stocked at a sane price — NAND
-is caught in the same surge as the DRAM. A1 is fine here; the detector loads
-once at boot and then runs from RAM.
-
-## Order 2 — roboter-bausatz.de · €41.60
-
-| Item | Qty | Unit | Sum | Link |
-|---|---|---|---|---|
-| MG90S Micro Servo Motor (metal gear) | **10** | 4,16 | 41,60 | [link](https://www.roboter-bausatz.de/p/mg90s-micro-servo-motor) |
-
-**10 = Sesame's 8 + 2 spares.** Tiers: 1–4 €4.38 · **5–19 €4.16** · 20+ €4.05.
-Stock: "Sofort verfügbar, 1-3 Tage."
-
-Nobody in the German maker-shop tier stocks MG90S — BerryBase returns 0 hits,
-Reichelt 0 hits on the part number. This shop is the cheapest confirmed German
-source with quantity tiers.
-
-**Spares are not optional.** You will strip or burn one during calibration,
-and a dead servo mid-build costs you a shipping cycle.
-
-## Order 3 — AliExpress / Amazon · ~€22
-
-The two Sesame parts German maker retailers simply don't carry, plus the
-consumables. Order these **first** — they're the longest lead time in the cart.
-
-| Item | Qty | ~€ | Why here |
-|---|---|---|---|
-| **Lolin/WeMos ESP32-S2 Mini** | 1 (+1 spare) | ~5 ea | Not at BerryBase or Reichelt. Reichelt has an *ESP32-S2-DevKitC-N8* at €10.95, but it's a different board — Sesame's frame is cut for the S2 Mini's footprint |
-| **SSD1306 OLED 0.96" 128×64 I2C** | 1 (+1 spare) | ~4 ea | See the stock note below |
-| M2 × 5mm self-threading screws | 60 | ~4 | Sesame needs ~40. Buy 60 |
-| Silicone tubing + narrow nozzle | — | ~3 | Aquarium airline tubing works |
-| **VL53L0X ToF (GY-530)** | 2 | ~3 ea | Range band + Warden proximity trip. German options are €8.50–19.95; the generic board is the same sensor |
-| Electrolytic 1000µF 16V | 2 | ~1 | Bulk capacitance for the motion engine and pump inrush |
-| XH2.54 pigtails, KCD1 switch, zip ties | — | ~4 | |
-
-⚠️ **The 0.96" SSD1306 was out of stock at BerryBase.** What they had:
-0.91" 128×**32** at €6.90 (31 in stock) — *wrong resolution*, half the
-vertical pixels, which will break Sesame's face graphics; and a Soldered
-0.96" 128×64 SSD1306 at €9.55 that was `nicht lieferbar`. Get the right part
-on AliExpress rather than bodging the face — it's the highest
-personality-per-euro component in the build.
-
-## Order 4 — Reichelt (reichelt.de) · €24.45
-
-**The brain lives here.** BerryBase had the Pi Zero 2 W listed at €18.90 but
-`Artikel aktuell nicht lieferbar` in *every* variant — bare, WH, and all three
-starter kits. Reichelt stocks it.
-
-| Item | Order no. | Qty | Unit | Sum |
-|---|---|---|---|---|
-| **Raspberry Pi Zero 2 WH** (headers pre-soldered) | `RASP PI ZERO2 WH` | 1 | 22,10 | 22,10 |
-| IRLZ 44N — MOSFET, N-Ch 55V 47A, TO-220AB | `IRLZ 44N` | 3 | 0,70 | 2,10 |
-| 1N 4007 — rectifier diode 1000V 1A, DO-41 | `1N 4007` | 5 | 0,05 | 0,25 |
-| | | | | **24,45** |
-
-Take the **WH** (€22.10) over the bare **W** (€19.40). €2.70 buys you
-pre-soldered headers, and you need GPIO for the pump MOSFET and the UART link
-to the ESP32 — soldering a 40-pin header to a board you can't replace quickly
-is a bad trade.
-
-Also on the shelf if you need it: `RPIZ CAM ADAPTER` (15-pin CSI → Zero),
-€1.10.
-
----
-
-## Walk-in: Segor, Berlin-Charlottenburg
-
-**SEGOR-electronics GmbH** — Kaiserin-Augusta-Allee 94, 10589
-Berlin-Charlottenburg · Mo–Fr **10:00–13:30** and **14:30–18:00** (closed for
-lunch), Sa **10:00–13:00** · U7 Mierendorffplatz, bus M27 · segor.de.
-
-Worth a trip for the things that are absurd to mail-order:
-
-- IRLZ44N + 1N4007 (Order 4 — buy them here instead)
-- 22AWG and 30AWG silicone wire, heat-shrink, JST connectors
-- M2/M2.5 screws if the AliExpress pack is late
-- Perfboard, headers, the odd resistor
-
-Budget **~€20–30**. Mind the 13:30–14:30 lunch closure.
-
----
-
-## Total
-
-| Block | € |
+| Item | Note |
 |---|---|
-| Order 1 — BerryBase | 76,30 |
-| Order 2 — servos | 41,60 |
-| Order 3 — AliExpress | ~22 |
-| Order 4 — Reichelt (Pi Zero 2 WH + semiconductors) | 24,45 |
-| Segor walk-in bag | ~25 |
-| Battery + charger (2S, still to source) | ~15 |
-| **Total** | **~204** |
+| AZDelivery MAX98357A I2S amp | Board only |
+| LuluDa mini speaker, 3W **8Ω**, JST-PH2.0 ×4 | 8Ω is the safer load. Amp has screw terminals, so cut the plug or add a socket |
+| Preciva 60W soldering station | |
+| KELLYSHUN flux + desoldering braid | |
+| Solder wire, heat-shrink (2/4/6mm) | already owned |
 
-Shipping on top: ~€5–7 each for BerryBase and roboter-bausatz.
+---
 
-## Still to source
+## 🛒 Still to buy
 
-- **The battery.** Upstream specifies a Bambu Lab 14500 7.4V 800mAh. Any 2S
-  pack of that physical size works, but **check it fits the undercarriage**
-  before buying — the frame is printed around it. This is the one part where
-  a substitution can cost you a re-print.
-- **The Sesame Distro Board PCB**, if you want Option B instead of the
-  hand-wired harness. Gerbers are in the repo; a fab run is ~€5–30 plus
-  shipping, and adds a lead time. **The hand-wired ESP32-S2 Mini works** —
-  start there and treat the PCB as a v2 upgrade.
+| Item | ~€ | Why |
+|---|---|---|
+| **Bambu Lab 7.4V charger, XH2.54** ([EU store](https://eu.store.bambulab.com/en/collections/power-supplies)) | **4.49** | The *only* thing that can charge your pack — see below |
+| **2nd Bambu 14500 pack** | ~10 | 17 min of walking per charge. One pack is one demo |
+| INMP441 I2S microphone | ~4 | Only if you want voice — [`LLM_VOICE.md`](LLM_VOICE.md) |
+
+---
+
+## ❌ Wrong buys, and why
+
+Keep these documented — the reasoning is worth more than the parts.
+
+| Item | Why it's wrong |
+|---|---|
+| **Raspberry Pi Zero WH** | The original Zero W: **1 core** ARM11 vs the Zero 2's **4** Cortex-A53. YOLO would run at ~0.1–0.3 FPS instead of 1–2. The listing has no "2" in the title — that's the tell |
+| **URGENEX B3 charger** | Charges **only** through a 3-pin balance lead, and says *"don't charge Li-ion."* Your pack is Li-ion with a 2-pin plug and a BMS. Nothing to plug in |
+| **ENJOY-UNIQUE JST-XH-3P cable** | Same trap: XH2.54 and JST-XH are the same *family*, but **3 pins ≠ 2 pins**. Won't mate |
+| **Salomon Soft Flask 250ml** | 250g is 8× the water budget; collapsible so the cradle can't grip it; a submersible pump needs a rigid open container |
+| **AOLIKES 18650 2S1P 2600mAh** | ~37×19×65mm and ~100g — won't fit the printed bay, and pushes the robot over its torque budget |
+| **Hailege TCRT5000 modules** | Redundant with the bare sensors, and too big for `cliff_bracket` |
+| **2nd AUKENIEN 1N4007 pack** | Exact duplicate — 400 diodes for a job needing 1 |
+| **24 AWG Temu wire** | Sits between the 22 and 30 AWG you already have, and is *thinner* than your power wire. (Its own listing contradicts itself: "24 gauge" but "0.8mm²", which is 18 AWG — that description is boilerplate shared across all gauge variants) |
+| **Raspberry Pi AI HAT+** (26 TOPS, €122.50) | Needs **PCIe** — the Pi Zero has none. Would force a Pi 5, which is larger than Sesame. And 30 FPS for a job needing 1–2 |
+
+## The battery lesson, in one line
+
+**Bare LiPo** → needs a 3-pin **balance lead** and a balance charger.
+**Protected pack with a BMS** (yours) → needs only **2 pins**, and a plain
+8.4V charger. That single distinction explains every wrong charger above.
+
+⚠️ Sesame's build guide: ***"Never cut the factory battery connector off the
+pack."*** Yours is already XH2.54 — nothing to change. Make adapter pigtails
+if you ever need a different plug.
+
+---
+
+## Where to buy what
+
+| Shop | For |
+|---|---|
+| **roboter-bausatz.de** | MG90S — the only German source with quantity tiers |
+| **BerryBase** | Zero camera, SD cards, buck converters, TCRT5000, pump, filament |
+| **Reichelt** | Pi Zero 2 WH (`RASP PI ZERO2 WH`), IRLZ44N, 1N4007 |
+| **Bambu Lab EU store** | Battery + charger |
+| **Amazon.de / AliExpress** | ESP32-S2 Mini, SSD1306, screws, wire, tubing, VL53L0X |
+| **Segor**, Kaiserin-Augusta-Allee 94, Berlin · Mo–Fr 10:00–13:30 & 14:30–18:00 | Anything you forgot. Mind the lunch closure |
 
 ## Confidence
 
-- **High** — BerryBase and Reichelt prices and stock counts, read from the
-  retailers' own listings. The Pi 5 4GB price was cross-checked at two shops
-  and matched exactly.
-- **High** — the Sesame BOM contents, read from the upstream repo.
-- **Medium** — Segor's address and hours (its own site plus two directories,
-  consistent). Per-item stock there is not verified; call ahead if something
-  is critical.
-- **Low** — AliExpress prices (~€ figures are typical, not quotes) and the
-  battery line, which is unsourced pending a fit check.
+- **High** — every "bought" line was read from the actual listing on
+  2026-08-08, and the battery/charger incompatibilities were confirmed from
+  the manufacturers' own pages.
+- **Medium** — the screw set containing M2×5mm specifically; the exact
+  internal diameter of the UMETASS bottles (measure it and set `BOTTLE_D`).
+- **Unverified** — one Amazon listing refused to load three times and was
+  identified from your description only.

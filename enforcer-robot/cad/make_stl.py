@@ -56,9 +56,9 @@ CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 # the robot yaws to aim, so horizontal centring is the only closed loop, and
 # the vertical angle is a mechanical decision made once, here.
 #
-# The robot stands ~10cm tall on a desk and the target is a seated person's
-# torso, so the aim is slightly *up*. Never level with a face -- see the
-# safety section of README.md.
+# The robot stands ~10cm tall on a desk and the target is the person's HANDS
+# and the phone, on the desk -- not their torso, which the ballistics test
+# below proves is unreachable at this angle. Never level with a face.
 NOZZLE_TILT = 20.0
 
 # Torque budget for restyling the legs. MG90S is rated 1.8 kg-cm at 4.8V and
@@ -74,6 +74,17 @@ SESAME_MASS_G = 380.0
 WORST_LEG_SHARE = 0.5
 
 PHONE_G = 180.0             # a typical phone -- roughly half of Sesame again
+
+# --- the squirt, as ballistics -------------------------------------------
+# The nozzle angle is fixed in the printed mount, so the only thing that
+# aims the shot vertically is DISTANCE. These constants decide the range
+# band, and there is a test below that checks the target is reachable at
+# all -- because at +20deg from a 12cm nozzle, a seated person's torso is
+# NOT, at any pump pressure.
+G = 9.81
+NOZZLE_H = 0.12             # nozzle height above the desk, robot + deck
+TARGET_H = 0.10             # hands and the phone, ON the desk -- not the torso
+PUMP_HEAD_M = 0.40          # Adafruit 3V submersible, ~30-50cm. MEASURE YOURS
 
 SEG = 24                    # facets per full circle
 
@@ -447,6 +458,46 @@ def max_reach_mm(mass_g: float, share: float = WORST_LEG_SHARE) -> float:
     return budget / (mass_g * share / 1000.0) * 10.0
 
 
+def jet_speed_for(reach_m: float, tilt_deg: float = None,
+                  target_h: float = TARGET_H) -> float | None:
+    """Nozzle exit speed needed to put the jet at `target_h` after `reach_m`.
+
+    Returns None when the target is unreachable at that angle -- which is a
+    real case, not a rounding artefact: a launch angle only rises so fast, so
+    a target above the line NOZZLE_H + reach*tan(tilt) cannot be hit however
+    hard you pump.
+    """
+    t = math.radians(NOZZLE_TILT if tilt_deg is None else tilt_deg)
+    rise = reach_m * math.tan(t) - (target_h - NOZZLE_H)
+    if rise <= 0:
+        return None
+    return math.sqrt(G * reach_m * reach_m / (2 * math.cos(t) ** 2 * rise))
+
+
+def head_needed_m(reach_m: float, **kw) -> float | None:
+    """Pump head equivalent to the required jet speed."""
+    v = jet_speed_for(reach_m, **kw)
+    return None if v is None else v * v / (2 * G)
+
+
+def range_band(head_m: float = PUMP_HEAD_M):
+    """Furthest reach the pump can actually deliver, and a safe near limit."""
+    far = 0.0
+    r = 0.15
+    while r < 2.0:
+        h = head_needed_m(r)
+        if h is None or h > head_m:
+            break
+        far = r
+        r += 0.01
+    return 0.20, far
+
+
+def reservoir_depth_mm(volume_ml: float, bottle_d_mm: float) -> float:
+    """Water depth for a given fill -- the pump's intake must stay under it."""
+    return volume_ml * 1000.0 / (math.pi * (bottle_d_mm / 2.0) ** 2)
+
+
 def payload_cases():
     """Loaded mass and reach limit for each way the robot can be configured.
 
@@ -787,6 +838,44 @@ def self_test():
         ok = False
     else:
         print("  ok    phone-carrying is over budget, so Warden is guard-and-block")
+
+    # --- the shot has to be physically possible ---------------------------
+    torso = 0.35
+    unreachable = [r for r in (0.3, 0.4, 0.5, 0.6)
+                   if head_needed_m(r, target_h=torso) is None]
+    if len(unreachable) < 4:
+        print(f"  FAIL  a torso at {torso*100:.0f}cm is supposed to be out of reach")
+        print(f"        at +{NOZZLE_TILT:.0f}deg -- if it is now reachable, the docs")
+        print(f"        saying 'aim at the hands' need revisiting")
+        ok = False
+    else:
+        print(f"  ok    torso ({torso*100:.0f}cm up) unreachable at +{NOZZLE_TILT:.0f}deg "
+              f"-- correct, we aim at the hands")
+
+    near, far = range_band()
+    if far < 0.30:
+        print(f"  FAIL  pump reaches only {far*100:.0f}cm -- too short to be a threat")
+        ok = False
+    else:
+        print(f"  ok    RANGE_MIN {near*100:.0f}cm  RANGE_MAX {far*100:.0f}cm "
+              f"(at {PUMP_HEAD_M*100:.0f}cm of pump head)")
+    print(f"  --    head needed vs reach (target = hands at {TARGET_H*100:.0f}cm):")
+    for r in (0.3, 0.4, 0.5, 0.6, 0.8):
+        h = head_needed_m(r)
+        mark = "ok  " if h is not None and h <= PUMP_HEAD_M else "OVER"
+        print(f"        {mark} {r*100:3.0f}cm -> {h*100:4.0f}cm of head" if h
+              else f"        n/a  {r*100:3.0f}cm -> unreachable")
+
+    # --- the pump intake must stay submerged ------------------------------
+    fill = 30.0
+    depth = reservoir_depth_mm(fill, BOTTLE_D)
+    if depth < 20.0:
+        print(f"  FAIL  {fill:.0f}ml in a {BOTTLE_D:.0f}mm bottle is only "
+              f"{depth:.0f}mm deep -- intake will suck air")
+        ok = False
+    else:
+        print(f"  ok    {fill:.0f}ml in a {BOTTLE_D:.0f}mm bottle = {depth:.0f}mm deep "
+              f"({fill:.0f}g), intake stays covered")
 
     return ok
 

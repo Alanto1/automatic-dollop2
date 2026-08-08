@@ -102,16 +102,46 @@ That has a consequence people miss: a fixed elevation means the water lands
 in a **fixed band of distances**. So "aimed" really means *aligned in yaw*
 **and** *inside the calibrated range band*.
 
+### The target is the hands and the phone — not the torso
+
+This is settled by ballistics, not preference. From a 12cm nozzle at +20°,
+the jet has only risen ~18cm by half a metre, so **a seated person's torso
+(~35cm above the desk) is unreachable at any pump pressure**:
+
+```
+torso (35cm up) unreachable at +20deg -- correct, we aim at the hands
+```
+
+`make_stl.py --test` asserts that, so if anyone raises the tilt the build
+fails rather than this document going quietly wrong.
+
+Aiming at the hands is the better target anyway: it's what the offence
+actually is, and it is a long way below anyone's face.
+
 ### Range calibration (do this once, write it down)
 
-1. Fill the reservoir. Set the robot at **40 cm** from a vertical sheet of
-   paper on the wall/desk. Fire a 200 ms pulse. Mark where it lands.
-2. Repeat at **50, 60, 70, 80 cm**.
-3. You now have a curve of landing height vs distance. The **usable band** is
-   the range where it lands on a seated person's torso — not their lap, not
-   their face.
-4. Hard-code `RANGE_MIN` / `RANGE_MAX` from that. Outside the band the robot
-   **walks closer or backs off instead of firing.**
+The theory says, for a 3V submersible pump at ~40cm of head:
+
+```
+RANGE_MIN 20cm  RANGE_MAX 56cm
+head needed vs reach (target = hands at 10cm):
+   ok    30cm ->   20cm of head
+   ok    40cm ->   27cm of head
+   ok    50cm ->   35cm of head
+   OVER  60cm ->   43cm of head
+   OVER  80cm ->   58cm of head
+```
+
+Now measure it, because `PUMP_HEAD_M` is an estimate:
+
+1. Fill the reservoir. Set the robot **30 cm** from a sheet of paper laid on
+   the desk. Fire a 200 ms pulse. Mark where it lands.
+2. Repeat at **40, 50, 60 cm**.
+3. The **usable band** is where it lands on the desk in front of a person —
+   on their hands and phone, never above desk level.
+4. Set `PUMP_HEAD_M` from what you measured, re-run the test for your real
+   band, and hard-code `RANGE_MIN` / `RANGE_MAX`. Outside the band the robot
+   **walks closer instead of firing.**
 
 Measure range with the **VL53L0X** pointed forward. Bounding-box height works
 as a fallback but needs its own calibration and is much noisier.
@@ -138,7 +168,7 @@ again.
 
 ### Safety, non-negotiable
 
-- Nozzle aims at **torso and desk only**. Never level with a face.
+- Nozzle aims at **the desk and the hands only**. Never above desk level.
   `make_stl.py` rejects a tilt outside 5–35° for this reason.
 - Consent first — it's a commitment device, the target opts in. In public,
   only a volunteer who agreed, or a target cup.

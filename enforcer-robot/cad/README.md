@@ -53,8 +53,21 @@ so horizontal centring is the only closed loop, and the **vertical** angle is
 a mechanical decision made once, here. If the two mounts drift apart, the
 robot aims high or low by exactly the difference and no software will find it.
 
-+20° from a ~10cm-tall robot points at a seated person's torso across a desk.
-The self-test rejects anything outside 5–35°. **Never aim level with a face.**
++20° from a ~10cm-tall robot puts the jet on the person's **hands and phone,
+on the desk** — the torso is unreachable at this angle at any pressure, and
+the self-test asserts that. It also rejects any tilt outside 5–35°.
+**Never aim above desk level.**
+
+The same test prints the range band the pump can actually deliver:
+
+```
+RANGE_MIN 20cm  RANGE_MAX 56cm (at 40cm of pump head)
+   ok    30cm ->   20cm of head      OVER  60cm ->   43cm of head
+   ok    50cm ->   35cm of head      OVER  80cm ->   58cm of head
+```
+
+`PUMP_HEAD_M` is an estimate — measure yours (BEHAVIOURS.md has the
+procedure) and re-run.
 
 ## Why a deck at all
 
@@ -102,8 +115,12 @@ change any leg geometry — the whole answer moves with it.
 
 ## Weight budget — read this before choosing a bottle
 
-Water is 1 g/ml. The self-test reports the fill weight for your `BOTTLE_D`:
-the 36mm default over 60mm of fill is **61g**.
+Water is 1 g/ml, and the torque budget only affords about **30 ml**. The
+self-test checks that much still covers the pump's intake:
+
+```
+30ml in a 36mm bottle = 29mm deep (30g), intake stays covered
+```
 
 Sesame is a small robot on 8 MG90S servos and an 800mAh pack. 61g of water
 plus the deck plus the pump is a real fraction of its payload. **Weigh your

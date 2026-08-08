@@ -183,8 +183,13 @@ UART is the better end state.
 Sesame can turn but it can't tilt. So there is exactly **one** closed loop:
 turn until the target is horizontally centred in frame, then fire. The
 **vertical** angle is a mechanical decision made once — both camera and nozzle
-are fixed at **+20° above horizontal** on their printed mounts, aimed at a
-seated person's torso from desk height.
+are fixed at **+20° above horizontal** on their printed mounts, aimed at the
+person's **hands and phone on the desk**.
+
+That target is settled by ballistics, not taste: from a 12cm nozzle at +20°
+a seated torso (~35cm up) is unreachable *at any pump pressure*, and
+`make_stl.py --test` asserts it. Aiming at the hands is also safer and more
+on-theme — the phone is the offence.
 
 That's why `cad/make_stl.py` derives both mounts from a single `NOZZLE_TILT`
 and has a test asserting they match. If those two angles drift apart, the
@@ -274,8 +279,8 @@ Consent in writing, and anyone can stop any time.
 - **Water + electronics.** Keep the reservoir and nozzle at the front firing
   *outward and slightly down*, battery only (never mains), and keep water
   lines physically away from the ESP32 and the servo wiring.
-- **Aim.** Torso/desk only — **never** the face or eyes. Short pulses, low
-  pressure. It's a squirt, not a jet.
+- **Aim.** The **desk and the hands only** — never above desk level, never a
+  face. Short pulses, low pressure. It's a squirt, not a jet.
 - **Consent.** It's a commitment device: the user opts in. For public demos,
   only squirt a volunteer who agreed, or a target cup.
 - **Don't let it fall.** Cliff sensors before any autonomous walking — a robot
@@ -293,9 +298,10 @@ Consent in writing, and anyone can stop any time.
    **So get the spider from shape, not size:** angular shell, low body,
    knees-up silhouette, spider eyes. Not longer legs. Re-run that test with
    your *measured* mass before you restyle anything.
-2. **Payload.** Water is heavy — 100ml is 100g, and it costs you ~12mm of
-   reach. **Weigh your build and walk it loaded early.** If it can't, drop to
-   a 30–50ml reservoir or run Squirt stationary. Week 5, not week 12.
+2. **Payload.** Water is heavy — 100ml is 100g and blows the torque budget.
+   **Run 30ml**: in a 36mm bottle that's 29mm of depth, enough to keep the
+   pump's intake covered, at only 30g. Weigh your build and walk it loaded
+   early — week 5, not week 12.
 3. **"On-task vs slacking" detection** that doesn't false-fire — a robot that
    squirts you while you're working is a *bad* robot. Hysteresis and time
    thresholds.
@@ -313,11 +319,11 @@ Consent in writing, and anyone can stop any time.
 |---|---|
 | Sesame isn't walking reliably | **Stationary Squirt sniper** — it poses, breathes and emotes, doesn't walk. Still complete |
 | The pump browns out the ESP32 | Separate pump battery, or a solenoid + gravity feed |
-| 100ml is too heavy to walk with | 50ml reservoir — 496g still fits the torque budget |
+| 100ml is too heavy to walk with | **30ml** — 29mm deep in a 36mm bottle, still covers the pump intake, only 30g |
 | The shell restyle is eating weeks | Ship Sesame's stock shell + your face and motion. Identity mostly lives in *how it moves* anyway |
-| Behind at week 11 | Cut Warden. Polish Squirt, keep the motion engine, run the experiment |
+| Behind at week 11 | Cut voice/LLM first, then Warden. Polish Squirt, keep the motion engine, run the experiment |
 
-**Cut Warden before you cut the motion engine.** A robot that moves like a
+**Cut the LLM before Warden, and Warden before the motion engine.** A robot that moves like a
 creature and does one thing beats a stiff robot that does two — on a demo
 table and in a writeup.
 
@@ -342,6 +348,8 @@ you, with a focus experiment." That alone wins a room.
 - `PURCHASE_LIST.md` — the German cart with verified prices and stock
 - `BUILD_CHECKLIST.md` — week-by-week plan
 - `BEHAVIOURS.md` — **how it moves, shoots and defends the phone**, end to end
+- `LLM_VOICE.md` — giving it speech, hearing, and an LLM (and where they must
+  *not* go)
 - `cad/` — the Enforcer's *additional* printed parts, and the torque budget
   that constrains how far you can restyle the legs
 
@@ -356,3 +364,6 @@ you, with a focus experiment." That alone wins a room.
    ~127g at a 36mm bottle; `cad/make_stl.py --test` prints the breakdown.
 6. **Pi ↔ ESP32 link: WiFi or UART?** Start WiFi (no firmware change), move to
    UART once it works. They end up 5cm apart.
+7. **Voice and an LLM?** Possible but off-board — the Pi Zero cannot host a
+   model. See [`LLM_VOICE.md`](LLM_VOICE.md). Treat it as a layer *after* the
+   robot works, and note it adds 2–3 weeks.
