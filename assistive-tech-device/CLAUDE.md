@@ -5,6 +5,51 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-08-06: theory curriculum added at repo root (`../learning/`)
+
+Eleventh pass, and **no code, hardware, sourcing or enclosure changes** —
+the builder asked for a theory study plan, which landed in a new
+top-level `learning/` directory, not in here. Nothing in this project
+was modified except this entry.
+
+Worth knowing from here, though: the plan is anchored to this device
+throughout, and writing it surfaced several **specific, unclaimed
+findings about this firmware**. They are listed as a table in
+`../learning/PROJECTS.md` ("Track B"), each tied to the section of
+theory that justifies it. None have been implemented. The ones that are
+real defects rather than nice-to-haves:
+
+- **No hysteresis at the zone boundaries.** A reading sitting near a
+  threshold (e.g. hovering at 1000mm) chatters between zones every
+  sample. `HapticMapper.h` needs separate enter/leave thresholds, and
+  `test_haptic_mapper.cpp` has no case covering it.
+- **The three PWM duties (140/200/255) are not perceptually even.** The
+  motor is an ERM, whose output force goes as the *square* of speed, so
+  those duties are roughly 0.30 / 0.62 / 1.00 in felt intensity, not
+  0.55 / 0.78 / 1.00. Also unverified: whether duty 140 is even above
+  the motor's startup threshold at 3.7V (it is likelier to be at 5V
+  from USB, which is how it has been tested so far).
+- **Running the ATmega328P at 16MHz off a 3.7V cell is marginally
+  out of spec.** Interpolating the datasheet's speed grades (10MHz at
+  2.7V, 20MHz at 4.5V) gives ~15.6MHz guaranteed at 3.7V. Usually
+  works; fails cold, or when the motor sags the rail. This is a real
+  open item for Phase 5 alongside the `R3` charge-current one, and it
+  argues for the boost converter that `PURCHASE_LIST.md` already flags
+  as omitted.
+- **Filtering the sensor readings is not as free as it looks.** At the
+  50ms sample period, an EMA with α=0.2 costs ~314mm of positional lag
+  at walking speed — wider than the entire Critical zone (10-249mm). If
+  jumpy readings ever need smoothing, a median-of-3 (one sample, ~70mm)
+  is the right tool, not an EMA.
+- **`Wire.setClock(400000)` may be outside the I2C rise-time budget.**
+  Fast mode allows 300ns; a 4.7kΩ pull-up with ~100pF of breadboard
+  capacitance gives ~400ns. Explains any "works on short wires" flakiness.
+- **Sensor failure modes are under-documented** in `README.md`: the
+  VL53L0X's ~25° cone can miss a thin obstacle in front of a strong
+  wall return, dark targets read as "nothing there", and ambient IR
+  outdoors raises the noise floor. All three are safety-relevant for
+  the actual intended users.
+
 ## Session log — 2026-07-31: switches sourced locally, enclosure gains a switch cutout
 
 Tenth pass. Sourcing closed out, and the enclosure model got its first
