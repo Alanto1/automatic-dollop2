@@ -60,8 +60,23 @@ Checked **2026-08-18**. This is not a BerryBase problem, it's a global one:
 | buyzero.de, Pimoroni, The Pi Hut | sold out |
 | **Farnell DE** | orderable — **deliveries begin 10 March 2027** |
 
-March 2027 is after the competition, so waiting is not a plan. Three real
-options, best first:
+**✅ Resolved 2026-08-18: restock date is 25 September 2026.** That is five
+weeks out, and Week 6 (perception) is the first week that needs the board — so
+it lands just in time. **Do not pay a scalper.** Instead:
+
+1. **Get in the queue now** — back-order or set the back-in-stock alert at
+   BerryBase *and* Reichelt (their page has a "Message if back in stock"
+   button). Order from two shops and cancel the loser; a €19 board ordered
+   twice is a €19 risk, and restock dates slip.
+2. **Pull the perception work forward** into Weeks 1–5, where it needs only
+   your laptop and recorded video. See `BUILD_CHECKLIST.md`. This is the
+   actual fix: it converts the delay into zero schedule impact.
+3. **Decision gate: if the board has not shipped by 10 October**, stop waiting
+   and take option 2 or 3 below. Don't let a slipping restock date eat Week 7.
+
+If the date slips or you want the board sooner, the options below still stand.
+
+Waiting past the competition is not a plan. Three options, best first:
 
 1. **Buy one at a markup.** eBay.de / Amazon.de marketplace, roughly €35–50
    against a €22 list price. Costs ~€25 extra and **changes nothing else** —

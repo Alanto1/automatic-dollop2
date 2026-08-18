@@ -41,10 +41,11 @@ an assembly error.
       Extreme Pro A1 32GB €26.90, `RPIZ-CAM-15` camera €17.50 — **not** the
       160° fisheye, **not** the `RPIC-ZSAD` adapter)
 - [ ] Place **Reichelt** (MOSFETs, diodes)
-- [ ] 🔴 **Source a Pi Zero 2 W** — sold out at BerryBase, Reichelt,
-      Technik-LPE, buyzero, Pimoroni and The Pi Hut; Farnell quotes **March
-      2027**. Buy at a markup on eBay/Amazon (~€35–50), or switch to a Radxa
-      Zero 3W. Decide before Week 6 —
+- [ ] **Pi Zero 2 W — back in stock 2026-09-25.** Sold out everywhere right
+      now, but that date lands the week you need it. Back-order it and set
+      back-in-stock alerts at **two** shops, then cancel the loser. Don't pay
+      a scalper; do pull perception forward (next section).
+      **Gate: not shipped by 10 Oct → switch to a Radxa Zero 3W.** Details in
       [`START_HERE.md`](START_HERE.md#-the-pi-zero-2-w-is-sold-out-across-europe)
 - [ ] Place **Bambu Lab EU** — 2× 14500 pack + the **XH2.54 charger** (€4.49).
       A balance charger cannot charge this pack; see PURCHASE_LIST
@@ -64,6 +65,34 @@ Meanwhile, zero hardware:
       them into `mood.py` and re-run the tests
 
 **Demoable:** the state machine, on screen, with attitude.
+
+---
+
+## Weeks 1–5, in parallel — Perception on your laptop
+
+**Pulled forward from Week 6 because the Pi Zero 2 W is back in stock
+2026-09-25**, which is the same week you'd need it. This work needs no Pi, no
+camera and no robot — only your laptop and your phone's camera — and doing it
+now turns a 5-week parts delay into zero schedule impact.
+
+- [ ] Record ~20 min of yourself at a desk: working, picking up the phone,
+      leaving, coming back. Phone camera on a stack of books is fine
+- [ ] Crop the footage to **53.5°** to match `RPIZ-CAM-15`, and confirm your
+      head is still in frame at your real desk distance. If it isn't, the
+      camera mount goes higher — decide that *before* Week 4's shell restyle
+- [ ] YOLOv8n @320 over the video **on the laptop**, sampled at 1–2 FPS —
+      not full frame rate. That's what a Zero 2 W will give you
+- [ ] Hand-label "working" / "on phone" / "gone"; measure how often the
+      detector agrees. **These are your false-positive numbers**, and they're
+      the most valuable thing you can carry into the build
+- [ ] Head-down from bounding-box geometry — **not** MediaPipe Pose, which is
+      too heavy for 512MB alongside the detector
+- [ ] Wrap it into a `Scene` and feed it to `brain/mood.py`. That's the whole
+      software loop running on recorded video, before the robot exists
+- [ ] Feed the measured frame rate back into `CLEAR_GRACE`
+
+**Demoable:** your own desk footage, labelled, with the robot's mood
+overlaid frame by frame. That is a competition-grade result on its own.
 
 ---
 
@@ -149,16 +178,22 @@ Do this **before** designing anything around the reservoir.
 
 **Demoable:** it squirts on command.
 
-## Week 6 — Perception
+## Week 6 — Perception, on the Pi
+
+⚠️ **Do the detector itself in the parallel track above, not here.** By the
+time the board arrives this week should be a *port*, not a project. If you
+arrive at Week 6 having never run YOLO on anything, the Pi shortage has cost
+you a week it didn't have to.
 
 - [ ] Pi Zero 2 W on the payload deck; camera on its mount, forward-facing
 - [ ] Camera streaming into OpenCV on the Pi Zero
-- [ ] Person + `cell_phone` detection (YOLOv8n, 320×320, NCNN or ONNX)
-- [ ] Head-down from bounding-box geometry — **not** MediaPipe Pose, which is
-      likely too heavy for 512MB alongside the detector
-- [ ] Measure your real frame rate. 1–2 FPS is expected and is enough
-- [ ] Wrap it all into one `scene` object the state machine reads
-- [ ] **Tune against false positives.** It must NOT fire while you work
+- [ ] Re-export the model to **NCNN** and run it on-device
+- [ ] **Measure your real frame rate.** 1–2 FPS is expected and is enough —
+      but check it against the `CLEAR_GRACE` you tuned. If the Pi is slower
+      than you assumed, that constant has to go up
+- [ ] Swap the video-file source for the camera behind the same `Scene`
+      interface. Nothing above that seam should need to change
+- [ ] Re-check false positives **on the robot**, in your actual room light
 
 **Demoable:** on screen, correct labels for "working" / "on phone" / "gone."
 
