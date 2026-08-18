@@ -37,20 +37,27 @@ an assembly error.
 - [ ] Place the **AliExpress** order FIRST (ESP32-S2 Mini, SSD1306, M2 screws,
       tubing) — longest lead time, smallest cost
 - [ ] Place **roboter-bausatz** (10× MG90S — nobody else in Germany stocks them)
-- [ ] Place **BerryBase** (Zero camera, SD ×2, buck ×2, pump, TCRT5000 ×4,
-      filament)
-- [ ] Place **Reichelt** (Pi Zero 2 **WH**, MOSFETs, diodes)
+- [ ] Place **BerryBase** (buck ×2, pump, TCRT5000 ×4, filament)
+- [ ] Place **Reichelt** (Pi Zero 2 **WH** `RASP PI ZERO2 WH` €22.10, MOSFETs,
+      diodes) — ⚠️ BerryBase is out of the Zero, the A1 SD card and the Zero
+      camera. All three are Week 6 parts, so none of them block anything.
+      Substitutes in [`START_HERE.md`](START_HERE.md#if-berrybase-is-out-of-stock)
 - [ ] Place **Bambu Lab EU** — 2× 14500 pack + the **XH2.54 charger** (€4.49).
       A balance charger cannot charge this pack; see PURCHASE_LIST
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
 
 Meanwhile, zero hardware:
 
-- [ ] **Mood state machine** — fake `scene` events (phone / head-down /
-      absent) → CHILL → SUSPICIOUS → WARNING → STRIKE → SMUG
-- [ ] **Test it**: 2s phone → no fire; 4s → escalate; person returns
-      mid-escalation → de-escalates cleanly, never stuck
-- [ ] Browser visualiser, like `haptic_simulator.html`
+- [x] ~~**Mood state machine**~~ — [`brain/mood.py`](brain/README.md). Scene →
+      CHILL → SUSPICIOUS → WARNING → STRIKE → SMUG, pure logic, injected clock
+- [x] ~~**Test it**~~ — `brain/tests/run_tests.sh`, **19/19**. Covers: below
+      notice → ignored; the full ladder; one shot per episode; a dropped frame
+      doesn't reset escalation; putting the phone away de-escalates cleanly;
+      an empty chair can never fire; a refused shot stays angry
+- [x] ~~Browser visualiser~~ — `brain/simulator/mood_simulator.html`, with a
+      frame-dropping switch and sliders for all six timings
+- [ ] **Tune the timings** in the simulator until it feels right, then copy
+      them into `mood.py` and re-run the tests
 
 **Demoable:** the state machine, on screen, with attitude.
 

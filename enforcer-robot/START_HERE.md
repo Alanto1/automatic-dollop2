@@ -47,9 +47,17 @@ Order in this sequence, because lead times differ:
 what Sesame can actually carry. Take the **WH** (headers pre-soldered, €22.10
 at Reichelt); you need GPIO for the pump MOSFET and for the link to the ESP32.
 
-Two stock warnings from the sourcing pass: BerryBase had the **Pi Zero out of
-stock in every variant**, so buy it at Reichelt — and the **Zero camera showed
-only 3 left**.
+### If BerryBase is out of stock
+
+Three items went out of stock during ordering. **None of them are on the
+critical path** — all three are Week 6 (perception), and Weeks 0–5 are the
+state machine, the printed body, and the water rig.
+
+| Out of stock | Buy instead |
+|---|---|
+| Pi Zero 2 **WH** | **Reichelt**, order code `RASP PI ZERO2 WH`, €22.10 |
+| SanDisk Ultra A1 32GB | Any A1 32GB card, anywhere. Or BerryBase's **Extreme Pro A1 32GB**, €26.90 |
+| Camera for Pi **Zero** | Any Pi camera module + a **Zero ribbon adapter** (Reichelt `RPIZ CAM ADAPTER`, €1.10) — the Zero's connector is the narrow one, that cable is the only difference |
 
 ## Step 2 — Diagnose the printer (first 48 hours)
 
@@ -65,6 +73,33 @@ have no robot.
   Sesame's parts are small; a shop quote for 11 parts is cheap against losing
   three weeks.
 
+### Kobra 2 Pro — *"The module is abnormal"*
+
+This is the **auto-levelling strain-gauge module** under the bed, not the
+nozzle. The printer taps the nozzle onto it to find Z; when it can't read a
+clean tap it throws this. Anycubic's own order of causes, cheapest first:
+
+1. **Stuck buttons.** Press the module's buttons by hand — they must spring
+   back. If one is stuck, loosen the screws behind the module slightly
+   (M2.0 Allen). Over-tightened screws bind them.
+2. **Nozzle isn't over the module.** *Tools → Control → Module Calibration →
+   Position Calibration.* The nozzle must land on the module's **centre**.
+   Nudge it in the interface, **Save**, then re-level.
+3. **Dirt.** Clean the module face — filament debris on it reads as a bad tap.
+4. **Loose wiring** (the usual culprit if 1–3 don't fix it). Power off, then:
+   remove the touchscreen cable → unscrew the 2 plastic screws underneath
+   (M2.5 Allen) → pry the plastic off → unplug **FAN2** → reseat the
+   calibration module's cable at **both** ends: the mainboard, and under the
+   heated bed's aluminium plate.
+5. **Dead module.** Multimeter on **20V DC**: the module's pins on the
+   mainboard should read **3.3 V ± 0.3**. Outside that, the module is faulty —
+   claim the warranty.
+
+Tools: M2.5 and M2.0 Allen keys, a Phillips, and the multimeter that's already
+on your parts list. Do this **before** ordering more filament — and note that
+step 5 is exactly the "electronic fault" case above, where the replacement has
+to ride in this week's order.
+
 ---
 
 ## Step 3 — Build the software while the parcels fly
@@ -73,20 +108,32 @@ None of this needs a single part, and it's the part that's actually yours.
 It's also exactly what worked on the wristband: `HapticMapper` and
 `haptic_simulator.html` were both debugged before hardware existed.
 
-### The mood state machine (highest value — do this first)
+### ✅ The mood state machine — written, tested, in the repo
 
 The personality *is* this state machine. CHILL → SUSPICIOUS → WARNING →
-STRIKE → SMUG, driven by a `scene` object.
+STRIKE → SMUG, driven by a `Scene` object. It's in
+[`brain/`](brain/README.md), and it needs nothing you don't already have:
 
-- Feed it **fake** scene events: `phone_visible`, `head_down`, `no_person`.
-- Emit **intents**, not joint angles: `turn(deg)`, `walk(steps)`, `face(mood)`,
-  `fire(ms)`. That seam is the whole architecture (BEHAVIOURS.md).
-- Get the **timers and hysteresis** right. This is the hard part, it needs
-  zero hardware, and it is the entire difference between "impressive" and
-  "annoying." A robot that squirts you while you're working is a bad robot.
-- Unit-test it: phone visible 2s → no fire; 4s → escalate; person returns
-  mid-escalation → de-escalate cleanly, not stuck in WARNING forever.
-- Browser visualiser, like `haptic_simulator.html`, so you can *see* it.
+```bash
+cd brain
+./tests/run_tests.sh                  # 19/19 tests passed
+open simulator/mood_simulator.html    # toggle the camera, watch it escalate
+```
+
+`mood.py` imports only the standard library — no camera, no servos, no clock
+of its own. The caller passes `now` in, which is why a 30-second escalation
+runs instantly in the tests and why the browser can scrub time.
+
+**Your job now is tuning, not writing.** Open the simulator, turn on
+**drop frames**, and push the sliders around until the robot feels right;
+then copy the numbers into the constants at the top of `mood.py` and re-run
+the tests. The timings are the entire difference between "impressive" and
+"annoying" — a robot that squirts you while you're working is a bad robot,
+and this is the one part of that judgement you can make today.
+
+Watch `CLEAR_GRACE` in particular: it's the de-escalation delay, it is
+deliberately *not* symmetric with the escalation dwells, and the reason is in
+[`brain/README.md`](brain/README.md).
 
 ### Detection, on video files
 
