@@ -37,11 +37,15 @@ an assembly error.
 - [ ] Place the **AliExpress** order FIRST (ESP32-S2 Mini, SSD1306, M2 screws,
       tubing) — longest lead time, smallest cost
 - [ ] Place **roboter-bausatz** (10× MG90S — nobody else in Germany stocks them)
-- [ ] Place **BerryBase** (buck ×2, pump, TCRT5000 ×4, filament)
-- [ ] Place **Reichelt** (Pi Zero 2 **WH** `RASP PI ZERO2 WH` €22.10, MOSFETs,
-      diodes) — ⚠️ BerryBase is out of the Zero, the A1 SD card and the Zero
-      camera. All three are Week 6 parts, so none of them block anything.
-      Substitutes in [`START_HERE.md`](START_HERE.md#if-berrybase-is-out-of-stock)
+- [ ] Place **BerryBase** (buck ×2, pump, TCRT5000 ×4, filament, SanDisk
+      Extreme Pro A1 32GB €26.90, `RPIZ-CAM-15` camera €17.50 — **not** the
+      160° fisheye, **not** the `RPIC-ZSAD` adapter)
+- [ ] Place **Reichelt** (MOSFETs, diodes)
+- [ ] 🔴 **Source a Pi Zero 2 W** — sold out at BerryBase, Reichelt,
+      Technik-LPE, buyzero, Pimoroni and The Pi Hut; Farnell quotes **March
+      2027**. Buy at a markup on eBay/Amazon (~€35–50), or switch to a Radxa
+      Zero 3W. Decide before Week 6 —
+      [`START_HERE.md`](START_HERE.md#-the-pi-zero-2-w-is-sold-out-across-europe)
 - [ ] Place **Bambu Lab EU** — 2× 14500 pack + the **XH2.54 charger** (€4.49).
       A balance charger cannot charge this pack; see PURCHASE_LIST
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)

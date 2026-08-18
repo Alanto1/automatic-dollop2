@@ -34,9 +34,9 @@ Design rationale for each part: [`PARTS.md`](PARTS.md).
 
 | Item | Qty | Note |
 |---|---|---|
-| **Raspberry Pi Zero 2 WH** (pre-ordered) | 1 | ✅ the **2** matters — see the correction below |
-| Camera for Raspberry Pi Zero — BerryBase, €15.90 | 1 | Ships with the narrow Zero ribbon, so **no CSI adapter needed**. Was down to 3 in stock |
-| SanDisk Ultra microSDHC A1 32GB | 2 | A1 is fine — the detector loads once at boot |
+| **Raspberry Pi Zero 2 WH** | 1 | 🔴 **sold out Europe-wide** as of 2026-08-18 — Farnell quotes March 2027. Options in [`START_HERE.md`](START_HERE.md). The **2** still matters — see the correction below |
+| **Camera for Raspberry Pi Zero, 15cm** (`RPIZ-CAM-15`) — BerryBase, €17.50 | 1 | OV5647 5MP, **53.5° × 41.4°**. Ships with the narrow Zero ribbon, so **no adapter needed** |
+| **SanDisk Extreme Pro microSDHC A1 U3 32GB + adapter** — €26.90 | 1–2 | A1 / V30 / 100 MB/s. A1 is what matters; the detector loads once at boot |
 | Waveshare DC-DC Buck Mini, 4A, 5–36V→5V | 2 | One for Sesame's rail, **one dedicated to the Pi Zero** |
 | **TCRT5000 bare sensor** — BerryBase, €0.30 | 4 | Bare, not the module — this is what `cliff_bracket` is cut for. Threshold in software beats a trim pot |
 | **AZDelivery VL53L0X ToF** | 1 | Range band **and** the Warden proximity trip |
@@ -91,6 +91,8 @@ Keep these documented — the reasoning is worth more than the parts.
 | **2nd AUKENIEN 1N4007 pack** | Exact duplicate — 400 diodes for a job needing 1 |
 | **24 AWG Temu wire** | Sits between the 22 and 30 AWG you already have, and is *thinner* than your power wire. (Its own listing contradicts itself: "24 gauge" but "0.8mm²", which is 18 AWG — that description is boilerplate shared across all gauge variants) |
 | **Raspberry Pi AI HAT+** (26 TOPS, €122.50) | Needs **PCIe** — the Pi Zero has none. Would force a Pi 5, which is larger than Sesame. And 30 FPS for a job needing 1–2 |
+| **160° fisheye Zero camera** (`RPIZ-CAM-VF`, €18.90) | Same OV5647 sensor as the 53.5° version, spread over 3× the angle → **~3× fewer pixels on the phone** (≈13 px vs ≈40 px at 60cm, at YOLOv8n's 320px input). 13 px is at the detection floor, before the barrel distortion YOLO was never trained on |
+| **Camera cable adapter `RPIC-ZSAD`** (€1.20) | Runs the wrong way: it puts a **Zero camera on a standard Pi**. Both BerryBase Zero cameras already ship with the narrow Zero ribbon, so on a Pi Zero there is nothing to adapt |
 
 ## The battery lesson, in one line
 

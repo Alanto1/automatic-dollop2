@@ -44,20 +44,77 @@ Order in this sequence, because lead times differ:
 5. **Segor walk-in** — wire, heat-shrink, connectors, spare screws.
 
 **The brain is a Raspberry Pi Zero 2 W**, not a Pi 5 — 11g and ~2W, which is
-what Sesame can actually carry. Take the **WH** (headers pre-soldered, €22.10
-at Reichelt); you need GPIO for the pump MOSFET and for the link to the ESP32.
+what Sesame can actually carry. The **WH** (headers pre-soldered) is the
+convenient variant; you need GPIO for the pump MOSFET and for the link to the
+ESP32. Read the next section before ordering it, though.
 
-### If BerryBase is out of stock
+### 🔴 The Pi Zero 2 W is sold out across Europe
 
-Three items went out of stock during ordering. **None of them are on the
-critical path** — all three are Week 6 (perception), and Weeks 0–5 are the
-state machine, the printed body, and the water rig.
+Checked **2026-08-18**. This is not a BerryBase problem, it's a global one:
 
-| Out of stock | Buy instead |
+| Shop | Zero 2 W / WH |
 |---|---|
-| Pi Zero 2 **WH** | **Reichelt**, order code `RASP PI ZERO2 WH`, €22.10 |
-| SanDisk Ultra A1 32GB | Any A1 32GB card, anywhere. Or BerryBase's **Extreme Pro A1 32GB**, €26.90 |
-| Camera for Pi **Zero** | Any Pi camera module + a **Zero ribbon adapter** (Reichelt `RPIZ CAM ADAPTER`, €1.10) — the Zero's connector is the narrow one, that cable is the only difference |
+| BerryBase | sold out |
+| Reichelt (both `W` and `WH`) | *temporarily unavailable* |
+| Technik-LPE | backorder — stock level **−156** |
+| buyzero.de, Pimoroni, The Pi Hut | sold out |
+| **Farnell DE** | orderable — **deliveries begin 10 March 2027** |
+
+March 2027 is after the competition, so waiting is not a plan. Three real
+options, best first:
+
+1. **Buy one at a markup.** eBay.de / Amazon.de marketplace, roughly €35–50
+   against a €22 list price. Costs ~€25 extra and **changes nothing else** —
+   same pinout, same OS, same `picamera2`, same everything already written
+   down here. For a one-board project this is almost certainly right.
+2. **Radxa Zero 3W.** Same 65×30mm footprint, Pi-compatible 40-pin header,
+   quad Cortex-A55, real Debian, and **1–8 GB of RAM** instead of 512 MB —
+   the 4 GB version would even let the LLM run on the robot, which
+   [`LLM_VOICE.md`](LLM_VOICE.md) currently proves impossible. Costs: the
+   camera stack is not Raspberry Pi's, so plan on a **USB webcam** rather than
+   a CSI module, and budget extra time in Week 6. ~€95 for 4 GB/32 GB in
+   Germany; the small variants are much cheaper where you can find them.
+3. **Second-hand.** Plenty of Zero 2 Ws sit unused in finished projects.
+
+**Do not buy a Pi Zero W (no "2").** One ARM11 core instead of four — already
+documented as a wrong buy in [`PURCHASE_LIST.md`](PURCHASE_LIST.md).
+
+### The SD card and the camera — both still in stock
+
+| Item | € | Verdict |
+|---|---|---|
+| **SanDisk Extreme Pro microSDHC A1 U3 32 GB + adapter** | 26.90 | ✅ **buy it.** A1 / V30 / UHS-I U3, 100 MB/s, SD adapter included. Works with any of the three brains above, so it's safe to order before the Pi is settled |
+| **Camera for Raspberry Pi Zero, 15 cm** (`RPIZ-CAM-15`) | 17.50 | ✅ the right camera — 53.5° |
+| ~~Camera, adjustable focus, 160° FOV~~ (`RPIZ-CAM-VF`) | 18.90 | ❌ the fisheye — see below |
+| ~~Camera cable adapter Zero > standard camera~~ (`RPIC-ZSAD`) | 1.20 | ❌ **not needed**, and it runs the other way |
+
+**The adapter is the opposite of what it sounds like.** `RPIC-ZSAD` lets a
+*Zero* camera plug into a *standard* Pi. Both cameras above already ship with
+the narrow Zero cable, so on a Pi Zero you need nothing extra.
+
+**Why not the 160° fisheye.** Wide angle sounds better and is a trap. The
+detector has to find a **phone**, and a phone is small:
+
+```
+  phone ~7cm wide, seen from 60cm away  =  6.7 degrees of view
+  YOLOv8n input is 320px wide
+
+  53.5 deg lens (RPIZ-CAM-15)   320/53.5 = 6.0 px/deg  ->  40 px on the phone
+  170 deg lens (RPIZ-CAM-VF)    320/170  = 1.9 px/deg  ->  13 px on the phone
+```
+
+Both use the same 5 MP OV5647 sensor — the fisheye just spreads it over three
+times the angle, putting **~3× fewer pixels on the one thing you must detect**.
+13 px is at YOLOv8n's floor before you even add the barrel distortion, which
+YOLO was never trained on. Take the 53.5°.
+
+⚠️ But 53.5° *is* narrow: at 60 cm it frames about 60 cm across. Check this
+during the recorded-video work in Step 3 — crop your phone footage to 53.5°
+and confirm the head is still in shot, because "head down" needs the head. If
+it isn't, raise the camera mount rather than widening the lens.
+
+**Order sequence:** SD card now (works with anything) → **Pi next**, it's the
+long pole → **camera last**, since its interface depends on which brain wins.
 
 ## Step 2 — Diagnose the printer (first 48 hours)
 
