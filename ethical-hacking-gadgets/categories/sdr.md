@@ -15,7 +15,7 @@ buttons.
 |---|---|---|---|---|
 | **RTL-SDR (dongle)** | ~24 MHz–1.7 GHz | RX only, 8-bit | ~€30 | cheapest entry; ADS-B, weather, scanning |
 | **HackRF One / Pro** | 1 MHz–6 GHz | half-duplex, 8-bit | ~€300–400 | best all-round learner; can TX → [device](../devices/hackrf.md) |
-| **PortaPack H4M Pro** | 100 kHz–6 GHz | half-duplex | ~€280 | HackRF + touchscreen, standalone (no PC), Mayhem firmware |
+| **PortaPack H4M Pro** | 100 kHz–6 GHz | half-duplex | ~€280 | HackRF + touchscreen, standalone (no PC), Mayhem → [device](../devices/portapack-h4m-pro.md) |
 | **bladeRF 2.0 micro xA4** | 47 MHz–6 GHz | **full-duplex**, 12-bit | ~€649–949 | GSM/GPS research, better dynamic range |
 | **SignalSDR Pro** | wide | high-end | ~€1,100 | 5G base-station auditing; emulates USRP/PLUTO |
 | **KrakenSDR** | 100 MHz–1 GHz+ | 5× coherent RX | ~€799 | **direction finding** / beam-forming / signal hunting |

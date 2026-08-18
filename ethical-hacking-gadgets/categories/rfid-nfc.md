@@ -17,6 +17,7 @@ cards, hotel keys, pet chips, and inventory tags.
 | **Chameleon Lite** | HF | low-cost MIFARE emulation | budget | HF/MIFARE focus |
 | **Flipper Zero** | LF + HF | casual read/emulate legacy cards | ~€182+ | fine for weak cards → [device page](../devices/flipper-zero.md) |
 | **Keysy** | LF (125 kHz) | pocket duplicator/emulator | budget | quick fob copies |
+| **LilyGo T-Embed CC1101** | HF | ESP32-S3 handheld with PN532 NFC (Bruce) | ~€40–60 | HF only → [device](../devices/lilygo-t-embed-cc1101.md) |
 
 ## Readers / writers / diagnostics
 | Device | Freq | Use |

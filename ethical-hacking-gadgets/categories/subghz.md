@@ -27,6 +27,7 @@ and a lot of IoT live. Capture, analyse, decrypt, and (where legal) replay.
 | **Minino: IoT Multitool** | ~€65 | BLE, Zigbee, Thread, Matter detect/sniff/manipulate |
 | **tinySA Ultra+** | ~€163 | spectrum analyser — locate the target signal first |
 | **KIISU** | ~€79 | credit-card-sized Flipper-compatible alternative |
+| **LilyGo T-Embed CC1101** | ~€40–60 | ESP32-S3 + CC1101 + NFC + WiFi/BLE; great with Bruce → [device](../devices/lilygo-t-embed-cc1101.md) |
 | **HackRF / PortaPack** | ~€280+ | full SDR approach to Sub-GHz → [SDR category](sdr.md) |
 
 ## Capabilities & possibilities

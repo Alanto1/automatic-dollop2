@@ -17,6 +17,7 @@ during an authorised engagement.
 | **AWOK Dual C5 Touch** | ~€175 | WiFi 6 + BLE wardriving accessory (touchscreen) for Flipper |
 | **GhostBoard** | — | WiFi 6 / BLE 5 audit board (GhostESP suite) |
 | **M5StickC + Marauder/Bruce** | ~€25 | budget 2.4 GHz recon → [device page](../devices/m5stick.md) |
+| **LilyGo T-Embed CC1101** | ~€40–60 | ESP32-S3 WiFi/BLE + Sub-GHz + NFC (Bruce) → [device page](../devices/lilygo-t-embed-cc1101.md) |
 | **Pwnagotchi** | DIY | Pi-based handshake collector → [device page](../devices/pwnagotchi.md) |
 
 ### Pineapple modules (Glytch)

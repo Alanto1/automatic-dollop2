@@ -35,8 +35,10 @@ Full guidance: **[ETHICS_AND_LEGAL.md](ETHICS_AND_LEGAL.md)**
 |---|---|---|
 | **Flipper Zero** | Pocket multi-tool: Sub-GHz, NFC/RFID, IR, GPIO, iButton, BadUSB | [devices/flipper-zero.md](devices/flipper-zero.md) |
 | **HackRF One / HackRF Pro** | Wide-band software-defined radio (1 MHz–6 GHz), half-duplex TX/RX | [devices/hackrf.md](devices/hackrf.md) |
+| **PortaPack H4M Pro** | Standalone HackRF-Pro handheld (100 kHz–6 GHz) running Mayhem — no PC | [devices/portapack-h4m-pro.md](devices/portapack-h4m-pro.md) |
 | **Proxmark 3 (RDV4)** | The reference RFID/NFC research platform (LF + HF) | [devices/proxmark3.md](devices/proxmark3.md) |
 | **M5Stick / M5StickC Plus2** | ESP32 dev-brick; WiFi/BLE tooling, Bruce/M5 firmwares | [devices/m5stick.md](devices/m5stick.md) |
+| **LilyGo T-Embed CC1101** | ESP32-S3 handheld: Sub-GHz + NFC + WiFi/BLE, great with Bruce | [devices/lilygo-t-embed-cc1101.md](devices/lilygo-t-embed-cc1101.md) |
 | **Pwnagotchi** | AI-flavoured Raspberry Pi WiFi handshake collector | [devices/pwnagotchi.md](devices/pwnagotchi.md) |
 
 ### Category guides (many products each)
@@ -62,6 +64,8 @@ Full guidance: **[ETHICS_AND_LEGAL.md](ETHICS_AND_LEGAL.md)**
 | WiFi security | Alfa AWUS036ACHM adapter + a laptop; then WiFi Pineapple |
 | Embedded / firmware extraction | Bus Pirate 5 → GreatFET → ChipWhisperer |
 | USB attack surfaces | Rubber Ducky → Bash Bunny → O.MG Cable |
+| A cheap, open Flipper-style multi-tool | LilyGo T-Embed CC1101 (flash Bruce) |
+| Field SDR with no laptop | PortaPack H4M Pro |
 | Cheap, hackable, DIY | M5StickC Plus2 or a Raspberry Pi (Pwnagotchi) |
 
 ---
