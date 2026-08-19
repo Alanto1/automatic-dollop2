@@ -207,7 +207,11 @@ Watch `CLEAR_GRACE` in particular: it's the de-escalation delay, it is
 deliberately *not* symmetric with the escalation dwells, and the reason is in
 [`brain/README.md`](brain/README.md).
 
-### Detection, on video files
+### ✅ Detection, on video files — tooling written
+
+All five tools are in [`perception/`](perception/README.md) with a
+step-by-step guide. `./tests/run_tests.sh` → 18/18. What's left is yours:
+record the footage, label it, read your numbers.
 
 You don't need the Pi or the camera to start. Record 20 minutes of yourself at
 a desk on your phone — working, picking up your phone, leaving — and run
@@ -223,7 +227,10 @@ YOLOv8n over it on your laptop.
 - **This gives you real false-positive numbers before you own a robot**, which
   is the most valuable thing you can carry into the build.
 
-### Prototype the motion engine in a browser
+### ✅ Prototype the motion engine in a browser — built
+
+[`motion/leg_simulator.html`](motion/README.md) — open it, click **lunge**,
+watch the plot. Exports the tuned constants as a C header for the ESP32.
 
 The thing that stops it looking stiff, and it needs no hardware. Draw a
 2-DOF leg on a canvas and animate it:
@@ -236,7 +243,10 @@ The thing that stops it looking stiff, and it needs no hardware. Draw a
 Same trick as `haptic_simulator.html`: get the feel right on screen, then port
 the curves to the ESP32. See README "Making it move like a creature".
 
-### Learn Sesame's JSON API
+### ✅ Learn Sesame's JSON API — client written
+
+[`client/sesame.py`](client/README.md) — `stand/walk/turn/face` over a
+swappable transport, 13/13 tests against a fake robot that only logs.
 
 The seam between your code and the robot. Read the firmware's API, then write
 a thin Python client — `stand()`, `walk(dir)`, `turn(deg)`, `face(mood)` —

@@ -75,8 +75,12 @@ Meanwhile, zero hardware:
 camera and no robot — only your laptop and your phone's camera — and doing it
 now turns a 5-week parts delay into zero schedule impact.
 
+- [x] ~~Tooling~~ — [`perception/`](perception/README.md) is written and
+      tested (18/18): `detect.py`, `label.py`, `scene.py`, `evaluate.py`,
+      `replay.py`. Step-by-step guide in its README
 - [ ] Record ~20 min of yourself at a desk: working, picking up the phone,
-      leaving, coming back. Phone camera on a stack of books is fine
+      leaving, coming back. Phone camera on a stack of books is fine.
+      **Sit normally for the first 15s** — that's the posture calibration
 - [ ] Crop the footage to **53.5°** to match `RPIZ-CAM-15`, and confirm your
       head is still in frame at your real desk distance. If it isn't, the
       camera mount goes higher — decide that *before* Week 4's shell restyle
@@ -87,8 +91,9 @@ now turns a 5-week parts delay into zero schedule impact.
       the most valuable thing you can carry into the build
 - [ ] Head-down from bounding-box geometry — **not** MediaPipe Pose, which is
       too heavy for 512MB alongside the detector
-- [ ] Wrap it into a `Scene` and feed it to `brain/mood.py`. That's the whole
-      software loop running on recorded video, before the robot exists
+- [ ] `python3 replay.py detections.jsonl --video desk.mp4` — the whole
+      software loop on recorded video, before the robot exists. Keep
+      `annotated.mp4`: it's the best thing to show between demos
 - [ ] Feed the measured frame rate back into `CLEAR_GRACE`
 
 **Demoable:** your own desk footage, labelled, with the robot's mood
