@@ -155,3 +155,37 @@ Your printer is broken — diagnose it in the first 48 hours:
   for 11 parts is cheap against losing three weeks. Print a 20mm calibration
   cube first — if it's not within ~0.3mm, the printer isn't ready for parts
   that have to hold servo splines.
+
+### If you end up buying one
+
+Checked **2026-08-18**. What this project actually needs is narrow, so most
+of the spec sheet is irrelevant:
+
+| The robot needs | The robot does **not** need |
+|---|---|
+| Dimensional accuracy — servo splines, M2 screw bosses | A big bed. The largest Sesame part is small |
+| Reliability — the printer is not the project | An enclosure. This is a **PLA** build |
+| Fast iteration — you'll reprint the shell several times in Week 4 | A hardened nozzle. No carbon fill, no abrasives |
+| Auto bed levelling — the thing your Kobra just broke on | Multi-colour. Nice for a two-tone spider, not needed |
+
+| | € | Why |
+|---|---|---|
+| **Fix the Kobra 2 Pro** | 0–30 | Steps 1–4 above are free. A replacement strain-gauge module is the whole cost. **Try this first** — it's the same money as a spool of filament |
+| **Budget buy: Bambu Lab A1 mini** | **189** | 180×180×180. Auto levelling, auto flow calibration, accurate out of the box with zero tuning. ⚠️ Load Sesame's largest STL into a slicer *before* ordering — 180mm is probably enough, upstream doesn't publish dimensions |
+| **Best buy: Bambu Lab A1** | **259** | Same machine, 256×256×256, so no fitment question and you can print the whole leg set in one go. The €70 buys certainty and fewer print sessions |
+| Bambu Lab P1S | 389 | CoreXY and enclosed. The enclosure only matters for ABS/ASA, which this build never uses. Buy it for the *next* project, not this one |
+| Prusa CORE One | 1349 | Excellent, and absurd here. It is 5× the A1 for parts that fit in your hand |
+
+**Recommendation: fix the Kobra first, and if it's dead, the A1 at €259.**
+Not the P1S — you'd be paying €130 for an enclosure this project has no use
+for.
+
+### Settings for Sesame's parts
+
+Upstream specifies **PLA / PLA+, 8–10% infill, 2 wall loops, honeycomb**, and
+only the top cover needs supports. Follow that for the 11 upstream parts.
+
+⚠️ For **our** parts in `cad/stl/` — payload deck, nozzle mount, reservoir
+cradle — go to **4 walls and 25% infill**. Those carry the pump, the water and
+the aiming load; upstream's numbers are tuned for a shell that carries only
+itself.
