@@ -288,8 +288,8 @@ to spend on.
 
 | Long-term candidate | € | Volume | Chamber | Nozzle | The real trade |
 |---|---|---|---|---|---|
-| **Elegoo Centauri Carbon** | 299 | 256³ | passive | 350°C hardened **standard** | Cheapest sensible enclosed CoreXY. Unproven parts supply in 5 years |
-| **Elegoo Centauri Carbon 2** | 329 | 256³ | passive | 350°C hardened | Adds a touchscreen and a **cloud-free** workflow |
+| **Elegoo Centauri Carbon** | 299 | 256³ | passive | **320°C** hardened | Cheapest sensible enclosed CoreXY. Unproven parts supply in 5 years |
+| **Elegoo Centauri Carbon 2** | 329 | 256³ | passive | **350°C** hardened | Quieter, hotter, better vented — and only €30 more. See below |
 | **Bambu P1S** | 379 | 256³ | passive | hardened optional | Best-in-class reliability. You are renting the ecosystem |
 | **Prusa MK4S** (kit) | 839 | 250×210×220 | none | 290°C | Open and repairable, but **open frame** — skip for this purpose |
 | **Prusa CORE One** | 1099–1349 | 250×220×270 | **active, 55°C** | 300°C, 400°C HT option | Buy-once. Actively heated chamber unlocks PC/PPA. 3× the Elegoo |
@@ -330,6 +330,75 @@ to spend on.
   everything, and are content that the machine is partly Bambu's. That is a
   defensible trade — just not the one someone asking about *long term* is
   usually making.
+
+#### Centauri Carbon vs Carbon 2 — the gap is €30, not €150
+
+Checked **2026-08-18**. If the two look far apart, you are probably reading
+**US** pricing ($300 vs $450) or comparing against the **Combo**. In Germany:
+
+| | 3DJake DE | Elegoo EU | Stock |
+|---|---|---|---|
+| Centauri Carbon | €299 | €309 | out of stock at 3DJake, in stock at Elegoo |
+| Centauri Carbon 2 | €329 | — | **pre-order** |
+| Centauri Carbon 2 **Combo** (multicolour) | €379 | — | in stock |
+
+What the €30 buys:
+
+| | Carbon | Carbon 2 |
+|---|---|---|
+| Build volume | 256³ | 256³ — **same** |
+| Speed / acceleration | 500 mm/s · 20,000 mm/s² | **same** |
+| Max nozzle temp | 320°C | **350°C** |
+| Noise (vendor claim) | ~55 dB | **45 dB** |
+| Chamber | enclosed | + auto-opening vents, better filtration |
+| Screen | 4.3" | 5" |
+| Auto-levelling | baseline | ~14% faster |
+| Multicolour | CANVAS (now available for it too) | CANVAS |
+
+**Take the Carbon 2.** Not for the temperature — 320°C already covers ABS,
+ASA, PETG and PC, and 350°C only matters for PPS-CF and PPA, which you will
+probably never buy. Take it for the **10 dB**. That is roughly *half the
+perceived loudness*, on a machine that will run for hours in the room you
+sleep in. €30 is nothing against that. (Vendor dB claims are still marketing
+— treat it as an ordering, not an absolute.)
+
+**Skip the Combo.** €50 more for multicolour sounds cheap, and budget
+multicolour units are the least reliable part of every printer in this class
+— Anycubic's equivalent was described in a four-month test as jamming,
+clogging and tangling. It also purges a lot of filament. Add it later if you
+ever actually want two-tone parts.
+
+#### Warranty — the manufacturer's terms are not the ones that protect you
+
+**Elegoo EU: 24 months** on the printer itself, for the whole Centauri
+series — so Carbon and Carbon 2 are the same here. Calculated from the date
+you received the order.
+
+⚠️ **But the wear parts have *no warranty at all.*** Elegoo lists these as
+consumables and excludes them outright:
+
+> PEI platform plate · build plate · nozzle (kit) · PTFE tube · heater ·
+> thermistor · **hot end** · tools
+
+The hotend is on that list, and the hotend is the part that actually fails.
+Budget accordingly — a spare hotend is a consumable, not a warranty claim.
+
+**The protection that matters is statutory, and it comes from the seller, not
+Elegoo.** Under EU Directive 2019/771 — in Germany §438 BGB — anything bought
+from an **EU seller** carries a **2-year legal conformity guarantee**, and for
+the first 12 months the burden of proof sits with the *seller*: they must show
+the fault was not there at delivery, not the other way round.
+
+That gives one concrete rule:
+
+> **Buy from an EU seller** — 3DJake, Elegoo's EU store, a German retailer.
+> Not from AliExpress or a Chinese direct listing, however cheap.
+
+Cross-border direct orders leave you relying on the manufacturer's goodwill,
+international shipping for RMAs, and possibly customs charges on the
+replacement. On a €300 machine that difference is worth far more than any
+€20 price gap between shops. This is also the exact difference between your
+Kobra situation being "annoying" and being "unrecoverable".
 
 ⚠️ **None of this should touch the 14-week schedule.** Fix the Kobra, build
 the robot on it, and buy the long-term machine when you actually need ABS.
