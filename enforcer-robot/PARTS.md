@@ -368,6 +368,50 @@ multicolour units are the least reliable part of every printer in this class
 clogging and tangling. It also purges a lot of filament. Add it later if you
 ever actually want two-tone parts.
 
+#### What owners and reviewers actually report (Carbon 2)
+
+Gathered **2026-08-18** from written reviews, forum threads and owner reports.
+The pattern is consistent enough to summarise in one line:
+
+> **The hardware is genuinely good. The software is the weak part.**
+
+**Holds up:**
+
+- Print quality is repeatedly described as comparable to a P1S or X1C. One
+  owner reports theirs prints "just as good as a friend's X1C with fewer
+  fails"; another measured it printing *faster* than their P1S side by side.
+- **The noise claim is honest** — independently measured at **44–47 dB**,
+  peaking 54 dB, against a 45 dB vendor claim. Almost nobody in this market
+  quotes a number that survives measurement. (It does emit a mild constant
+  beep when idle.)
+- PLA and PETG are clean and consistent out of the box. TPU works with minor
+  profile tuning.
+
+**Recurring complaints:**
+
+| Problem | How much it matters here |
+|---|---|
+| **Elegoo Slicer connectivity** — refuses to connect on Windows, WiFi drops needing a router power-cycle, firmware updates breaking things | The most common complaint by far. **Mitigation: use OrcaSlicer**, which supports it. You do not have to run Elegoo's slicer |
+| **Default Z-offset too low** → wavy first layers, needs ~+0.025mm | One-time fix, but you *will* hit it. Budget an evening |
+| **ASA warps** even with the chamber hold | ⚠️ See below — this qualifies the "engineering materials" case |
+| Inaccurate print-time estimates (~17% out on multicolour) | Cosmetic |
+| False spaghetti/clog detection | Annoying, not fatal |
+| Clogging — one owner took 3 months to resolve; another needs to clear clogs more often than on their P1S, saying the CC has "less room for error" | The real reliability gap vs Bambu |
+| Shipping damage (broken glass doors) and slow RMA | Argues again for an **EU seller** |
+| Finicky spool holders, cold plate wants more grip | Minor |
+
+⚠️ **The ASA finding qualifies the case for buying it.** A *passive* enclosure
+traps heat but does not control it, so it handles ABS reasonably and ASA
+poorly. If ASA and PC are genuinely the goal, that is what an **actively
+heated chamber** — the CORE One's 55°C — is actually for. The Centauri is
+still a large step up from any open-frame printer; it is not equivalent to
+active chamber control, and its own reviewers found the limit.
+
+**Net:** at €329 this is a lot of printer, and the failure mode is *fiddling*,
+not *bricking*. If you enjoy tuning a machine, it is excellent value. If you
+want to never think about the printer, that is what the extra €50 for a P1S
+buys — and the owner reports above say so in almost those words.
+
 #### Warranty — the manufacturer's terms are not the ones that protect you
 
 **Elegoo EU: 24 months** on the printer itself, for the whole Centauri
