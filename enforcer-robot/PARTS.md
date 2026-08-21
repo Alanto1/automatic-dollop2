@@ -412,6 +412,63 @@ not *bricking*. If you enjoy tuning a machine, it is excellent value. If you
 want to never think about the printer, that is what the extra €50 for a P1S
 buys — and the owner reports above say so in almost those words.
 
+#### Final call: Carbon vs Carbon 2 vs P1S
+
+Scored against one specific set of priorities — **(1) not having to worry
+about it, (2) speed, (3) noise, (4) quality** — checked 2026-08-18.
+
+| | Carbon €299 | Carbon 2 €329 | **P1S €379** |
+|---|---|---|---|
+| **1. Don't-worry factor** | fair | fair | **best, clearly** |
+| **2. Speed** | 500mm/s · 20k accel | identical | identical |
+| **3. Noise** | ~55 dB (vendor claim, unverified) | **44–47 dB measured**, 54 peak | ~45 dB typical, aux fan spikes it |
+| **4. Quality** | tie | tie | tie |
+| Stock at 3DJake | ❌ out of stock | ⏳ **pre-order** | ✅ in stock |
+
+**Three of the four criteria do not separate these machines.**
+
+- **Speed is a genuine tie.** All three run 500 mm/s and 20,000 mm/s², and
+  parts this size are acceleration- and cooling-bound anyway. One owner
+  measured their Centauri printing *faster* than their P1S. Call it even.
+- **Quality is a tie.** Owners put the Centauri level with an X1C.
+- **Noise is closer than it looks.** The Carbon 2's 44–47 dB is *measured*,
+  which is worth something; the P1S sits around 45 dB typical but its aux and
+  chamber fans push it up, and owners report turning the aux fan down because
+  it is "way too loud". One reviewer's summary — *"fine in a workshop; in a
+  home office or bedroom it is a real consideration"* — applies to both. The
+  Carbon 2 also beeps continuously when idle. Effectively a wash.
+
+**So criterion 1 decides it, and criterion 1 is the one with a real gap.**
+
+The owner reports are unusually direct about this. Centauri owners comparing
+the two say the machine has *"less room for error than the P1S"* and that
+they *"adjust and fix clogs more often"*. One took three months to resolve a
+clogging problem. Add the Elegoo Slicer connectivity failures, the low
+default Z-offset, firmware updates breaking things, and reports of slow RMAs.
+
+None of that is fatal — the failure mode is **fiddling, not bricking** — but
+"fiddling" is exactly the thing being ranked first.
+
+> **Buy the P1S, €379.** You are paying €50 over the Carbon 2 for the
+> criterion you said matters most, and the other three are ties.
+
+Two supporting reasons, both practical rather than technical:
+
+- **It is the only one in stock.** The Carbon is out of stock and the Carbon 2
+  is pre-order. You have a robot to build and a printer that is already
+  broken.
+- **You have already lost time to a printer this month.** That is the whole
+  argument in one line.
+
+⚠️ **The P1S costs you something real, and it is not money.** Everything in
+"Brutal on Bambu" above still applies: the 2025 authorization firmware,
+cloud-first defaults, third-party firmware voiding the warranty. You are
+buying the least-hassle machine by accepting that you do not fully own it.
+If that trade bothers you more than an evening of tuning does, buy the
+**Carbon 2 at €329**, run **OrcaSlicer** from day one, and expect to fix the
+Z-offset yourself. That is a legitimate choice — just not the one that
+follows from ranking "don't want to worry" first.
+
 #### Warranty — the manufacturer's terms are not the ones that protect you
 
 **Elegoo EU: 24 months** on the printer itself, for the whole Centauri
