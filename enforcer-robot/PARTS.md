@@ -266,6 +266,78 @@ large.
    ecosystem, and accept the QC lottery. That is a values choice, and a
    legitimate one — just make it knowingly.
 
+#### If it's a long-term machine, not a project machine
+
+Different question, different answer — and it **eliminates the A1 above.**
+
+For one robot, the criterion is reliability. For a decade of engineering
+projects, the criteria become **materials** and **repairability**, and those
+two rule out every open-frame printer on this page.
+
+**Why the enclosure stops being optional.** PLA is a prototyping plastic: it
+creeps under load, softens around 60°C, and goes brittle in UV. Real
+functional parts want ABS, ASA, PC or a glass/carbon-filled nylon — and all
+of those warp or delaminate without a still, warm chamber. That is a whole
+*class* of materials, not a refinement. It is the single biggest capability
+step you can buy, and it is worth more than any brand argument here.
+
+So: **A1, A1 mini, A2L and Kobra 3 are project printers, not career
+printers.** Open frame, and no amount of money spent on build volume fixes
+that. The A2L in particular is 330mm of bed and no enclosure — the wrong axis
+to spend on.
+
+| Long-term candidate | € | Volume | Chamber | Nozzle | The real trade |
+|---|---|---|---|---|---|
+| **Elegoo Centauri Carbon** | 299 | 256³ | passive | 350°C hardened **standard** | Cheapest sensible enclosed CoreXY. Unproven parts supply in 5 years |
+| **Elegoo Centauri Carbon 2** | 329 | 256³ | passive | 350°C hardened | Adds a touchscreen and a **cloud-free** workflow |
+| **Bambu P1S** | 379 | 256³ | passive | hardened optional | Best-in-class reliability. You are renting the ecosystem |
+| **Prusa MK4S** (kit) | 839 | 250×210×220 | none | 290°C | Open and repairable, but **open frame** — skip for this purpose |
+| **Prusa CORE One** | 1099–1349 | 250×220×270 | **active, 55°C** | 300°C, 400°C HT option | Buy-once. Actively heated chamber unlocks PC/PPA. 3× the Elegoo |
+
+#### The five-year questions nobody asks at purchase
+
+1. **Can you still buy a hotend for it in 2031?** Prusa: yes, demonstrably —
+   they still stock MK3 parts a decade on, from Prague, which is next-day to
+   Berlin. Bambu: probably, on their terms. Elegoo/Anycubic: genuinely
+   unknown; budget brands discontinue models and the spares evaporate.
+2. **Do you control the firmware?** Prusa is open source. Elegoo's Carbon 2
+   runs cloud-free. Bambu spent 2025 gating third-party slicers and
+   accessories, and third-party firmware voids the warranty. Over 14 weeks
+   that is irrelevant. Over ten years it is the whole question.
+3. **Which slicer?** PrusaSlicer and OrcaSlicer are open and will outlive any
+   of these vendors. Being locked to one company's slicer is a slow-acting
+   risk.
+4. **Resale.** Prusa holds value unusually well; Bambu holds reasonably;
+   budget brands collapse. A CORE One sold in three years costs less to own
+   than a €400 printer sold in three years.
+5. **Can you fix it yourself?** A Prusa **kit** is not a worse product — for
+   someone doing engineering long-term, building it teaches you the machine,
+   and you can then repair anything on it. That is a real argument, not a
+   consolation prize.
+
+#### What to actually do
+
+- **Value pick — Elegoo Centauri Carbon 2, €329.** Enclosed CoreXY, 256³, a
+  350°C hardened nozzle *as standard*, cloud-free. It gets you the entire
+  engineering-materials capability for less than the P1S, and less than a
+  third of the CORE One. The honest risk is spares in five years.
+- **Buy-once — Prusa CORE One, €1,099–1,349.** The only one here with an
+  **actively heated chamber**, and the only one you can be confident of
+  repairing in 2031. If you are genuinely going to be doing this for years,
+  this is the machine that is still on your bench when the others are
+  e-waste.
+- **P1S, €379** is the pick only if you weight "works with zero effort" above
+  everything, and are content that the machine is partly Bambu's. That is a
+  defensible trade — just not the one someone asking about *long term* is
+  usually making.
+
+⚠️ **None of this should touch the 14-week schedule.** Fix the Kobra, build
+the robot on it, and buy the long-term machine when you actually need ABS.
+A €1,100 purchase in Week 0 delays the build and answers a question you do
+not have yet. A fixed Kobra 2 Pro is a perfectly good PLA printer, and
+keeping it as the PLA workhorse alongside an enclosed machine later is the
+normal end state, not a compromise.
+
 ### Settings for Sesame's parts
 
 Upstream specifies **PLA / PLA+, 8–10% infill, 2 wall loops, honeycomb**, and
