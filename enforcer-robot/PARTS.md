@@ -158,27 +158,113 @@ Your printer is broken — diagnose it in the first 48 hours:
 
 ### If you end up buying one
 
-Checked **2026-08-18**. What this project actually needs is narrow, so most
-of the spec sheet is irrelevant:
+Prices checked **2026-08-18**, German retailers. What this project actually
+needs is narrow, so most of a printer spec sheet is irrelevant:
 
 | The robot needs | The robot does **not** need |
 |---|---|
 | Dimensional accuracy — servo splines, M2 screw bosses | A big bed. The largest Sesame part is small |
-| Reliability — the printer is not the project | An enclosure. This is a **PLA** build |
+| Reliability — the printer is not the project | An enclosure. This is a **PLA** build throughout |
 | Fast iteration — you'll reprint the shell several times in Week 4 | A hardened nozzle. No carbon fill, no abrasives |
 | Auto bed levelling — the thing your Kobra just broke on | Multi-colour. Nice for a two-tone spider, not needed |
+| Quiet — it runs in your room, next to you | 600 mm/s. Small parts are acceleration-bound, not speed-bound |
 
-| | € | Why |
+#### The candidates
+
+| Printer | € | Build volume | Kinematics | Its actual weakness |
+|---|---|---|---|---|
+| **Bambu A1 mini** | 189 | 180³ | bed-slinger | Bed may be too small for Sesame's largest part — **verify in a slicer first** |
+| **Bambu A1** | 259 | 256³ | bed-slinger | 2024 heatbed-cable recall (resolved on current units) |
+| **Anycubic Kobra 3** | 199 | 250×250×250 | bed-slinger | QC lottery; ACE Pro multicolour unit jams constantly |
+| **Anycubic Kobra S1 Combo** | 399 | ~220³ enclosed | CoreXY | Same ecosystem problems, 2× the price of a Kobra 3 |
+| **Bambu A2L** | 379 | 330×320×325 | bed-slinger | **Wrong tool.** A 330mm bed for 60mm parts, louder, eats your desk |
+| **Bambu P1S** | 389 | 256³ enclosed | CoreXY | The enclosure serves ABS/ASA, which this build never uses |
+| Anycubic Kobra 3 Max | ~460 | 420×420×500 | bed-slinger | Same, more so |
+
+#### Speed — mostly a marketing number
+
+Every one of these advertises 300–600 mm/s. **None of them reach it on parts
+this size.** Sesame's pieces are small and detailed, so print time is
+dominated by *acceleration* and cooling, not top speed. Expect roughly
+30–60 min per joint and 2–4 h for a cover on any machine here — the spread
+between the cheapest and the dearest is maybe 20%.
+
+What actually costs you days is **failed prints and downtime**, not mm/s.
+Which is a reliability question, not a speed question.
+
+#### Noise — trust nobody's dB figure
+
+Manufacturer numbers (Bambu "<48 dB", Anycubic "55–60 dB") are quoted at
+unstated distances in *silent mode*, which throttles speed. Useful ordering,
+not useful absolutes:
+
+- **A1 mini** is the quietest here — least mass to fling, active motor noise
+  cancellation, small fans.
+- **A1 / A2L** get louder as the bed gets bigger and heavier.
+- **P1S / Kobra S1** are *enclosed*, which muffles motor whine but adds an
+  aux part-cooling fan and an exhaust fan. Enclosed does **not** mean quiet.
+- Bed-slingers make a low-frequency thump through the desk. Put any of them
+  on a paving slab or a concrete tile, not on the desk you work at.
+
+#### Long-term cost — smaller than either brand wants you to think
+
+| | Bambu | Anycubic |
 |---|---|---|
-| **Fix the Kobra 2 Pro** | 0–30 | Steps 1–4 above are free. A replacement strain-gauge module is the whole cost. **Try this first** — it's the same money as a spool of filament |
-| **Budget buy: Bambu Lab A1 mini** | **189** | 180×180×180. Auto levelling, auto flow calibration, accurate out of the box with zero tuning. ⚠️ Load Sesame's largest STL into a slicer *before* ordering — 180mm is probably enough, upstream doesn't publish dimensions |
-| **Best buy: Bambu Lab A1** | **259** | Same machine, 256×256×256, so no fitment question and you can print the whole leg set in one go. The €70 buys certainty and fewer print sessions |
-| Bambu Lab P1S | 389 | CoreXY and enclosed. The enclosure only matters for ABS/ASA, which this build never uses. Buy it for the *next* project, not this one |
-| Prusa CORE One | 1349 | Excellent, and absurd here. It is 5× the A1 for parts that fit in your hand |
+| Filament | any 1.75mm PLA; own-brand ~€20–25/kg | any 1.75mm PLA; own-brand ~€15–20/kg |
+| Nozzle/hotend | whole assembly swap, ~€15–25 | ~€5–15 |
+| Build plate | ~€20–30 | ~€20 |
 
-**Recommendation: fix the Kobra first, and if it's dead, the A1 at €259.**
-Not the P1S — you'd be paying €130 for an enclosure this project has no use
-for.
+Over this project you will use **~1 kg of filament and zero nozzles.** The
+consumable difference across every machine in this table is **under €30 for
+the whole build.** Anyone arguing brand on running costs is arguing about
+noise-level money.
+
+The real long-term cost is *failure rate × your time*, and there the gap is
+large.
+
+#### Brutal on Bambu
+
+- **They lock the ecosystem down, and it is getting worse.** January 2025
+  firmware added mandatory "Authorization Control"; September 2025 escalated
+  it, gating third-party slicers and accessories. OrcaSlicer's developer
+  publicly refused to adopt Bambu Connect. Third-party firmware (X1Plus) was
+  blocked, then permitted only via a "one-way ticket" that **voids your
+  warranty**.
+- **Cloud-first.** LAN-only mode exists and costs you features.
+- **Proprietary consumables** at a premium, and hotends swap as whole units.
+- **AMS purge waste is real** — multi-colour can waste more filament than the
+  part weighs.
+- Buying one is buying a **product**, not a machine you own outright. For a
+  14-week project that is a fine trade. As a matter of principle it is not.
+
+#### Brutal on Anycubic
+
+- **QC is a lottery.** One reviewer tested six Kobra 3 Max units and found
+  wide unit-to-unit variance and firmware instability. A four-month Kobra 3 V2
+  test concluded single-colour prints are genuinely good and the multicolour
+  ACE Pro "is a mess" — it clogs, jams and tangles.
+- **Support is inconsistent and spare parts are slow.** You are living this
+  right now with a levelling module.
+- **Security record is poor.** In 2024 an MQTT API flaw let attackers push
+  commands to printers worldwide; researchers say three emails over two
+  months went unanswered before it was exploited publicly.
+- **In its favour:** genuinely cheapest, more open, and you already know the
+  ecosystem. A Kobra 3 at €199 will print these parts fine *if you get a
+  good unit*.
+
+#### Verdict for this project
+
+1. **Fix the Kobra 2 Pro first.** €0–30, and the diagnosis is above.
+2. **If it's dead: Bambu A1, €259.** Not for speed and not for the brand —
+   for the hours you don't spend calibrating. You have 14 weeks and the
+   printer is not the project.
+3. **A1 mini at €189** if €70 matters, *after* checking the biggest STL fits
+   in 180mm.
+4. **Not the A2L, not the P1S, not the Kobra 3 Max.** You would be paying
+   €120–200 for build volume and an enclosure this robot has no use for.
+5. **Kobra 3 at €199** only if you specifically want to stay off Bambu's
+   ecosystem, and accept the QC lottery. That is a values choice, and a
+   legitimate one — just make it knowingly.
 
 ### Settings for Sesame's parts
 
