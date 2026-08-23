@@ -53,6 +53,20 @@ HEAD_DOWN_DROP = 0.12
 # 15 seconds of sitting normally.
 CALIB_FRAMES = 30
 
+# How close to the top of the frame the person's box may come before its
+# aspect ratio stops meaning anything, as a fraction of frame height.
+#
+# This is the failure that head-down detection dies of. If the top of your
+# head is outside the frame, YOLO's box stops at the edge, so the box gets
+# shorter when you sit *up* -- exactly backwards -- and squatter whenever you
+# shift forward. Measured on real desk footage the result was 3.9% precision:
+# 278 working frames called head-down out of 310 calls.
+#
+# There is no threshold that rescues a clipped box, so clipped frames are not
+# judged at all and are kept out of the calibration baseline. The fix is
+# physical: raise the camera until the head has headroom.
+EDGE_MARGIN = 0.01
+
 
 @dataclass
 class Box:
@@ -140,18 +154,31 @@ class HeadDownCalibrator:
         self.drop = drop
         self._samples: list[float] = []
         self.baseline: float | None = None
+        # Frames where the person was present but their box ran off the top
+        # of the frame. Reported by evaluate.py: a high count is a camera
+        # mounting problem, not a threshold problem.
+        self.clipped = 0
+        self.seen = 0
 
     @property
     def calibrating(self) -> bool:
         return self.baseline is None
 
-    def feed(self, person: Box | None) -> bool:
+    def feed(self, person: Box | None, frame_h: float | None = None) -> bool:
         """Returns True if this frame reads as head-down.
 
         Always False while calibrating -- an uncalibrated guess is worse than
-        no guess, because the mood machine would start escalating on it.
+        no guess, because the mood machine would start escalating on it. Also
+        always False when the box is clipped by the top of the frame, for the
+        same reason: a measurement that cannot mean what it says is worse
+        than no measurement, and this one escalates to STRIKE.
         """
         if person is None:
+            return False
+
+        self.seen += 1
+        if frame_h is not None and person.y1 <= frame_h * EDGE_MARGIN:
+            self.clipped += 1
             return False
 
         if self.baseline is None:
@@ -169,7 +196,8 @@ class HeadDownCalibrator:
         self.baseline = value
 
 
-def build_scene(boxes: list[Box], calibrator: HeadDownCalibrator) -> Scene:
+def build_scene(boxes: list[Box], calibrator: HeadDownCalibrator,
+                frame_h: float | None = None) -> Scene:
     """One frame of detections in, one Scene out.
 
     Note what is *not* here: no timers, no hysteresis, no memory of previous
@@ -179,7 +207,7 @@ def build_scene(boxes: list[Box], calibrator: HeadDownCalibrator) -> Scene:
     """
     person = pick_person(boxes)
     phone = phone_in_hand(person, boxes)
-    head_down = calibrator.feed(person)
+    head_down = calibrator.feed(person, frame_h)
 
     return Scene(
         person_present=person is not None,

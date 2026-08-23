@@ -128,6 +128,20 @@ during the recorded-video work in Step 3 — crop your phone footage to 53.5°
 and confirm the head is still in shot, because "head down" needs the head. If
 it isn't, raise the camera mount rather than widening the lens.
 
+**✅ Measured, and it isn't.** First desk recording, cropped to 53.5°: the
+person box ran off the top of the frame in a quarter of the frames, and
+head-down scored **3.9% precision** — 278 working frames called an offence.
+A box clipped by the frame edge is shorter for reasons that have nothing to
+do with posture, so no threshold rescues it. Two consequences, both now
+settled by measurement rather than guesswork:
+
+- **The camera mount goes higher than Sesame's stock eye line.** Decide the
+  height in Week 4, before the shell restyle, and check it by re-recording
+  at the new height rather than by eye.
+- `scene.py` now refuses to judge head-down on a clipped box and keeps those
+  frames out of the posture baseline; `evaluate.py` reports the clip rate.
+  A high rate is a mounting problem and says so.
+
 **Order sequence:** SD card now (works with anything) → **Pi next**, it's the
 long pole → **camera last**, since its interface depends on which brain wins.
 

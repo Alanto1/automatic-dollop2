@@ -58,7 +58,7 @@ def main() -> int:
 
     for rec in records:
         boxes = [Box(**b) for b in rec["boxes"]]
-        scene = build_scene(boxes, cal)
+        scene = build_scene(boxes, cal, rec.get("h"))
         # The clock is VIDEO time, not wall time. A slow laptop must not be
         # able to change what the robot would have decided.
         d = machine.update(scene, rec["t"])

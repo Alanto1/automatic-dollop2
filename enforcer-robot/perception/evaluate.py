@@ -96,7 +96,7 @@ def main() -> int:
             t_last = rec["t"]
             n_rec += 1
             boxes = [Box(**b) for b in rec["boxes"]]
-            got = scene_to_class(build_scene(boxes, cal))
+            got = scene_to_class(build_scene(boxes, cal, rec.get("h")))
 
             truth = label_at(times, labels, rec["t"])
             # Frames before the first label, and frames spent calibrating,
@@ -109,7 +109,12 @@ def main() -> int:
             n += 1
 
     if not n:
-        print("Nothing scoreable. Is the calibration window longer than the video?")
+        if cal.seen and cal.clipped == cal.seen:
+            print("Nothing scoreable: the person's box was clipped by the top of")
+            print("the frame in every frame, so posture could never be calibrated.")
+            print("Raise the camera, or drop --crop, and re-run detect.py.")
+        else:
+            print("Nothing scoreable. Is the calibration window longer than the video?")
         return 1
 
     span = (t_last - t_first) if t_last is not None else 0.0
@@ -138,6 +143,16 @@ def main() -> int:
 
     acc = sum(matrix[c][c] for c in CLASSES) / n
     print("\n  overall accuracy: %.3f  over %d frames (%d skipped)" % (acc, n, skipped))
+
+    if cal.clipped:
+        pct = cal.clipped / cal.seen * 100
+        print("\n  ⚠ Person box clipped by the top of the frame in %d/%d frames (%.0f%%)."
+              % (cal.clipped, cal.seen, pct))
+        print("    head_down was not judged on those -- a clipped box is shorter")
+        print("    for reasons that have nothing to do with posture.")
+        if pct > 10:
+            print("    This is a camera-mounting problem, not a threshold problem.")
+            print("    Raise the mount, or widen the lens (drop --crop), and re-record.")
 
     # ---- the number that actually matters --------------------------------
     #

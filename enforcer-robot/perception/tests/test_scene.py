@@ -242,6 +242,50 @@ def test_Scene_RangeIsAlwaysNoneFromVideo():
     return c.passed
 
 
+def test_HeadDown_ClippedBoxIsNeverJudged():
+    c = _Ctx()
+    cal = HeadDownCalibrator(calib_frames=5)
+    upright = person(200, 100, 440, 480)
+    for _ in range(5):
+        cal.feed(upright, frame_h=1000)
+    # A box that runs off the top of the frame is squat enough to trip the
+    # threshold, but it is squat because the head is out of shot -- not
+    # because it is bowed. Measured on real footage this was 26% of frames.
+    clipped = person(200, 0, 440, 300)
+    c.check(clipped.aspect < cal.baseline * (1.0 - HEAD_DOWN_DROP),
+            "the clipped box would trip the threshold on aspect alone")
+    c.check(cal.feed(clipped, frame_h=1000) is False,
+            "but it is not judged, because a clipped box means nothing")
+    c.check(cal.clipped == 1, "and it is counted, so evaluate.py can say so")
+    return c.passed
+
+
+def test_HeadDown_ClippedFramesStayOutOfTheBaseline():
+    c = _Ctx()
+    cal = HeadDownCalibrator(calib_frames=3)
+    upright = person(200, 100, 440, 480)
+    cal.feed(person(200, 0, 440, 300), frame_h=1000)   # clipped, must not count
+    for _ in range(3):
+        cal.feed(upright, frame_h=1000)
+    c.check(cal.baseline == upright.aspect,
+            "a clipped frame does not drag the posture baseline down")
+    return c.passed
+
+
+def test_HeadDown_UnknownFrameHeightKeepsOldBehaviour():
+    c = _Ctx()
+    # frame_h is optional: callers that do not know the frame size (the unit
+    # tests, and any caller written before this guard existed) must still work.
+    cal = HeadDownCalibrator(calib_frames=3)
+    upright = person(200, 100, 440, 480)
+    for _ in range(3):
+        cal.feed(upright)
+    bowed = person(200, 100 + 380 * (HEAD_DOWN_DROP + 0.05), 440, 480)
+    c.check(cal.feed(bowed) is True, "head-down still works without a frame height")
+    c.check(cal.clipped == 0, "and nothing is counted as clipped")
+    return c.passed
+
+
 TESTS = [
     ("PickPerson_NoneWhenEmpty", test_PickPerson_NoneWhenEmpty),
     ("PickPerson_IgnoresLowConfidence", test_PickPerson_IgnoresLowConfidence),
@@ -258,6 +302,9 @@ TESTS = [
     ("HeadDown_IsScaleInvariant", test_HeadDown_IsScaleInvariant),
     ("HeadDown_NoPersonIsNeverHeadDown", test_HeadDown_NoPersonIsNeverHeadDown),
     ("HeadDown_MedianResistsOneBadFrame", test_HeadDown_MedianResistsOneBadFrame),
+    ("HeadDown_ClippedBoxIsNeverJudged", test_HeadDown_ClippedBoxIsNeverJudged),
+    ("HeadDown_ClippedFramesStayOutOfTheBaseline", test_HeadDown_ClippedFramesStayOutOfTheBaseline),
+    ("HeadDown_UnknownFrameHeightKeepsOldBehaviour", test_HeadDown_UnknownFrameHeightKeepsOldBehaviour),
     ("Scene_WorkingLooksLikeWorking", test_Scene_WorkingLooksLikeWorking),
     ("Scene_EmptyFrameIsAbsent", test_Scene_EmptyFrameIsAbsent),
     ("Scene_RangeIsAlwaysNoneFromVideo", test_Scene_RangeIsAlwaysNoneFromVideo),
