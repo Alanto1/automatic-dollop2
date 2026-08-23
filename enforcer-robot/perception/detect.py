@@ -2,6 +2,7 @@
 """Run YOLOv8n over a video file at the frame rate a Pi Zero 2 W can manage.
 
     python3 detect.py desk.mp4 --fps 2 -o detections.jsonl
+    python3 detect.py desk.mp4 --crop 0.72 -o detections.jsonl   # narrow the lens
 
 This is the dirty half of perception: it owns the model and OpenCV, and it is
 the only file you have to rewrite when you move to the Pi. It writes one JSON
@@ -33,6 +34,11 @@ def main() -> int:
                     help="frames per second to SAMPLE (default 2, what a Pi Zero gives)")
     ap.add_argument("--imgsz", type=int, default=320,
                     help="model input size (default 320, what the Pi will run)")
+    ap.add_argument("--crop", type=float, default=1.0, metavar="FRAC",
+                    help="centre-crop to this fraction of the frame, to narrow "
+                         "your phone's lens to the robot's 53.5 deg one. "
+                         "0.72 takes a typical ~70 deg phone camera to 53.5. "
+                         "Default 1.0 = no crop")
     ap.add_argument("--model", default="yolov8n.pt")
     ap.add_argument("--conf", type=float, default=0.20,
                     help="floor confidence; scene.py applies the real per-class ones")
@@ -61,6 +67,16 @@ def main() -> int:
           % (src_fps, total, total / src_fps / 60 if src_fps else 0))
     print("sampling   : every %d frames -> %.2f FPS" % (stride, src_fps / stride))
     print("model      : %s @ %dpx" % (args.model, args.imgsz))
+    if not 0.05 < args.crop <= 1.0:
+        print("--crop must be in (0.05, 1.0]", file=sys.stderr)
+        return 1
+    if args.crop < 1.0:
+        import math
+        # Report the FOV this crop implies, assuming a ~70 deg source lens, so
+        # the number in the log can be checked against RPIZ-CAM-15's 53.5.
+        fov = 2 * math.degrees(math.atan(args.crop * math.tan(math.radians(70) / 2)))
+        print("crop       : centre %.2f -> ~%.1f deg (from a ~70 deg phone lens)"
+              % (args.crop, fov))
     print()
 
     model = YOLO(args.model)
@@ -79,6 +95,12 @@ def main() -> int:
             if idx % stride:
                 idx += 1
                 continue
+
+            if args.crop < 1.0:
+                h, w = frame.shape[:2]
+                ch, cw = int(h * args.crop), int(w * args.crop)
+                y0, x0 = (h - ch) // 2, (w - cw) // 2
+                frame = frame[y0:y0 + ch, x0:x0 + cw]
 
             t0 = time.time()
             res = model.predict(frame, imgsz=args.imgsz, conf=args.conf, verbose=False)[0]

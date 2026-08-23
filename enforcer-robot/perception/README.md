@@ -53,11 +53,31 @@ Your phone is much wider. If your head falls outside a 53.5° crop at your
 real desk distance, the camera mount has to go higher — and you need to know
 that before Week 4 restyles the shell.
 
+`detect.py --crop` does this for you — no ffmpeg, no re-encode, no second
+copy of the file. See Step 2.
+
 ## Step 2 — run the detector (10 min)
 
 ```bash
-python3 detect.py desk.mp4 --fps 2 -o detections.jsonl
+python3 detect.py desk.mp4 --fps 2 --crop 0.72 -o detections.jsonl
 ```
+
+`--crop 0.72` centre-crops each frame before inference, which takes a typical
+~70° phone camera down to the 53.5° the robot will have:
+
+```
+crop = tan(53.5/2) / tan(70/2) = 0.504 / 0.700 = 0.72
+```
+
+Substitute your phone's real horizontal FOV if you know it. The script prints
+the resulting angle so you can check it against 53.5. The crop is centred, so
+the boxes it writes are already in cropped coordinates and `scene.py` needs no
+adjustment — and `replay.py` reads the frame size back out of the detections
+and crops the video to match, so the overlay lines up either way.
+
+Run it uncropped the first time if you like. Numbers measured through a wider
+lens are still real numbers, and you can re-run with `--crop` in a minute to
+see what the narrower lens costs you.
 
 The first run downloads `yolov8n.pt` (~6 MB). `--fps 2` samples every 15th
 frame of 30 FPS footage — **that is deliberate**. A Pi Zero 2 W gives 1–2 FPS,

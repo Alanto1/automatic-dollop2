@@ -96,8 +96,22 @@ def main() -> int:
         print("Could not open %s" % args.video, file=sys.stderr)
         return 1
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    W = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    H = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    srcW = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    srcH = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    # detect.py --crop means the boxes are in cropped coordinates. Each record
+    # carries the frame size they were measured against, so match it here or
+    # every rectangle lands in the wrong place.
+    W, H = records[0].get("w", srcW), records[0].get("h", srcH)
+    if (W, H) != (srcW, srcH):
+        if W > srcW or H > srcH:
+            print("detections are %dx%d but %s is %dx%d -- wrong video?"
+                  % (W, H, args.video, srcW, srcH), file=sys.stderr)
+            return 1
+        print("cropping %dx%d -> %dx%d to match the detections"
+              % (srcW, srcH, W, H))
+    x0, y0 = (srcW - W) // 2, (srcH - H) // 2
+
     writer = cv2.VideoWriter(args.out, cv2.VideoWriter_fourcc(*"mp4v"), fps, (W, H))
 
     boxes_by_frame = {r["frame"]: r["boxes"] for r in records}
@@ -109,6 +123,8 @@ def main() -> int:
         ok, frame = cap.read()
         if not ok:
             break
+        if (W, H) != (srcW, srcH):
+            frame = frame[y0:y0 + H, x0:x0 + W]
         if idx in decisions:                 # hold the last decision between
             held = decisions[idx]            # sampled frames, exactly as the
             held_boxes = boxes_by_frame[idx] # robot does between inferences
