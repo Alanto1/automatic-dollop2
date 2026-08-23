@@ -46,11 +46,21 @@ static const int SERVO_PINS[8] = {1, 2, 3, 4, 5, 6, 7, 8};
 static const int I2C_SDA = 33;
 static const int I2C_SCL = 35;
 
-// Servo timing. 50Hz, 16-bit resolution.
+// Servo timing.
+//
+// 14 bits, NOT 16. The original ESP32's LEDC timers go to 20-bit resolution,
+// but the ESP32-S2/S3/C3 cap at 14 (SOC_LEDC_TIMER_BIT_WIDTH). Asking for 16
+// makes every single ledcAttach() fail, which looks exactly like a dead board
+// and is not one.
+//
+// This costs nothing in practice. At 50Hz, 14 bits = 20ms/16384 = 1.22us per
+// step, about 0.22 degrees on a 180-degree servo -- finer than an MG90S's own
+// deadband, so the servo is the limit, not the timer.
 static const int SERVO_HZ = 50;
-static const int SERVO_BITS = 16;
+static const int SERVO_BITS = 14;
 
 static int failures = 0;
+static uint32_t heapAtBoot = 0;
 
 static void report(const char* name, bool ok, const char* detail = "") {
   Serial.printf("[%s] %-28s %s\n", ok ? "PASS" : "FAIL", name, detail);
@@ -232,9 +242,17 @@ void testWifi() {
 
 void testHeap() {
   Serial.println("\n--- 9. Memory ---");
-  Serial.printf("     free heap  : %lu bytes\n", (unsigned long)ESP.getFreeHeap());
-  Serial.printf("     min free   : %lu bytes\n", (unsigned long)ESP.getMinFreeHeap());
-  report("heap > 100KB free", ESP.getFreeHeap() > 100000);
+  // Judge the heap BEFORE WiFi came up. The stack permanently takes 50-60KB
+  // once it initialises, so measuring after the scan in test 8 and comparing
+  // against a fresh-boot threshold fails healthy boards for no reason.
+  Serial.printf("     at boot      : %lu bytes\n", (unsigned long)heapAtBoot);
+  Serial.printf("     now, WiFi up : %lu bytes\n", (unsigned long)ESP.getFreeHeap());
+  Serial.printf("     min seen     : %lu bytes\n", (unsigned long)ESP.getMinFreeHeap());
+  Serial.printf("     psram free   : %lu bytes\n", (unsigned long)ESP.getFreePsram());
+  report("heap at boot > 150KB", heapAtBoot > 150000);
+  // With WiFi running, anything above ~40KB is comfortable for this firmware,
+  // and 2MB of PSRAM sits behind it for anything large.
+  report("heap with WiFi up > 40KB", ESP.getFreeHeap() > 40000);
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +264,8 @@ void setup() {
   unsigned long t0 = millis();
   while (!Serial && millis() - t0 < 3000) delay(10);
   delay(300);
+
+  heapAtBoot = ESP.getFreeHeap();
 
   Serial.println("\n\n===============================================");
   Serial.println("  ESP32-S2 Mini acceptance test");
