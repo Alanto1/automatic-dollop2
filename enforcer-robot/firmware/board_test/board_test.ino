@@ -64,8 +64,13 @@ void testChipIdentity() {
 
   esp_chip_info_t info;
   esp_chip_info(&info);
-  Serial.printf("     model      : %d (9 = ESP32-S2)\n", info.model);
-  Serial.printf("     revision   : %d\n", info.revision);
+  // CHIP_ESP32S2 == 2 in esp_chip_model_t. (9 is the ESP32-S3 -- easy to
+  // misread, so print the expected value rather than a bare number.)
+  Serial.printf("     model      : %d (%d = ESP32-S2)\n",
+                info.model, CHIP_ESP32S2);
+  // Newer IDF packs the revision as major*100 + minor.
+  Serial.printf("     revision   : v%d.%d\n",
+                info.revision / 100, info.revision % 100);
   Serial.printf("     cores      : %d  (the S2 is single-core, 1 is correct)\n",
                 info.cores);
   Serial.printf("     cpu freq   : %lu MHz\n", (unsigned long)getCpuFrequencyMhz());
