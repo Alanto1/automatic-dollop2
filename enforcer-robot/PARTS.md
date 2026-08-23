@@ -108,6 +108,49 @@ project.
 | Temperature-controlled soldering iron | ~38 | ~40 servo/harness joints |
 | Solder, flux, desoldering braid | ~15 | |
 | Hot glue gun | ~12 | Strain relief — moving legs eat wires |
+| **Small desk or USB fan** | ~10 | ⚠️ Not optional either — see below |
+
+### Soldering in a bedroom
+
+Yes, you can. The open window is not the part that makes it safe, though.
+
+**What you're actually breathing is flux, not lead.** Lead boils at 1749°C
+and your iron runs at ~350°C, so essentially no lead becomes airborne. The
+white smoke is decomposing **rosin/colophony flux**, and colophony is a
+recognised cause of occupational asthma. Sensitisation is cumulative and
+permanent — you don't get to un-sensitise later.
+
+**An open window alone does not help much**, because you lean over the joint
+and the plume rises straight through your breathing zone before the room air
+ever moves it. The window is the exhaust path, not the ventilation.
+
+The fix costs about €10:
+
+- **Put a small fan beside the work, blowing sideways across the joint**
+  toward the open window. Across, not at you — a fan pointed at the board
+  blows the plume into your face.
+- **Keep your head out of the plume.** 30cm back and off to one side. If you
+  need to be closer, use a magnifier, not your nose.
+- Fume extractors with activated-carbon pads (~€25) work, but a fan plus an
+  open window moves far more air for less money.
+
+**Lead is a hands problem, not a lungs problem.** It transfers from solder to
+fingers to your phone, food and face. So: **wash your hands with soap
+afterwards**, and don't eat or drink at the bench. That is the entire lead
+precaution and it matters more than any mask.
+
+Note that **lead-free solder is not automatically safer here** — it needs a
+higher tip temperature, which produces *more* flux fume. Leaded 60/40 at a
+lower temperature with good extraction is a defensible choice for hobby work.
+
+The rest is ordinary bench sense: the iron is 350°C and goes in its stand
+*every* time, nothing flammable on the desk, don't solder on a bed or carpet,
+and keep the isopropyl alcohol you clean flux with well away from the tip.
+
+In a Berlin winter you will not want the window open. That is exactly when
+the fan matters most — crack the window, run the fan, and work in short
+sessions.
+
 
 ### What to skip
 
