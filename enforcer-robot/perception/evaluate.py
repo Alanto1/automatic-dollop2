@@ -29,8 +29,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from scene import Box, HeadDownCalibrator, build_scene  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "brain"))
+
+from mood import CLEAR_GRACE, DWELL, Offence, can_ever_fire  # noqa: E402
+
 # Ground-truth label -> what the Scene should look like.
 CLASSES = ["working", "phone", "head_down", "gone"]
+
+# The offences that can actually reach STRIKE, straight from the mood machine
+# rather than restated here, so the two can never drift apart.
+FIREABLE = [c for c in CLASSES
+            if any(o.value == c and can_ever_fire(o) for o in Offence)]
 
 
 def scene_to_class(s) -> str:
@@ -76,10 +85,16 @@ def main() -> int:
     matrix = {t: {p: 0 for p in CLASSES} for t in CLASSES}
     skipped = 0
     n = 0
+    t_first = t_last = None
+    n_rec = 0
 
     with open(args.detections) as fh:
         for line in fh:
             rec = json.loads(line)
+            if t_first is None:
+                t_first = rec["t"]
+            t_last = rec["t"]
+            n_rec += 1
             boxes = [Box(**b) for b in rec["boxes"]]
             got = scene_to_class(build_scene(boxes, cal))
 
@@ -96,6 +111,11 @@ def main() -> int:
     if not n:
         print("Nothing scoreable. Is the calibration window longer than the video?")
         return 1
+
+    span = (t_last - t_first) if t_last is not None else 0.0
+    sample_fps = (n_rec - 1) / span if span > 0 else 0.0
+    DWELL_FRAMES = {o.value: max(1, round(DWELL[o] * sample_fps))
+                    for o in Offence if o in DWELL and sample_fps}
 
     w = max(len(c) for c in CLASSES) + 2
     print("\nConfusion matrix   (rows = what you were doing, cols = what it said)\n")
@@ -120,23 +140,33 @@ def main() -> int:
     print("\n  overall accuracy: %.3f  over %d frames (%d skipped)" % (acc, n, skipped))
 
     # ---- the number that actually matters --------------------------------
+    #
+    # Every offence mood.can_ever_fire() accepts counts here, not just phone.
+    # head_down escalates to STRIKE exactly like phone does, so calling a
+    # working frame head_down is a squirt you did not deserve in precisely
+    # the same way -- and there are usually far more of them, because leaning
+    # toward a screen and bowing your head look alike to a bounding box.
     working = sum(matrix["working"].values())
-    false_phone = matrix["working"]["phone"]
+    per_offence = {c: matrix["working"][c] for c in FIREABLE}
+    false_fire = sum(per_offence.values())
     print("\n" + "=" * 62)
     if working:
-        rate = false_phone / working
+        rate = false_fire / working
         print("  FALSE POSITIVES while working: %d / %d frames = %.1f%%"
-              % (false_phone, working, rate * 100))
+              % (false_fire, working, rate * 100))
+        print("    " + "  ".join("%s %d (%.1f%%)" % (c, v, v / working * 100)
+                                 for c, v in per_offence.items()))
         print()
         if rate == 0:
-            print("  Zero. Now check the recall on 'phone' above -- a detector")
-            print("  that never fires also scores zero here.")
+            print("  Zero. Now check the recall on the fireable classes above --")
+            print("  a detector that never fires also scores zero here.")
         elif rate < 0.02:
             print("  Under 2%%. With PHONE_DWELL=3.0s at this frame rate, isolated")
             print("  bad frames will not survive the mood machine's dwell timer.")
         elif rate < 0.10:
-            print("  Borderline. Raise CONF_PHONE in scene.py, or PHONE_DWELL in")
-            print("  brain/mood.py, and re-run. Re-running costs one second.")
+            print("  Borderline. Tighten whichever class dominates the line above:")
+            print("  CONF_PHONE / PHONE_NEAR_PAD, or HEAD_DOWN_DROP, in scene.py.")
+            print("  Re-running this costs one second -- no model, no video.")
         else:
             print("  TOO HIGH. This robot would squirt you while you work.")
             print("  Fix this before building anything else -- it is the")
@@ -145,12 +175,26 @@ def main() -> int:
         print("  No 'working' frames labelled, so no false-positive rate.")
     print("=" * 62)
 
-    missed = matrix["phone"]["working"]
-    phone_total = sum(matrix["phone"].values())
-    if phone_total:
-        print("\n  Missed phones: %d / %d = %.1f%% (these cost you nothing but a"
-              % (missed, phone_total, missed / phone_total * 100))
-        print("  slower reaction -- the dwell timer needs only 4-5 good frames)")
+    # ---- recall, against what the dwell timer actually needs --------------
+    for c in FIREABLE:
+        support = sum(matrix[c].values())
+        if not support:
+            continue
+        hit = matrix[c][c]
+        rec = hit / support
+        need = DWELL_FRAMES.get(c)
+        print("\n  Missed %s: %d / %d = %.1f%%"
+              % (c, support - hit, support, (1 - rec) * 100))
+        if need and rec >= 0.5:
+            print("  Per-frame recall %.0f%% still reaches STRIKE: the dwell needs" % (rec * 100))
+            print("  ~%d frames and CLEAR_GRACE=%.1fs bridges the gaps." % (need, CLEAR_GRACE))
+        elif need:
+            print("  ⚠ Per-frame recall is only %.0f%%. The dwell needs ~%d frames"
+                  % (rec * 100, need))
+            print("  held together across gaps of under CLEAR_GRACE=%.1fs, and at" % CLEAR_GRACE)
+            print("  this hit rate the offence keeps clearing before it gets there.")
+            print("  This is not 'a slower reaction' -- it may never fire at all.")
+            print("  Confirm with replay.py: SHOTS FIRED is the honest answer.")
     return 0
 
 
