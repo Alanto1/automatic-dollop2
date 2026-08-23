@@ -151,6 +151,50 @@ In a Berlin winter you will not want the window open. That is exactly when
 the fan matters most — crack the window, run the fan, and work in short
 sessions.
 
+### Flux residue: clean it or leave it?
+
+Small correction to the question first — flux doesn't need *drying*. Rosin
+isn't wet; it cools from liquid to a hard, tacky solid the moment the iron
+leaves. The real question is **remove or leave**, and the answer depends
+entirely on which flux you used.
+
+| Flux type | Where you meet it | Must you clean? |
+|---|---|---|
+| **Rosin core** (R / RMA) | Inside standard 60/40 solder wire | **No.** Residue is non-conductive and non-corrosive once cool. Electrically inert |
+| **Rosin, activated** (RA) | Some flux pastes | Preferably yes — activators can be mildly corrosive |
+| **No-clean** | Most modern flux pens and pastes | No — designed to stay. ⚠️ But clean it *fully or not at all*; a half-hearted wipe smears activators around and is worse than leaving it |
+| **Water-soluble / organic acid** (OA) | Some paste fluxes | **Always, within hours.** Actively corrosive and hygroscopic — it will eat traces over months |
+| **Acid / plumbing flux** | Hardware shops | Never use this on electronics at all |
+
+⚠️ **Check the label on the KELLYSHUN flux before first use.** If it says
+water-soluble or organic acid, cleaning becomes mandatory rather than
+optional. If it says no-clean or rosin, it isn't.
+
+**On this robot, clean it anyway.** Not for the electrical reason — for the
+project-specific one: **this machine carries water and sprays it.** Flux
+residue is tacky, so it collects dust, and dust plus a stray droplet is a
+leakage path across a board that would otherwise be fine. A robot with a pump
+on it is the wrong place to leave sticky residue.
+
+There is a second reason worth naming: judges look at the build. A clean board
+photographs well and signals care, and that costs you twenty minutes.
+
+**How:**
+
+1. **99% isopropyl alcohol** — not 70%. The water in 70% leaves its own
+   residue and dries far more slowly. ~€6 for 500ml.
+2. Scrub with a stiff brush — an old toothbrush is fine.
+3. Blot with kitchen roll, or flood and let it run off.
+4. **Let it evaporate completely before powering up.** 10–15 minutes in air.
+   IPA carrying dissolved flux is not something you want across a live rail.
+
+⚠️ **IPA is flammable** — iron in its stand and cooling before the bottle
+comes out, and keep the fan from the section above running.
+
+⚠️ **Don't flood modules.** IPA wicks under components and can get inside
+switches, connectors and the OLED, and it lifts some screen printing. Brush
+the joints on the perfboard; don't dunk the SSD1306 or the ESP32 module.
+
 
 ### What to skip
 
