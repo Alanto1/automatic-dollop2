@@ -27,7 +27,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from scene import Box, HeadDownCalibrator, build_scene  # noqa: E402
+from scene import EDGE_MARGIN, Box, HeadDownCalibrator, build_scene, pick_person  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "brain"))
 
@@ -87,6 +87,7 @@ def main() -> int:
     n = 0
     t_first = t_last = None
     n_rec = 0
+    top_edges = []          # person box top, as a fraction of frame height
 
     with open(args.detections) as fh:
         for line in fh:
@@ -96,7 +97,11 @@ def main() -> int:
             t_last = rec["t"]
             n_rec += 1
             boxes = [Box(**b) for b in rec["boxes"]]
-            got = scene_to_class(build_scene(boxes, cal, rec.get("h")))
+            fh_px = rec.get("h")
+            person = pick_person(boxes)
+            if person is not None and fh_px:
+                top_edges.append(person.y1 / fh_px)
+            got = scene_to_class(build_scene(boxes, cal, fh_px))
 
             truth = label_at(times, labels, rec["t"])
             # Frames before the first label, and frames spent calibrating,
@@ -143,6 +148,19 @@ def main() -> int:
 
     acc = sum(matrix[c][c] for c in CLASSES) / n
     print("\n  overall accuracy: %.3f  over %d frames (%d skipped)" % (acc, n, skipped))
+
+    if top_edges:
+        top_edges.sort()
+        med = top_edges[len(top_edges) // 2]
+        p10 = top_edges[len(top_edges) // 10]
+        near = sum(1 for v in top_edges if v <= 0.05) / len(top_edges) * 100
+        print("\n  Person box top edge: median %.1f%% of frame height down,"
+              " 10th pct %.1f%%," % (med * 100, p10 * 100))
+        print("  and %.0f%% of frames sit within 5%% of the top." % near)
+        if med < 0.05:
+            print("  ⚠ Almost no headroom. Raise the camera: head-down is measured")
+            print("    from box height, and a box pinned to the frame edge cannot")
+            print("    shorten when the head bows.")
 
     if cal.clipped:
         pct = cal.clipped / cal.seen * 100

@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from mood import (  # noqa: E402
     CLEAR_GRACE,
     COOLDOWN,
+    HEAD_DOWN_CAN_FIRE,
     HEAD_DOWN_DWELL,
     NOTICE_AFTER,
     PHONE_DWELL,
@@ -111,7 +112,12 @@ def test_CanEverFire_AbsentCanNever():
     c.check(not can_ever_fire(Offence.ABSENT), "ABSENT can never fire")
     c.check(not can_ever_fire(Offence.NONE), "NONE can never fire")
     c.check(can_ever_fire(Offence.PHONE), "PHONE can fire")
-    c.check(can_ever_fire(Offence.HEAD_DOWN), "HEAD_DOWN can fire")
+    # HEAD_DOWN is gated on a measurement, not a belief -- it scored 0.000
+    # precision on real footage, so it escalates but does not fire. The test
+    # asserts the switch is honoured in both directions rather than pinning
+    # today's value, so re-measuring on a raised camera does not break it.
+    c.check(can_ever_fire(Offence.HEAD_DOWN) is HEAD_DOWN_CAN_FIRE,
+            "HEAD_DOWN firing follows HEAD_DOWN_CAN_FIRE")
     return c.passed
 
 

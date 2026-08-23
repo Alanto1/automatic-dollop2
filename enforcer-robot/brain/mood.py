@@ -44,6 +44,28 @@ PHONE_DWELL = 3.0      # a phone in your hand is unambiguous
 HEAD_DOWN_DWELL = 6.0  # you might just be reading paper. Be slower to judge
 ABSENT_DWELL = 20.0    # you are allowed to stand up
 
+# Whether head-down may escalate all the way to STRIKE, or only to WARNING.
+#
+# OFF, on measurement. On the first real desk recording (10.8 min, 2 FPS,
+# hand-labelled) head-down from bounding-box geometry scored:
+#
+#     uncropped   0.000 precision, 0.000 recall   119 false, 0 true
+#     53.5 deg    0.039 precision, 0.600 recall   278 false, 12 true
+#
+# Zero true positives at the framing the robot will actually use. It is not a
+# threshold that needs moving: a box cannot tell "bowed over a phone" from
+# "leaning toward a monitor", because both shorten the box the same way, and
+# the second one is what working looks like.
+#
+# Phone alone, on the same footage, scored 0.897 precision. That is the
+# flagship behaviour and it survives on its own.
+#
+# Head-down still escalates to WARNING -- the robot gets visibly suspicious,
+# which is most of the effect and none of the risk. Flip this back to True
+# only after re-measuring on footage from a raised camera, and put the new
+# precision number in the writeup next to this one.
+HEAD_DOWN_CAN_FIRE = False
+
 # Extra time in WARNING before it fires. This is the "you have been warned"
 # window -- the robot is taunting and creeping at you for this long before
 # any water moves. A commitment device warns; it does not ambush.
@@ -139,14 +161,22 @@ def classify(scene: Scene) -> Offence:
 
 
 def can_ever_fire(offence: Offence) -> bool:
-    """ABSENT escalates but can never reach STRIKE.
+    """Which offences may reach STRIKE. The rest top out at WARNING.
 
-    Interlock 1 in BEHAVIOURS.md requires a detected person before the pump
-    may run, so firing at an empty chair is impossible by construction. The
-    robot is still allowed to be visibly annoyed about it -- it just tops out
-    at WARNING, sulking at your empty desk, which is funnier anyway.
+    ABSENT never can: interlock 1 in BEHAVIOURS.md requires a detected person
+    before the pump may run, so firing at an empty chair is impossible by
+    construction. The robot is still allowed to be visibly annoyed about it --
+    it just sulks at your empty desk, which is funnier anyway.
+
+    HEAD_DOWN is gated on HEAD_DOWN_CAN_FIRE, which is off because the signal
+    measured at 0.000 precision on real footage. Same idea: it may still
+    escalate and taunt, it may not pull the trigger.
     """
-    return offence in (Offence.PHONE, Offence.HEAD_DOWN)
+    if offence is Offence.PHONE:
+        return True
+    if offence is Offence.HEAD_DOWN:
+        return HEAD_DOWN_CAN_FIRE
+    return False
 
 
 @dataclass

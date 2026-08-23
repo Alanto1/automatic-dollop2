@@ -56,6 +56,34 @@ that before Week 4 restyles the shell.
 `detect.py --crop` does this for you — no ffmpeg, no re-encode, no second
 copy of the file. See Step 2.
 
+### ⚠️ Measured: head-down does not work, and the crop makes everything worse
+
+First real recording — 10.8 min, 2 FPS, hand-labelled — scored like this:
+
+| | uncropped | `--crop 0.72` (53.5°) |
+|---|---|---|
+| overall accuracy | **0.838** | 0.696 |
+| phone precision | **0.897** | 0.233 |
+| phone recall | **0.321** | 0.086 |
+| head-down precision | 0.000 | 0.039 |
+| false strikes while working | 11.4% | 27.5% |
+
+Two things follow, and both are now in the code:
+
+- **head-down is off as a firing offence** (`HEAD_DOWN_CAN_FIRE` in
+  `brain/mood.py`). Zero true positives at the framing the robot will use. A
+  bounding box cannot separate "bowed over a phone" from "leaning toward a
+  monitor" — both shorten the box identically, and the second is what working
+  looks like. It still escalates to WARNING, so the robot gets suspicious and
+  taunts; it just may not shoot. **With it off, false strikes fall to 0.3%.**
+- **53.5° costs more than it saves at a normal desk.** Everything got worse
+  under the crop, phone precision most of all. The lens is not the problem —
+  the framing is. Raise the camera and sit further back before concluding the
+  camera choice was wrong.
+
+Re-measure both after the mount goes higher. If head-down earns its precision
+back, flip the constant and put both numbers in the writeup.
+
 ## Step 2 — run the detector (10 min)
 
 ```bash
