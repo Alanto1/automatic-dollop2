@@ -24,6 +24,11 @@
 #include <Wire.h>
 #include <WiFi.h>
 
+// esp_chip_info() used to arrive transitively via esp_system.h. ESP32 Arduino
+// core 3.x split it into its own header, so it has to be included explicitly
+// or CHIP_ESP32S2 and friends are "not declared in this scope".
+#include "esp_chip_info.h"
+
 // ---------------------------------------------------------------------------
 // Pins
 // ---------------------------------------------------------------------------
