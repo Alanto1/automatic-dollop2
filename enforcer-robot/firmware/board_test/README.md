@@ -117,6 +117,15 @@ misdescribed. Return it.
 The ESP32-**S2**'s LEDC peripheral has **exactly 8 channels**. The original
 ESP32 has 16. Sesame needs exactly 8 servos.
 
+**And they are 14-bit, not 20-bit.** The original ESP32's LEDC timers go to
+20 bits; the S2, S3 and C3 cap at **14** (`SOC_LEDC_TIMER_BIT_WIDTH`). Ask for
+16 and *every* `ledcAttach()` returns false — which looks exactly like a dead
+board and is not one. Use `SERVO_BITS = 14` in Sesame's firmware too.
+
+It costs nothing: at 50Hz, 14 bits is 20ms/16384 = **1.22µs per step**, roughly
+0.22° on a 180° servo. An MG90S's own deadband is wider than that, so the
+servo is the limit, not the timer.
+
 **You have zero spare PWM channels.** That is fine — the plan never needed a
 ninth — but it means:
 
