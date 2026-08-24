@@ -138,7 +138,7 @@ def test_Phone_ThresholdIsLooserThanPerson():
 
 def test_HeadDown_SilentWhileCalibrating():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=10)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=10)
     hunched = person(200, 300, 440, 480)  # very squat box
     for _ in range(9):
         c.check(cal.feed(hunched) is False, "never flags during calibration")
@@ -150,7 +150,7 @@ def test_HeadDown_SilentWhileCalibrating():
 
 def test_HeadDown_UprightIsNotFlagged():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=5)
     upright = person(200, 100, 440, 480)   # aspect 380/240 = 1.58
     for _ in range(5):
         cal.feed(upright)
@@ -160,7 +160,7 @@ def test_HeadDown_UprightIsNotFlagged():
 
 def test_HeadDown_BowedHeadIsFlagged():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=5)
     upright = person(200, 100, 440, 480)
     for _ in range(5):
         cal.feed(upright)
@@ -175,7 +175,7 @@ def test_HeadDown_IsScaleInvariant():
     # Rolling the chair back makes you smaller in frame without changing your
     # posture. Aspect ratio is used precisely so this does not read as an
     # offence -- with a raw top-edge test, it would.
-    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=5)
     near = person(200, 100, 440, 480)          # 240 x 380
     for _ in range(5):
         cal.feed(near)
@@ -187,7 +187,7 @@ def test_HeadDown_IsScaleInvariant():
 
 def test_HeadDown_NoPersonIsNeverHeadDown():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=1)
     cal.force_baseline(1.5)
     c.check(cal.feed(None) is False, "an empty chair has no posture")
     return c.passed
@@ -195,7 +195,7 @@ def test_HeadDown_NoPersonIsNeverHeadDown():
 
 def test_HeadDown_MedianResistsOneBadFrame():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=5)
     upright = person(200, 100, 440, 480)
     cal.feed(upright)
     cal.feed(upright)
@@ -212,7 +212,7 @@ def test_HeadDown_MedianResistsOneBadFrame():
 
 def test_Scene_WorkingLooksLikeWorking():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([person()], cal)
     c.check(s.person_present, "person seen")
@@ -223,7 +223,7 @@ def test_Scene_WorkingLooksLikeWorking():
 
 def test_Scene_EmptyFrameIsAbsent():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([], cal)
     c.check(not s.person_present, "nobody there")
@@ -233,7 +233,7 @@ def test_Scene_EmptyFrameIsAbsent():
 
 def test_Scene_RangeIsAlwaysNoneFromVideo():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([person()], cal)
     # A video file has no rangefinder. None means "no reading", which the
@@ -245,7 +245,7 @@ def test_Scene_RangeIsAlwaysNoneFromVideo():
 
 def test_HeadDown_ClippedBoxIsNeverJudged():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=5)
     upright = person(200, 100, 440, 480)
     for _ in range(5):
         cal.feed(upright, frame_h=1000)
@@ -263,7 +263,7 @@ def test_HeadDown_ClippedBoxIsNeverJudged():
 
 def test_HeadDown_ClippedFramesStayOutOfTheBaseline():
     c = _Ctx()
-    cal = HeadDownCalibrator(enabled=True, calib_frames=3)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=3)
     upright = person(200, 100, 440, 480)
     cal.feed(person(200, 0, 440, 300), frame_h=1000)   # clipped, must not count
     for _ in range(3):
@@ -277,7 +277,7 @@ def test_HeadDown_UnknownFrameHeightKeepsOldBehaviour():
     c = _Ctx()
     # frame_h is optional: callers that do not know the frame size (the unit
     # tests, and any caller written before this guard existed) must still work.
-    cal = HeadDownCalibrator(enabled=True, calib_frames=3)
+    cal = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=3)
     upright = person(200, 100, 440, 480)
     for _ in range(3):
         cal.feed(upright)
@@ -349,6 +349,18 @@ def test_Face_NoPersonIsNeverHeadDown():
     return c.passed
 
 
+def test_HeadDown_FaceSourceIsNeverStuckCalibrating():
+    c = _Ctx()
+    # build_scene does not feed the calibrator when the source is "face", so
+    # a calibrator that reports "still calibrating" forever makes evaluate.py
+    # skip every frame in the run and print "Nothing scoreable".
+    cal = HeadDownCalibrator(enabled=True, source="face", calib_frames=3)
+    c.check(cal.calibrating is False, "face source is never calibrating")
+    cal2 = HeadDownCalibrator(enabled=True, source="aspect", calib_frames=3)
+    c.check(cal2.calibrating is True, "aspect source still calibrates first")
+    return c.passed
+
+
 TESTS = [
     ("PickPerson_NoneWhenEmpty", test_PickPerson_NoneWhenEmpty),
     ("PickPerson_IgnoresLowConfidence", test_PickPerson_IgnoresLowConfidence),
@@ -366,6 +378,7 @@ TESTS = [
     ("HeadDown_NoPersonIsNeverHeadDown", test_HeadDown_NoPersonIsNeverHeadDown),
     ("HeadDown_MedianResistsOneBadFrame", test_HeadDown_MedianResistsOneBadFrame),
     ("HeadDown_DisabledIsAlwaysSilent", test_HeadDown_DisabledIsAlwaysSilent),
+    ("HeadDown_FaceSourceIsNeverStuckCalibrating", test_HeadDown_FaceSourceIsNeverStuckCalibrating),
     ("Face_MissingFaceIsHeadDown", test_Face_MissingFaceIsHeadDown),
     ("Face_FaceHighInBoxIsUpright", test_Face_FaceHighInBoxIsUpright),
     ("Face_FaceLowInBoxIsHeadDown", test_Face_FaceLowInBoxIsHeadDown),

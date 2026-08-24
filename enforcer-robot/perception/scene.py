@@ -229,10 +229,11 @@ class HeadDownCalibrator:
     """
 
     def __init__(self, calib_frames: int = CALIB_FRAMES, drop: float = HEAD_DOWN_DROP,
-                 enabled: bool = HEAD_DOWN_ENABLED):
+                 enabled: bool = HEAD_DOWN_ENABLED, source: str = HEAD_DOWN_SOURCE):
         self.calib_frames = calib_frames
         self.drop = drop
         self.enabled = enabled
+        self.source = source
         self._samples: list[float] = []
         self.baseline: float | None = None
         # Frames where the person was present but their box ran off the top
@@ -243,10 +244,14 @@ class HeadDownCalibrator:
 
     @property
     def calibrating(self) -> bool:
-        # Disabled means there is nothing to calibrate, so it is not
-        # "still calibrating" -- evaluate.py skips calibrating frames, and
-        # reporting True here silently discarded every frame in the run.
-        return self.enabled and self.baseline is None
+        # Only the "aspect" source feeds this calibrator, and only when
+        # head-down is enabled at all. In every other configuration there is
+        # nothing to calibrate, so this is not "still calibrating" -- and
+        # since evaluate.py skips calibrating frames, saying True here
+        # silently discarded every frame in the run.
+        if not self.enabled or self.source != "aspect":
+            return False
+        return self.baseline is None
 
     def feed(self, person: Box | None, frame_h: float | None = None) -> bool:
         """Returns True if this frame reads as head-down.
