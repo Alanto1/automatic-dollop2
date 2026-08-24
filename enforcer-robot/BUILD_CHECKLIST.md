@@ -152,10 +152,12 @@ AI attached yet.
 - [ ] Keep the foot within the computed reach limit (~48mm at 507g). Get the
       spider from *shape* — angular shell, low body, knees-up — not from
       longer legs, which the servos cannot pay for
-- [ ] ⚠️ **Raise the camera mount.** Measured on the first desk recording: at
-      53.5° the person box clips the top of the frame ~26% of the time, which
-      took head-down to 3.9% precision. Raise it until a seated person has
-      headroom at 50–80cm, then re-record and check `evaluate.py`'s clip rate
+- [ ] ⚠️ **Aim the camera at the hands, not the head.** Measured on the first
+      desk recording: at 53.5° a phone *held in the hand* falls outside the
+      frame while a phone *on the desk* stays in it — the exact inverse of
+      what the robot needs, and why phone precision fell 0.90 → 0.23 under the
+      crop. Frame the hands-and-desk zone, then re-record and re-run
+      `evaluate.py` before committing the mount to the shell
 - [ ] Spider eyes on the OLED instead of dog eyes. Free identity
 - [ ] Re-print, re-assemble, confirm it still walks
 

@@ -81,6 +81,22 @@ Two things follow, and both are now in the code:
   the framing is. Raise the camera and sit further back before concluding the
   camera choice was wrong.
 
+**Which phone the crop threw away is the useful part.** Watching the footage:
+a phone lying on the desk stayed inside the 53.5° crop, and a phone *held in
+the hand* fell outside it — raised, off to one side, straight through the
+crop boundary. So the narrow lens kept the phone that must never fire and
+discarded the one that must. That inverts the framing requirement:
+
+> The camera has to see **the zone where hands hold a phone**, not just the
+> head and torso. Same zone BEHAVIOURS.md already aims the water at — the
+> hands on the desk, never the torso.
+
+**And head-down failed for a reason no threshold reaches.** The calibration
+window caught a straighter posture than the real working one, so every
+working frame sat below baseline. For this desk, "working" and "head down"
+are the same box shape. That is not a constant that needs moving; it is a
+signal that is not there.
+
 Re-measure both after the mount goes higher. If head-down earns its precision
 back, flip the constant and put both numbers in the writeup.
 
