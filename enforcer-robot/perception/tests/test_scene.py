@@ -137,7 +137,7 @@ def test_Phone_ThresholdIsLooserThanPerson():
 
 def test_HeadDown_SilentWhileCalibrating():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=10)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=10)
     hunched = person(200, 300, 440, 480)  # very squat box
     for _ in range(9):
         c.check(cal.feed(hunched) is False, "never flags during calibration")
@@ -149,7 +149,7 @@ def test_HeadDown_SilentWhileCalibrating():
 
 def test_HeadDown_UprightIsNotFlagged():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
     upright = person(200, 100, 440, 480)   # aspect 380/240 = 1.58
     for _ in range(5):
         cal.feed(upright)
@@ -159,7 +159,7 @@ def test_HeadDown_UprightIsNotFlagged():
 
 def test_HeadDown_BowedHeadIsFlagged():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
     upright = person(200, 100, 440, 480)
     for _ in range(5):
         cal.feed(upright)
@@ -174,7 +174,7 @@ def test_HeadDown_IsScaleInvariant():
     # Rolling the chair back makes you smaller in frame without changing your
     # posture. Aspect ratio is used precisely so this does not read as an
     # offence -- with a raw top-edge test, it would.
-    cal = HeadDownCalibrator(calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
     near = person(200, 100, 440, 480)          # 240 x 380
     for _ in range(5):
         cal.feed(near)
@@ -186,7 +186,7 @@ def test_HeadDown_IsScaleInvariant():
 
 def test_HeadDown_NoPersonIsNeverHeadDown():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
     cal.force_baseline(1.5)
     c.check(cal.feed(None) is False, "an empty chair has no posture")
     return c.passed
@@ -194,7 +194,7 @@ def test_HeadDown_NoPersonIsNeverHeadDown():
 
 def test_HeadDown_MedianResistsOneBadFrame():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
     upright = person(200, 100, 440, 480)
     cal.feed(upright)
     cal.feed(upright)
@@ -211,7 +211,7 @@ def test_HeadDown_MedianResistsOneBadFrame():
 
 def test_Scene_WorkingLooksLikeWorking():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([person()], cal)
     c.check(s.person_present, "person seen")
@@ -222,7 +222,7 @@ def test_Scene_WorkingLooksLikeWorking():
 
 def test_Scene_EmptyFrameIsAbsent():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([], cal)
     c.check(not s.person_present, "nobody there")
@@ -232,7 +232,7 @@ def test_Scene_EmptyFrameIsAbsent():
 
 def test_Scene_RangeIsAlwaysNoneFromVideo():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=1)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=1)
     cal.force_baseline(1.58)
     s = build_scene([person()], cal)
     # A video file has no rangefinder. None means "no reading", which the
@@ -244,7 +244,7 @@ def test_Scene_RangeIsAlwaysNoneFromVideo():
 
 def test_HeadDown_ClippedBoxIsNeverJudged():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=5)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=5)
     upright = person(200, 100, 440, 480)
     for _ in range(5):
         cal.feed(upright, frame_h=1000)
@@ -262,7 +262,7 @@ def test_HeadDown_ClippedBoxIsNeverJudged():
 
 def test_HeadDown_ClippedFramesStayOutOfTheBaseline():
     c = _Ctx()
-    cal = HeadDownCalibrator(calib_frames=3)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=3)
     upright = person(200, 100, 440, 480)
     cal.feed(person(200, 0, 440, 300), frame_h=1000)   # clipped, must not count
     for _ in range(3):
@@ -276,13 +276,29 @@ def test_HeadDown_UnknownFrameHeightKeepsOldBehaviour():
     c = _Ctx()
     # frame_h is optional: callers that do not know the frame size (the unit
     # tests, and any caller written before this guard existed) must still work.
-    cal = HeadDownCalibrator(calib_frames=3)
+    cal = HeadDownCalibrator(enabled=True, calib_frames=3)
     upright = person(200, 100, 440, 480)
     for _ in range(3):
         cal.feed(upright)
     bowed = person(200, 100 + 380 * (HEAD_DOWN_DROP + 0.05), 440, 480)
     c.check(cal.feed(bowed) is True, "head-down still works without a frame height")
     c.check(cal.clipped == 0, "and nothing is counted as clipped")
+    return c.passed
+
+
+def test_HeadDown_DisabledIsAlwaysSilent():
+    c = _Ctx()
+    # The deployed default. Measured 0.000 precision / 0.000 recall on real
+    # footage, so the signal is off entirely -- not merely barred from firing.
+    # Off means it cannot reach WARNING either, which is the point: a robot
+    # that glares at you for 11% of your working day is still a bad robot.
+    cal = HeadDownCalibrator(enabled=False, calib_frames=3)
+    upright = person(200, 100, 440, 480)
+    for _ in range(3):
+        cal.feed(upright, frame_h=1000)
+    bowed = person(200, 100 + 380 * (HEAD_DOWN_DROP + 0.05), 440, 480)
+    c.check(cal.feed(bowed, frame_h=1000) is False, "head-down never fires when disabled")
+    c.check(cal.baseline is None, "and no baseline is even collected")
     return c.passed
 
 
@@ -302,6 +318,7 @@ TESTS = [
     ("HeadDown_IsScaleInvariant", test_HeadDown_IsScaleInvariant),
     ("HeadDown_NoPersonIsNeverHeadDown", test_HeadDown_NoPersonIsNeverHeadDown),
     ("HeadDown_MedianResistsOneBadFrame", test_HeadDown_MedianResistsOneBadFrame),
+    ("HeadDown_DisabledIsAlwaysSilent", test_HeadDown_DisabledIsAlwaysSilent),
     ("HeadDown_ClippedBoxIsNeverJudged", test_HeadDown_ClippedBoxIsNeverJudged),
     ("HeadDown_ClippedFramesStayOutOfTheBaseline", test_HeadDown_ClippedFramesStayOutOfTheBaseline),
     ("HeadDown_UnknownFrameHeightKeepsOldBehaviour", test_HeadDown_UnknownFrameHeightKeepsOldBehaviour),

@@ -40,6 +40,24 @@ CONF_PHONE = 0.25
 # desk is not an offence; a phone in your hand is.
 PHONE_NEAR_PAD = 0.15
 
+# Whether head-down is computed at all.
+#
+# OFF, on measurement. On the first hand-labelled desk recording it scored
+# 0.000 precision and 0.000 recall: 119 frames called head-down, none of them
+# real, and all 20 genuine ones missed. The cause is not a threshold. The
+# calibration window catches a straighter posture than the one you actually
+# work in, so every working frame then sits below baseline -- at a real desk
+# "working" and "head down" are the same box shape.
+#
+# mood.HEAD_DOWN_CAN_FIRE already stops it pulling the trigger. This switch
+# is the level above: with the signal off entirely it cannot escalate to
+# WARNING either, which is what stops the robot glaring at you for 11% of
+# your working day over a signal that measured as noise.
+#
+# Turn it back on to re-measure from footage with the camera aimed at the
+# hands, and keep HEAD_DOWN_CAN_FIRE off until the precision earns it.
+HEAD_DOWN_ENABLED = False
+
 # How much the person's box has to get *squatter* than their calibrated
 # upright baseline before it reads as head-down, as a fraction.
 #
@@ -149,9 +167,11 @@ class HeadDownCalibrator:
     that. Run the calibration while sitting normally.
     """
 
-    def __init__(self, calib_frames: int = CALIB_FRAMES, drop: float = HEAD_DOWN_DROP):
+    def __init__(self, calib_frames: int = CALIB_FRAMES, drop: float = HEAD_DOWN_DROP,
+                 enabled: bool = HEAD_DOWN_ENABLED):
         self.calib_frames = calib_frames
         self.drop = drop
+        self.enabled = enabled
         self._samples: list[float] = []
         self.baseline: float | None = None
         # Frames where the person was present but their box ran off the top
@@ -173,7 +193,7 @@ class HeadDownCalibrator:
         same reason: a measurement that cannot mean what it says is worse
         than no measurement, and this one escalates to STRIKE.
         """
-        if person is None:
+        if person is None or not self.enabled:
             return False
 
         self.seen += 1
