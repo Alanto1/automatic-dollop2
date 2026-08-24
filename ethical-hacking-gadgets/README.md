@@ -52,6 +52,12 @@ Full guidance: **[ETHICS_AND_LEGAL.md](ETHICS_AND_LEGAL.md)**
 | **Hardware / firmware audit** | ChipWhisperer, Bus Pirate, GreatFET, Cynthion, Faulty Cat, glitching | [categories/hardware-firmware.md](categories/hardware-firmware.md) |
 | **Physical security** | Lockpicks, bypass tools, bump keys, disc-detainer picks | [categories/physical-security.md](categories/physical-security.md) |
 
+### Hands-on guides
+| Guide | Covers |
+|---|---|
+| **T-Embed CC1101 setup** | Unbox → flash Bruce → first safe projects (beginner) — [guides/t-embed-cc1101-setup.md](guides/t-embed-cc1101-setup.md) |
+| **ESP32 firmware guide** | Bruce vs CapibaraZero vs Marauder, and multi-boot — [guides/firmware-guide.md](guides/firmware-guide.md) |
+
 ---
 
 ## 🎯 "Which tool for which job?"
@@ -78,7 +84,8 @@ ethical-hacking-gadgets/
 ├── ETHICS_AND_LEGAL.md       ← authorisation, RF law, responsible disclosure
 ├── GLOSSARY.md               ← LF/HF/UHF, SDR, HID, glitching, etc.
 ├── devices/                  ← one file per flagship device
-└── categories/               ← one file per product category
+├── categories/               ← one file per product category
+└── guides/                   ← hands-on setup & firmware walkthroughs
 ```
 
 ## Contributing
