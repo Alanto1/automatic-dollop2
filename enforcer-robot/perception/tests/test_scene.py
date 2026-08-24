@@ -15,7 +15,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 
-from scene import (  # noqa: E402
+from scene import (  # noqa: F401
+    head_down_from_face,  # noqa: E402
     CONF_PERSON,
     CONF_PHONE,
     HEAD_DOWN_DROP,
@@ -302,6 +303,52 @@ def test_HeadDown_DisabledIsAlwaysSilent():
     return c.passed
 
 
+def face(x1, y1, x2, y2):
+    return Box("face", 1.0, x1, y1, x2, y2)
+
+
+def test_Face_MissingFaceIsHeadDown():
+    c = _Ctx()
+    p = person(200, 100, 440, 480)
+    c.check(head_down_from_face(p, [p]) is True,
+            "a person with no findable face is looking down")
+    return c.passed
+
+
+def test_Face_FaceHighInBoxIsUpright():
+    c = _Ctx()
+    p = person(200, 100, 440, 480)          # 380 tall, top at y=100
+    f = face(290, 120, 350, 190)            # centre 25% down the box
+    c.check(head_down_from_face(p, [p, f]) is False, "a face up top is upright")
+    return c.passed
+
+
+def test_Face_FaceLowInBoxIsHeadDown():
+    c = _Ctx()
+    p = person(200, 100, 440, 480)
+    f = face(290, 380, 350, 450)            # centre ~92% down the box
+    c.check(head_down_from_face(p, [p, f]) is True,
+            "a face down near the desk is a bowed head the cascade still saw")
+    return c.passed
+
+
+def test_Face_FaceOutsideThePersonDoesNotVouch():
+    c = _Ctx()
+    # A face on a poster behind you, or a flatmate's, must not certify that
+    # *you* are upright -- otherwise anything on the wall disables head-down.
+    p = person(200, 100, 440, 480)
+    f = face(700, 120, 760, 190)
+    c.check(head_down_from_face(p, [p, f]) is True,
+            "a face outside the person box does not count as theirs")
+    return c.passed
+
+
+def test_Face_NoPersonIsNeverHeadDown():
+    c = _Ctx()
+    c.check(head_down_from_face(None, []) is False, "an empty chair is not head-down")
+    return c.passed
+
+
 TESTS = [
     ("PickPerson_NoneWhenEmpty", test_PickPerson_NoneWhenEmpty),
     ("PickPerson_IgnoresLowConfidence", test_PickPerson_IgnoresLowConfidence),
@@ -319,6 +366,11 @@ TESTS = [
     ("HeadDown_NoPersonIsNeverHeadDown", test_HeadDown_NoPersonIsNeverHeadDown),
     ("HeadDown_MedianResistsOneBadFrame", test_HeadDown_MedianResistsOneBadFrame),
     ("HeadDown_DisabledIsAlwaysSilent", test_HeadDown_DisabledIsAlwaysSilent),
+    ("Face_MissingFaceIsHeadDown", test_Face_MissingFaceIsHeadDown),
+    ("Face_FaceHighInBoxIsUpright", test_Face_FaceHighInBoxIsUpright),
+    ("Face_FaceLowInBoxIsHeadDown", test_Face_FaceLowInBoxIsHeadDown),
+    ("Face_FaceOutsideThePersonDoesNotVouch", test_Face_FaceOutsideThePersonDoesNotVouch),
+    ("Face_NoPersonIsNeverHeadDown", test_Face_NoPersonIsNeverHeadDown),
     ("HeadDown_ClippedBoxIsNeverJudged", test_HeadDown_ClippedBoxIsNeverJudged),
     ("HeadDown_ClippedFramesStayOutOfTheBaseline", test_HeadDown_ClippedFramesStayOutOfTheBaseline),
     ("HeadDown_UnknownFrameHeightKeepsOldBehaviour", test_HeadDown_UnknownFrameHeightKeepsOldBehaviour),

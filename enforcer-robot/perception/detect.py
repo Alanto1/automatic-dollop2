@@ -3,6 +3,7 @@
 
     python3 detect.py desk.mp4 --fps 2 -o detections.jsonl
     python3 detect.py desk.mp4 --crop 0.72 -o detections.jsonl   # narrow the lens
+    python3 detect.py desk.mp4 --face -o detections.jsonl        # head-down signal
 
 This is the dirty half of perception: it owns the model and OpenCV, and it is
 the only file you have to rewrite when you move to the Pi. It writes one JSON
@@ -24,6 +25,11 @@ import time
 # The two classes we care about, out of COCO's 80.
 KEEP = {"person", "cell phone"}
 
+# --face adds a third, from OpenCV's Haar cascade rather than the model.
+# Frontal-face cascades fail when the head turns or bows, and that failure is
+# the signal: a person in frame with no findable face is looking down.
+FACE_CASCADE = "haarcascade_frontalface_default.xml"
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
@@ -42,6 +48,10 @@ def main() -> int:
     ap.add_argument("--model", default="yolov8n.pt")
     ap.add_argument("--conf", type=float, default=0.20,
                     help="floor confidence; scene.py applies the real per-class ones")
+    ap.add_argument("--face", action="store_true",
+                    help="also run a Haar face cascade and emit 'face' boxes. "
+                         "Costs a few ms/frame and gives scene.py a head-down "
+                         "signal that looks at the head, unlike box aspect ratio")
     ap.add_argument("--show", action="store_true", help="preview window while running")
     args = ap.parse_args()
 
@@ -82,6 +92,14 @@ def main() -> int:
     model = YOLO(args.model)
     names = model.names
 
+    cascade = None
+    if args.face:
+        cascade = cv2.CascadeClassifier(cv2.data.haarcascades + FACE_CASCADE)
+        if cascade.empty():
+            print("Could not load %s" % FACE_CASCADE, file=sys.stderr)
+            return 2
+        print("face       : %s" % FACE_CASCADE)
+
     kept = 0
     idx = 0
     t_start = time.time()
@@ -115,6 +133,20 @@ def main() -> int:
                 boxes.append({"label": label, "conf": round(float(b.conf[0]), 3),
                               "x1": round(x1, 1), "y1": round(y1, 1),
                               "x2": round(x2, 1), "y2": round(y2, 1)})
+
+            if cascade is not None:
+                # Downscaled to 640 wide: Haar is the slow part otherwise, and
+                # a face big enough to matter here survives the reduction.
+                fh_, fw_ = frame.shape[:2]
+                k = 640.0 / fw_ if fw_ > 640 else 1.0
+                small = cv2.resize(frame, None, fx=k, fy=k) if k < 1.0 else frame
+                gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+                for (fx, fy, fw2, fh2) in cascade.detectMultiScale(gray, 1.15, 5,
+                                                                   minSize=(24, 24)):
+                    boxes.append({"label": "face", "conf": 1.0,
+                                  "x1": round(fx / k, 1), "y1": round(fy / k, 1),
+                                  "x2": round((fx + fw2) / k, 1),
+                                  "y2": round((fy + fh2) / k, 1)})
 
             # `t` is video time, not wall time. Everything downstream is
             # driven by it, so a slow laptop cannot distort the timings.

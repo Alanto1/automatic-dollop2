@@ -58,6 +58,30 @@ PHONE_NEAR_PAD = 0.15
 # hands, and keep HEAD_DOWN_CAN_FIRE off until the precision earns it.
 HEAD_DOWN_ENABLED = False
 
+# Which signal head-down is derived from, when it is enabled at all.
+#
+#   "aspect"  the person box's height/width against a calibrated baseline
+#   "face"    whether a frontal face is findable inside the person box
+#
+# "aspect" is the original and it measured 0.000 precision AND 0.000 recall:
+# every genuine head-down frame was called working, and 119 working frames
+# were called head-down. Anti-correlated, not merely noisy. The cause is that
+# a head is a small part of a torso-height box, so bowing it barely moves the
+# ratio -- while leaning in and rolling the chair back move it a great deal.
+# Aspect ratio measures lean and distance, not head pose.
+#
+# "face" looks at the head instead: a frontal Haar cascade loses you when you
+# bow, so "person in frame, no findable face" is head-down. It needs
+# detect.py --face, which emits the extra boxes. Cheap enough for a Pi Zero
+# (a few ms on a downscaled frame) and it needs no posture calibration.
+HEAD_DOWN_SOURCE = "face"
+
+# How far down the person's box a face may sit before it stops counting as
+# "looking up". A face found low in the box is a bowed head the cascade was
+# still able to see, and 0.5 is generous -- a seated upright person's face is
+# in the top third.
+FACE_LOW_IN_BOX = 0.5
+
 # How much the person's box has to get *squatter* than their calibrated
 # upright baseline before it reads as head-down, as a fraction.
 #
@@ -158,6 +182,43 @@ def phone_in_hand(person: Box | None, boxes: list[Box]) -> Box | None:
     return max(near, key=lambda b: b.conf) if near else None
 
 
+def face_in_person(person: Box | None, boxes: list[Box]) -> Box | None:
+    """The face belonging to this person, if the cascade found one.
+
+    Restricted to faces whose centre is inside the person box, so a face on a
+    poster behind you does not vouch for you being upright.
+    """
+    if person is None:
+        return None
+    faces = [b for b in boxes if b.label == "face"
+             and person.x1 <= b.cx <= person.x2
+             and person.y1 <= b.cy <= person.y2]
+    return max(faces, key=lambda b: b.area) if faces else None
+
+
+def head_down_from_face(person: Box | None, boxes: list[Box]) -> bool:
+    """Head-down when no frontal face is findable, or the face sits low.
+
+    Two ways a bowed head shows up, and both count:
+
+    - the cascade loses the face entirely, which is the common case; or
+    - it still finds it, but low in the person box, because the head has
+      dropped toward the desk.
+
+    A person turned fully away also reads as head-down here. That is a known
+    confusion and an honest one to measure rather than assume: turning away
+    from the screen is not obviously innocent either.
+    """
+    if person is None:
+        return False
+    face = face_in_person(person, boxes)
+    if face is None:
+        return True
+    if person.h <= 0:
+        return False
+    return (face.cy - person.y1) / person.h > FACE_LOW_IN_BOX
+
+
 class HeadDownCalibrator:
     """Learns what *your* upright posture looks like, then flags deviations.
 
@@ -182,7 +243,10 @@ class HeadDownCalibrator:
 
     @property
     def calibrating(self) -> bool:
-        return self.baseline is None
+        # Disabled means there is nothing to calibrate, so it is not
+        # "still calibrating" -- evaluate.py skips calibrating frames, and
+        # reporting True here silently discarded every frame in the run.
+        return self.enabled and self.baseline is None
 
     def feed(self, person: Box | None, frame_h: float | None = None) -> bool:
         """Returns True if this frame reads as head-down.
@@ -227,7 +291,12 @@ def build_scene(boxes: list[Box], calibrator: HeadDownCalibrator,
     """
     person = pick_person(boxes)
     phone = phone_in_hand(person, boxes)
-    head_down = calibrator.feed(person, frame_h)
+    if not HEAD_DOWN_ENABLED:
+        head_down = False
+    elif HEAD_DOWN_SOURCE == "face":
+        head_down = head_down_from_face(person, boxes)
+    else:
+        head_down = calibrator.feed(person, frame_h)
 
     return Scene(
         person_present=person is not None,
