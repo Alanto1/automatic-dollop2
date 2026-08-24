@@ -27,7 +27,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from scene import EDGE_MARGIN, Box, HeadDownCalibrator, build_scene, pick_person  # noqa: E402
+from scene import (  # noqa: E402
+    EDGE_MARGIN, FACE_LOW_IN_BOX, Box, HeadDownCalibrator, build_scene,
+    face_in_person, pick_person,
+)
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "brain"))
 
@@ -88,6 +91,7 @@ def main() -> int:
     t_first = t_last = None
     n_rec = 0
     top_edges = []          # person box top, as a fraction of frame height
+    head_pos = {c: [] for c in CLASSES}   # head centre, as a fraction down the person box
 
     with open(args.detections) as fh:
         for line in fh:
@@ -102,6 +106,16 @@ def main() -> int:
             if person is not None and fh_px:
                 top_edges.append(person.y1 / fh_px)
             got = scene_to_class(build_scene(boxes, cal, fh_px))
+
+            # Where the head sits inside the person box, split by what you
+            # were actually doing. If the working and head_down distributions
+            # overlap, no FACE_LOW_IN_BOX separates them and the signal is
+            # not there -- which is worth knowing before sweeping thresholds.
+            truth_now = label_at(times, labels, rec["t"])
+            if person is not None and person.h > 0 and truth_now in head_pos:
+                fc = face_in_person(person, boxes)
+                if fc is not None:
+                    head_pos[truth_now].append((fc.cy - person.y1) / person.h)
 
             truth = label_at(times, labels, rec["t"])
             # Frames before the first label, and frames spent calibrating,
@@ -161,6 +175,36 @@ def main() -> int:
             print("  ⚠ Almost no headroom. Raise the camera: head-down is measured")
             print("    from box height, and a box pinned to the frame edge cannot")
             print("    shorten when the head bows.")
+
+    if any(head_pos.values()):
+        print("\n  Head position inside the person box, by what you were doing")
+        print("  (fraction down from the top; FACE_LOW_IN_BOX = %.2f is the cut)"
+              % FACE_LOW_IN_BOX)
+        print("  %-11s %7s %7s %7s %7s   %s" % ("", "p10", "median", "p90", "n", "over cut"))
+        for c in CLASSES:
+            v = sorted(head_pos[c])
+            if not v:
+                continue
+            over = sum(1 for x in v if x > FACE_LOW_IN_BOX) / len(v) * 100
+            print("  %-11s %7.3f %7.3f %7.3f %7d   %.0f%%"
+                  % (c, v[len(v) // 10], v[len(v) // 2], v[min(len(v) - 1, len(v) * 9 // 10)],
+                     len(v), over))
+        w_, h_ = sorted(head_pos["working"]), sorted(head_pos["head_down"])
+        if w_ and h_:
+            # The best a single cut can do: sweep every candidate and keep the
+            # one that separates the two classes best.
+            best = max(
+                ((sum(1 for x in h_ if x > t) / len(h_)
+                  + sum(1 for x in w_ if x <= t) / len(w_)) / 2, t)
+                for t in [i / 100 for i in range(5, 96)])
+            print("\n  Best single threshold: %.2f, separating %.0f%% of the time."
+                  % (best[1], best[0] * 100))
+            if best[0] < 0.65:
+                print("  Near chance -- the two distributions overlap, so no value of")
+                print("  FACE_LOW_IN_BOX rescues this. The head position simply does")
+                print("  not distinguish your working posture from your head-down one.")
+            else:
+                print("  Set FACE_LOW_IN_BOX to that and re-run: it costs one second.")
 
     if cal.clipped:
         pct = cal.clipped / cal.seen * 100
