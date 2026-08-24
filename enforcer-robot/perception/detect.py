@@ -3,7 +3,8 @@
 
     python3 detect.py desk.mp4 --fps 2 -o detections.jsonl
     python3 detect.py desk.mp4 --crop 0.72 -o detections.jsonl   # narrow the lens
-    python3 detect.py desk.mp4 --face -o detections.jsonl        # head-down signal
+    python3 detect.py desk.mp4 --face -o detections.jsonl        # head-down, cascade
+    python3 detect.py desk.mp4 --pose -o detections.jsonl        # head-down, keypoints
 
 This is the dirty half of perception: it owns the model and OpenCV, and it is
 the only file you have to rewrite when you move to the Pi. It writes one JSON
@@ -30,6 +31,18 @@ KEEP = {"person", "cell phone"}
 # the signal: a person in frame with no findable face is looking down.
 FACE_CASCADE = "haarcascade_frontalface_default.xml"
 
+# --pose gets the same "face" box from YOLO pose keypoints instead. Costs a
+# second model pass, needs nothing from OpenCV beyond reading frames, and is
+# the better signal: real head landmarks rather than a frontal-only cascade
+# that also loses you when you merely turn your head.
+#
+# COCO keypoints 0-4 are nose, eyes and ears -- the head. A box around the
+# visible ones is the head's position; none visible means the head is not
+# facing the camera, which is what head-down looks like.
+POSE_MODEL = "yolov8n-pose.pt"
+HEAD_KPTS = (0, 1, 2, 3, 4)
+KPT_CONF = 0.30
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
@@ -52,6 +65,10 @@ def main() -> int:
                     help="also run a Haar face cascade and emit 'face' boxes. "
                          "Costs a few ms/frame and gives scene.py a head-down "
                          "signal that looks at the head, unlike box aspect ratio")
+    ap.add_argument("--pose", action="store_true",
+                    help="emit 'face' boxes from YOLO pose keypoints instead of "
+                         "the Haar cascade. Slower than --face but a better "
+                         "head-down signal, and needs no OpenCV beyond decoding")
     ap.add_argument("--show", action="store_true", help="preview window while running")
     args = ap.parse_args()
 
@@ -91,6 +108,11 @@ def main() -> int:
 
     model = YOLO(args.model)
     names = model.names
+
+    poser = None
+    if args.pose:
+        poser = YOLO(POSE_MODEL)
+        print("pose       : %s (head keypoints -> face boxes)" % POSE_MODEL)
 
     cascade = None
     if args.face:
@@ -133,6 +155,25 @@ def main() -> int:
                 boxes.append({"label": label, "conf": round(float(b.conf[0]), 3),
                               "x1": round(x1, 1), "y1": round(y1, 1),
                               "x2": round(x2, 1), "y2": round(y2, 1)})
+
+            if poser is not None:
+                pres = poser.predict(frame, imgsz=args.imgsz, conf=0.25,
+                                     verbose=False)[0]
+                kp = pres.keypoints
+                if kp is not None and kp.xy is not None:
+                    xy = kp.xy.cpu().numpy()
+                    kconf = (kp.conf.cpu().numpy() if kp.conf is not None
+                             else None)
+                    for i in range(xy.shape[0]):
+                        pts = [xy[i][j] for j in HEAD_KPTS
+                               if kconf is None or kconf[i][j] >= KPT_CONF]
+                        if not pts:
+                            continue    # head not visible -> no face box
+                        xs = [float(pt[0]) for pt in pts]
+                        ys = [float(pt[1]) for pt in pts]
+                        boxes.append({"label": "face", "conf": 1.0,
+                                      "x1": round(min(xs), 1), "y1": round(min(ys), 1),
+                                      "x2": round(max(xs), 1), "y2": round(max(ys), 1)})
 
             if cascade is not None:
                 # Downscaled to 640 wide: Haar is the slow part otherwise, and
