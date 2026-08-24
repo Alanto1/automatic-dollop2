@@ -42,21 +42,15 @@ PHONE_NEAR_PAD = 0.15
 
 # Whether head-down is computed at all.
 #
-# OFF, on measurement. On the first hand-labelled desk recording it scored
-# 0.000 precision and 0.000 recall: 119 frames called head-down, none of them
-# real, and all 20 genuine ones missed. The cause is not a threshold. The
-# calibration window catches a straighter posture than the one you actually
-# work in, so every working frame then sits below baseline -- at a real desk
-# "working" and "head down" are the same box shape.
+# ON, now that HEAD_DOWN_SOURCE = "face" gives it something worth computing.
+# It was off while the only available signal was box aspect ratio, which
+# measured 0.000 precision and 0.000 recall -- 119 working frames accused and
+# every genuine one missed. Off meant it could not even reach WARNING, which
+# is what stopped the robot glaring at its owner for 11% of the working day.
 #
-# mood.HEAD_DOWN_CAN_FIRE already stops it pulling the trigger. This switch
-# is the level above: with the signal off entirely it cannot escalate to
-# WARNING either, which is what stops the robot glaring at you for 11% of
-# your working day over a signal that measured as noise.
-#
-# Turn it back on to re-measure from footage with the camera aimed at the
-# hands, and keep HEAD_DOWN_CAN_FIRE off until the precision earns it.
-HEAD_DOWN_ENABLED = False
+# Two switches, deliberately: this one decides whether the signal is
+# measured, mood.HEAD_DOWN_CAN_FIRE whether a measured signal may fire.
+HEAD_DOWN_ENABLED = True
 
 # Which signal head-down is derived from, when it is enabled at all.
 #
@@ -77,10 +71,14 @@ HEAD_DOWN_ENABLED = False
 HEAD_DOWN_SOURCE = "face"
 
 # How far down the person's box a face may sit before it stops counting as
-# "looking up". A face found low in the box is a bowed head the cascade was
-# still able to see, and 0.5 is generous -- a seated upright person's face is
-# in the top third.
-FACE_LOW_IN_BOX = 0.5
+# "looking up".
+#
+# 0.30, from measurement rather than taste. On the hand-labelled recording
+# the head sat at median 0.213 of body height while working and 0.367 while
+# bowed, and the two distributions did not overlap: working's 90th percentile
+# was 0.234, head-down's 10th was 0.309. evaluate.py sweeps every candidate
+# cut and reports the best one, which is how this number was found.
+FACE_LOW_IN_BOX = 0.30
 
 # How much the person's box has to get *squatter* than their calibrated
 # upright baseline before it reads as head-down, as a fraction.
@@ -296,9 +294,13 @@ def build_scene(boxes: list[Box], calibrator: HeadDownCalibrator,
     """
     person = pick_person(boxes)
     phone = phone_in_hand(person, boxes)
-    if not HEAD_DOWN_ENABLED:
+    # The calibrator carries the configuration, taken from the module
+    # constants when it was built. Reading the globals here instead would let
+    # a caller hold a calibrator configured one way while build_scene judged
+    # it another -- which is exactly what a test caught.
+    if not calibrator.enabled:
         head_down = False
-    elif HEAD_DOWN_SOURCE == "face":
+    elif calibrator.source == "face":
         head_down = head_down_from_face(person, boxes)
     else:
         head_down = calibrator.feed(person, frame_h)

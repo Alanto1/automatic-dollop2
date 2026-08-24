@@ -70,12 +70,27 @@ First real recording — 10.8 min, 2 FPS, hand-labelled — scored like this:
 
 Two things follow, and both are now in the code:
 
-- **head-down is off as a firing offence** (`HEAD_DOWN_CAN_FIRE` in
-  `brain/mood.py`). Zero true positives at the framing the robot will use. A
-  bounding box cannot separate "bowed over a phone" from "leaning toward a
-  monitor" — both shorten the box identically, and the second is what working
-  looks like. It still escalates to WARNING, so the robot gets suspicious and
-  taunts; it just may not shoot. **With it off, false strikes fall to 0.3%.**
+- **head-down needed a different measurement, not a better threshold.** Box
+  aspect ratio scored 0.000 precision *and* 0.000 recall — anti-correlated,
+  because a head is a small part of a torso-height box while lean and camera
+  distance are not. Pose head keypoints (`detect.py --pose`,
+  `HEAD_DOWN_SOURCE = "face"`) took it to **0.529 / 0.900** on the same
+  footage and the same labels:
+
+  | signal | precision | recall |
+  |---|---|---|
+  | box aspect, uncropped | 0.000 | 0.000 |
+  | box aspect, 53.5° crop | 0.039 | 0.600 |
+  | **pose head keypoints** | **0.529** | **0.900** |
+
+  That precision understates it. Of the 16 false positives, **11 were frames
+  where the phone genuinely was in hand** and YOLO had lost the phone box —
+  an offence caught under the wrong name, not a false accusation. Only 4 were
+  real working frames, 0.4% of them. Head-down is quietly covering for the
+  phone detector: phone recall alone is 32%, but 37 of 81 phone frames
+  trigger *some* offence, because a head tilted at a phone is still down.
+
+  Sample size is 20 head-down frames. Promising, not settled.
 - **53.5° costs more than it saves at a normal desk.** Everything got worse
   under the crop, phone precision most of all. The lens is not the problem —
   the framing is. Raise the camera and sit further back before concluding the

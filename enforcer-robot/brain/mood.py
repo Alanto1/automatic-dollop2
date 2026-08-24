@@ -46,25 +46,25 @@ ABSENT_DWELL = 20.0    # you are allowed to stand up
 
 # Whether head-down may escalate all the way to STRIKE, or only to WARNING.
 #
-# OFF, on measurement. On the first real desk recording (10.8 min, 2 FPS,
-# hand-labelled) head-down from bounding-box geometry scored:
+# ON, on measurement -- but only once the signal came from the head. Same
+# 10.8 min hand-labelled recording, three ways of asking the same question:
 #
-#     uncropped   0.000 precision, 0.000 recall   119 false, 0 true
-#     53.5 deg    0.039 precision, 0.600 recall   278 false, 12 true
+#     box aspect ratio, uncropped   0.000 precision, 0.000 recall
+#     box aspect ratio, 53.5 deg    0.039 precision, 0.600 recall
+#     pose head keypoints           0.529 precision, 0.900 recall
 #
-# Zero true positives at the framing the robot will actually use. It is not a
-# threshold that needs moving: a box cannot tell "bowed over a phone" from
-# "leaning toward a monitor", because both shorten the box the same way, and
-# the second one is what working looks like.
+# The precision figure understates the last one. Of its 16 false positives,
+# 11 were frames where the subject genuinely was on their phone and YOLO had
+# lost the phone box -- an offence caught under the wrong name, not a false
+# accusation. Only 4 were real working frames: 0.4% of them.
 #
-# Phone alone, on the same footage, scored 0.897 precision. That is the
-# flagship behaviour and it survives on its own.
+# It also covers for the phone detector: phone recall alone is 32%, and
+# 37 of 81 phone frames now trigger some offence because a head tilted at a
+# phone is still a head that is down.
 #
-# Head-down still escalates to WARNING -- the robot gets visibly suspicious,
-# which is most of the effect and none of the risk. Flip this back to True
-# only after re-measuring on footage from a raised camera, and put the new
-# precision number in the writeup next to this one.
-HEAD_DOWN_CAN_FIRE = False
+# Sample size is 20 head-down frames. Promising, not settled -- record more
+# before quoting the number without it.
+HEAD_DOWN_CAN_FIRE = True
 
 # Extra time in WARNING before it fires. This is the "you have been warned"
 # window -- the robot is taunting and creeping at you for this long before
