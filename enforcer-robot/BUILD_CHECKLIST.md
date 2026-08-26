@@ -78,19 +78,23 @@ now turns a 5-week parts delay into zero schedule impact.
 - [x] ~~Tooling~~ — [`perception/`](perception/README.md) is written and
       tested (18/18): `detect.py`, `label.py`, `scene.py`, `evaluate.py`,
       `replay.py`. Step-by-step guide in its README
-- [ ] Record ~20 min of yourself at a desk: working, picking up the phone,
-      leaving, coming back. Phone camera on a stack of books is fine.
-      **Sit normally for the first 15s** — that's the posture calibration
-- [ ] Crop the footage to **53.5°** to match `RPIZ-CAM-15`, and confirm your
-      head is still in frame at your real desk distance. If it isn't, the
-      camera mount goes higher — decide that *before* Week 4's shell restyle
-- [ ] YOLOv8n @320 over the video **on the laptop**, sampled at 1–2 FPS —
-      not full frame rate. That's what a Zero 2 W will give you
-- [ ] Hand-label "working" / "on phone" / "gone"; measure how often the
-      detector agrees. **These are your false-positive numbers**, and they're
-      the most valuable thing you can carry into the build
-- [ ] Head-down from bounding-box geometry — **not** MediaPipe Pose, which is
-      too heavy for 512MB alongside the detector
+- [x] ~~Record footage~~ — 10.8 min at 1080p30, hand-labelled. Shorter than
+      planned and it was enough to settle four design questions. Next one
+      wants more phone time (81 frames ≈ 40s) and more head-down (20 frames)
+- [x] ~~Crop to 53.5° and check the framing~~ — **it fails.** Accuracy
+      0.838 → 0.696 and phone precision 0.897 → 0.233 under the crop, because
+      a phone *held in the hand* falls outside it while one lying on the desk
+      does not. The camera must frame the hands, not the head. Week 4 item
+- [x] ~~YOLOv8n @320 at 2 FPS~~ — 14 ms/frame on the laptop, 1299 frames
+- [x] ~~Hand-label and measure~~ — **overall accuracy 0.947, false strikes
+      1.1%** against a 2% budget. Started at 27.5%. `CONF_PHONE` 0.15 and
+      `FACE_LOW_IN_BOX` 0.30, both chosen by sweep rather than by taste
+- [x] ~~Head-down from bounding-box geometry~~ — **tried and it does not
+      work**: 0.000 precision *and* 0.000 recall, anti-correlated, because box
+      aspect ratio measures lean and camera distance rather than head pose.
+      Replaced with **yolov8n-pose head keypoints** (0.529 / 0.900). Not
+      MediaPipe, and a second 6MB model rather than a heavier one — but it is
+      a second inference pass, so measure the Pi cost in Week 6
 - [ ] `python3 replay.py detections.jsonl --video desk.mp4` — the whole
       software loop on recorded video, before the robot exists. Keep
       `annotated.mp4`: it's the best thing to show between demos

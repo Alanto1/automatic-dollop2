@@ -33,7 +33,23 @@ CONF_PERSON = 0.40
 # motion-blurred. Being strict here is the classic way to build a detector
 # that never fires: set it low and let the mood machine's dwell timers throw
 # away the noise instead. That is what they are for.
-CONF_PHONE = 0.25
+#
+# 0.15 rather than 0.25, measured on the hand-labelled recording:
+#
+#            recall  precision  false strikes
+#     0.25    0.321      0.897          0.6%
+#     0.15    0.444      0.818          1.1%
+#
+# Precision falls and it is still the right trade, because the dwell timer
+# does not treat the two symmetrically. A real pickup lasts five seconds and
+# lands ten consecutive frames; a misdetection lands one. PHONE_DWELL needs
+# six frames held together, so clustered evidence accumulates and scattered
+# noise does not. Ten more true frames push episodes over the threshold; five
+# more scattered false ones do nothing.
+#
+# 0.321 was also likely below the floor where the dwell ever completes, which
+# makes the difference firing at all rather than reacting sooner.
+CONF_PHONE = 0.15
 
 # How far outside the person's box a phone still counts as "theirs", as a
 # fraction of the person's box size. A phone lying on the far side of the
