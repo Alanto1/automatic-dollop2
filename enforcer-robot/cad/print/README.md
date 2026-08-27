@@ -45,7 +45,38 @@ photos of exactly where, at
 
 ---
 
-## Batch 1 — the body (print now, nothing blocks it)
+## The order, plate by plate
+
+Five plates. Numbers 1–3 can all run today; 4 and 5 wait on a tape measure
+and a scale.
+
+| # | Plate | Supports | est. |
+|---|---|---|---|
+| 0 | 20 mm calibration cube | no | 20 min |
+| 1 | **one** joint — `R1-v117` | no | 11 min |
+| 2 | remaining 7 joints + 4× `cliff_bracket` + `nozzle_mount` | no | ≈ 1.9 h |
+| 3 | `Internal-Frame-v121` + `Bottom-Cover-v121` | no | ≈ 1.6 h |
+| 4 | `Top-Cover-Enclosed-v117` | **yes** | ≈ 50 min |
+| — | *assemble, get it walking, weigh it, measure it* | | |
+| 5 | `payload_deck` + `camera_mount` + 2× `reservoir_cradle` | no | ≈ 1.1 h |
+
+**Plate 1 is one joint, on purpose.** Test-fit an MG90S in it before
+committing to the other seven. A servo pocket that is 0.2 mm tight is a
+fifteen-minute discovery here and a four-hour one after the full plate. If
+the servos have not arrived yet, print it anyway and check it against the
+calipers and the upstream render — you still catch gross scaling errors.
+
+**Plate 4 is alone because its settings differ.** Outer brim and Normal
+(Manual) supports are plate-wide in most slicers, and you do not want either
+on the joints.
+
+**Nothing after plate 4 should start before the robot walks.** Stock firmware
+first — that is how you know a later fault is yours and not an assembly
+error, and it is why the payload parts wait.
+
+---
+
+## Batch 1 — the body (plates 1–4)
 
 | Part | Qty | g | est. |
 |---|---|---|---|
@@ -70,7 +101,7 @@ After this batch you can assemble Sesame, flash stock firmware, and get it
 walking. That is Weeks 1–2 of the checklist and it needs none of the parts
 below.
 
-## Batch 2 — the Enforcer payload (print AFTER measuring)
+## Batch 2 — the Enforcer payload (plate 5, print AFTER measuring)
 
 ⚠️ **Do not print these tonight.** Three of the six have dimensions that are
 currently estimates, marked as such in `make_stl.py`, and the measurements
