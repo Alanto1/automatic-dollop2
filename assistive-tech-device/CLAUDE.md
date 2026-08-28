@@ -5,9 +5,69 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-08-28: enclosure fit fixes, and a branch reset recovered
+
+Fourteenth pass. Three fit problems reported off the STLs, all of them
+caused by a **placeholder dimension nobody had replaced with a real one**.
+
+| Was | Now | Why |
+| --- | --- | --- |
+| `nano_stack_height` 8 | **13** | 8 was a bare board. Headers are soldered, so pin tails stand ~3.5mm proud of the solder side |
+| `tof_length/width` 14 × 8 | **25 × 15.6** | a GY-53's real published size. 14 × 8 was a guess, and small enough that the sensor physically would not enter its cradle |
+| `box_outer_*` 67 × 30 | **72 × 34** | builder asked for wire room, and the two fixes above independently needed it — at 30mm wide the cradle would not have fitted the cavity at all |
+
+Three design changes came with them:
+
+- **The Nano's pocket is now open on its -X face**, like the battery's.
+  A fourth wall there would either foul the soldered pin tails or force
+  the pocket wider still; open, they hang out into the cavity.
+- **The sensor cradle is no longer a closed picture-frame.** It is two
+  side rails plus a bottom ledge, open at the top, so the board drops in
+  from above. A closed frame has to be right in *both* Y and Z or the
+  board is locked out entirely — which is exactly what happened. Rails
+  only have to be right in Y; a taller-than-expected board just stands
+  proud instead of not fitting. Rail-to-rail gap is 25.6mm for a 25mm
+  board.
+- **`sensor_window_dia` 6 → 7.** The board now stands up to 8mm off the
+  wall on its header pins, turning the window into a short tunnel. At
+  6mm dia and 8mm deep the opening subtends ~41°, uncomfortably close to
+  the sensor's own 25° cone; 7mm takes it back to ~47°.
+
+### The USB holes are now deliberately loose along X
+
+Previously each lid opening was sized to its connector and centred on the
+pocket's slot. That assumed the board sits centred in its pocket — and
+with the Nano's pocket now open on one face, it doesn't; it beds against
+the remaining wall. Where the connector actually lands depends on which
+way round the board sits, how thick the headers are, and which wall it
+rests on. All three are still guesses.
+
+So the opening now spans nearly the whole slot along X (12.6mm for the
+Nano) and stays tight only along Y, where the position *is* known because
+every board is centred in the cavity. A slot 6mm wider than it needs to be
+is untidy and works; a slot 2mm off-centre is a reprint. The counterbore
+grew in Y only for the same reason — widening it in X would cut away the
+pocket walls the boards hang from.
+
+### Branch reset — what happened, and where the work was
+
+This session's container came back with `claude/follow-this-yo7wgl` reset
+to `main` (which by then carried PR #10's `learning/` curriculum). All
+eight enclosure commits were **absent from the clone entirely** — not
+just unmerged, gone: `git cat-file` couldn't resolve them.
+
+They were safe on GitHub in `refs/pull/8/head`. Recovery was
+`git fetch origin 'refs/pull/8/head:refs/remotes/pr8'` then a merge; the
+only conflict was `CLAUDE.md`, where both sides had added a session log,
+and both were kept.
+
+**Worth knowing for next time:** a PR ref survives a branch reset. If work
+seems to have vanished from a branch, check `refs/pull/N/head` before
+assuming it's lost.
+
 ## Session log — 2026-08-06: theory curriculum added at repo root (`../learning/`)
 
-Eleventh pass, and **no code, hardware, sourcing or enclosure changes** —
+Thirteenth pass, and **no code, hardware, sourcing or enclosure changes** —
 the builder asked for a theory study plan, which landed in a new
 top-level `learning/` directory, not in here. Nothing in this project
 was modified except this entry.
@@ -49,6 +109,142 @@ real defects rather than nice-to-haves:
   wall return, dark targets read as "nothing there", and ambient IR
   outdoors raises the noise floor. All three are safety-relevant for
   the actual intended users.
+
+## Session log — 2026-08-03/04: enclosure built to the sketch, then given internal mounting
+
+Twelfth pass. `enclosure.scad` was rebuilt around a hand-drawn sketch and
+a set of real caliper measurements, replacing most of the guessed layout.
+Final arrangement, all confirmed against exported STL coordinates rather
+than assumed:
+
+The pod lies with its **67mm length along the arm**, so a 30mm end face
+looks forward. Sensor on that front face, switch on the back one.
+
+| Feature | Where | Verified |
+| --- | --- | --- |
+| Box | 72 × 34 × 52, on a 7.2mm plinth | base prints 72×34×**59.2** |
+| Sensor window, ⌀6 | −X front wall, z 29.8–35.8 | ✅ |
+| Switch slot, 6.5 × 3 | +X back wall, z 31.3–34.3 | ✅ |
+| Sensor cradle | front wall, x 2.2–7.7, z 26.9–38.7 | ✅ |
+| Motor seat ring, ⌀13.8 | floor, centre x 10.1, z 9.4–11.4 | ✅ |
+| Nano pocket | lid, x 18.0–29.8, hangs 24.75 | ✅ |
+| Battery pocket (1 face open) | lid, x 35.08–43.88, hangs 27 | ✅ |
+| TP4056 pocket | lid, x 49.15–57.95, hangs 14.3 | ✅ |
+| mini-USB, 6.83 × 8.0 | lid, x 20.48–27.32 (on the Nano pocket) | ✅ |
+| USB-C, 4.64 × 9.36 | lid, x 51.23–55.87 (on the TP4056 pocket) | ✅ |
+| Strap tunnel, 21.5 wide | plinth, x 22.75–44.25, z 2.2–7.2 | ✅ |
+
+**The strap compartment is a plinth UNDER the box, not a tunnel through
+the box's floor.** This was corrected mid-pass: the first version bored
+the tunnel through the floor and the cavity paid ~7mm for it, dropping
+usable interior to 37.6mm. The builder's actual intent was extra height
+below the box, so the interior keeps its full height and the pod stands
+further off the wrist instead.
+
+Three numbers all get called "the height" — worth keeping straight:
+
+| | mm |
+| --- | --- |
+| `box_outer_height` — the open-topped box alone | 52 |
+| `base_height` — what prints, box + plinth | 59.2 |
+| assembled, with the lid plate | 61.4 |
+| `cavity_height` — usable, for a board hanging from the lid | 46.8 |
+
+**The box is 52, not the sketched 50, and that was forced.** The Nano has
+to hang on its long edge — the only orientation putting its mini-USB where
+the lid's hole is — so the cavity needs ≥45mm. At 50 it came out 44.8:
+short by 0.2mm, the kind of miss that only surfaces when the print is in
+your hand. An assert on `cavity_height` now enforces it, so going back to
+50 fails loudly.
+
+The plinth is the pod's full 72 × 34 footprint rather than a pedestal
+under the middle. A pedestal would use less material, but the box floor
+would then overhang it at ~71° from vertical — support-or-fail — and the
+ramp needed to bring that back to a printable 45° would reach nearly to
+the pod's ends anyway.
+
+**Both USB ports moved from a side wall into the lid.** All three boards
+hang from the lid; the two with connectors hang connector-end up, so the
+ports come out through the top. Each port is counterbored from underneath
+so the connector body nests up inside the lid's lip — without that the
+receptacle sits at the bottom of a 5.2mm shaft and no plug reaches it. The
+counterbore is the load-bearing detail of this whole arrangement, and
+`usb_body_margin` (2mm) is a **guess**, not a measurement.
+
+### Internal mounting — pockets, cradle, motor seat
+
+Added 2026-08-04. Everything is a **locator, not a clamp**: nothing is a
+press fit, the parts are glued, and what the features buy is a glue joint
+made against a flat surface in a known position.
+
+- **Board pockets hang from the lid**, four walls each, `rib_thickness`
+  1.6mm. The **battery's has one face left open** — a LiPo pouch swells
+  with age and a rigid box with no give is a bad place to discover that;
+  the open face also lets you see the cell.
+- **Order front→back is Nano · battery · TP4056.** Nano nearest the
+  sensor keeps the I2C run short (I2C already cost this project hours;
+  long unshielded SDA/SCL is the classic way to make it flaky), TP4056
+  nearest the switch it feeds.
+- **Boards face along X**, stacked down the pod's length. Forced, not
+  chosen: facing along Y the three pockets need 29.4mm across a 25.6mm
+  cavity. A knock-on effect — the receptacles are now **wide along Y and
+  narrow along X**, the opposite of the previous revision, which would
+  have cut two holes the plugs couldn't enter.
+- **USB holes are derived from the pockets**, not placed independently. A
+  hole that drifts 2mm off its board is a hole the plug fouls on, and
+  there is no way to see that in a render.
+- **Sensor cradle** is a picture-frame on the inside of the front wall,
+  centred on the window, with a notch in its lower rail for wires.
+  `tof_lens_offset_y/z` exist because on a GY-53 the chip is *not* centred
+  on the breakout — both default to 0 and **need measuring**. Wrong here
+  means the sensor stares at the inside of the wall and reads a permanent
+  obstacle; the device would look fine and just always buzz.
+- **Motor seat** is a ring on the cavity floor, front zone, wire notch
+  facing +X toward the Nano. On the floor rather than a side wall because
+  the floor is nearest the skin with solid plinth beneath it, so the buzz
+  couples into the wrist instead of rattling around the shell.
+
+**Assembly is designed around the lid being upside down on the bench** —
+pockets become open-topped cups, boards drop in connector-end first, and
+gravity holds them while the glue sets. That is the whole reason they hang
+from the lid rather than standing up from the base floor.
+
+One trap worth remembering: `sensor_cradle()` and `motor_seat()` are
+unioned **after** `pod_shell`'s `difference()`, not inside it. Both live
+inside the cavity, so unioning them first would hand them straight to the
+same subtraction that carves the cavity out — they'd vanish, and the
+render would look perfectly fine.
+
+**The two watch-style lug tunnels became one central strap channel**, at
+the builder's request. Worth knowing: this file's own comments had
+explicitly rejected a single slot because one wrap point lets the pod
+pivot instead of sitting flat. That concern was not solved, it was
+accepted — it's now documented in the file header rather than deleted,
+so nobody rediscovers it as a surprise. It's modelled as a *closed*
+tunnel rather than an open groove, so the pod stays on the strap when the
+band is off and the underside stays a continuous face against the wrist.
+
+### Two silent-failure bugs caught this pass
+
+Both rendered as valid manifold geometry with zero warnings, which is why
+render success alone is not verification in this file:
+
+1. **USB counterbores abutted at exactly 0mm.** `usb_gap = 4` with
+   `usb_body_margin = 2` on each facing side left a zero-thickness wall;
+   CGAL reported `Simple: yes` and the two pockets would have printed as
+   one trench. Fixed by deriving `usb_gap` from `usb_body_margin` and
+   asserting they can't touch.
+2. **`belt_clip_back` had no switch slot and no sensor window** — it
+   duplicated the shell by hand and never picked up either cutout, so
+   printing it produced a sealed box. Fixed structurally rather than by
+   patching: both backs now share one `pod_shell(with_strap)` module, so
+   anything added to the shell reaches both and they can't drift apart
+   again.
+
+This is the third and fourth time a cutout in this file has silently done
+nothing (earlier: the switch slot landing inside a strap tunnel, and two
+tunnels merging). **Verify cutouts by checking coordinates in the exported
+STL, not by checking that the render succeeded.**
 
 ## Session log — 2026-07-31: switches sourced locally, enclosure gains a switch cutout
 
@@ -484,11 +680,12 @@ consent before naming or showing any test user.
   "Session log" above). Hardware itself has not been purchased or
   assembled — see `PURCHASE_LIST.md`. Blindfolded course test (with
   sighted spotter) not yet possible until hardware exists.
-- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` render-verifies
-  cleanly (base/lid/clip all confirmed via headless OpenSCAD in this
-  pass — see "Session log"). Every dimension is still a placeholder —
-  needs real caliper measurements once parts arrive, then re-render
-  before printing.
+- [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
+  the builder's 72 × 34 × 52mm sketch, and base/lid/clip/coupon all
+  render-verify cleanly with every cutout confirmed against exported STL
+  coordinates (see the 2026-08-03 session log). Most dimensions are real
+  caliper numbers now; `switch_actuator_length`/`_width` and
+  `usb_body_margin` are the remaining guesses. Nothing printed yet.
 - [ ] **Weeks 4-6 — real feedback session** with whoever responds to the
   Week 0 outreach. Not started (outreach not sent yet).
 - [ ] **Writeup + consent**, after the above.
@@ -622,12 +819,24 @@ assistive-tech-device/
 
 ## Natural next steps
 
-1. Send the outreach emails (`outreach/`) — still the most time-sensitive
-   open item, ideally in parallel with the steps below, not after.
-2. Work through `PURCHASE_LIST.md` and actually buy the parts - either
-   the flat 502030 LiPo pouch via Kaspi.kz or an 18650 in person at Alash
-   Electronics, see the battery note for the tradeoff.
-3. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
+As of 2026-08-03, in priority order:
+
+1. **Get the TP4056's `R3` swapped to ~10kΩ.** Still the only open safety
+   item, and it has been open for four passes. The stock module pushes
+   ~1A into a 250mAh cell (~4C). Supervise every charge until it's done.
+2. **Print `part="switch_test_coupon"`** and report which slot the
+   actuator moves freely in — that closes the largest remaining unknown
+   in the enclosure without measuring a 2mm nub.
+3. **Measure `usb_body_margin`** — how far each USB connector's body
+   stands proud of its board. The lid's counterbore depends on it, and
+   getting it wrong makes both ports unreachable.
+4. **Identify which two switch pins make/break** with the D2→D3
+   continuity sketch, and confirm the slider latches.
+5. Phase 4 (combined firmware on real hardware) and Phase 5 (running off
+   the battery) — neither started.
+6. Send the outreach emails (`outreach/`) — the most time-sensitive open
+   item, and independent of everything above, so it shouldn't wait on it.
+7. Follow `tutorial.md` phase by phase, starting from Phase 0 - it covers
    board bring-up, sensor, motor, combined firmware, power, soldering,
    the enclosure fit-and-reprint loop, final assembly, and the blindfolded
    test, in the order that makes problems easiest to isolate. Don't skip
