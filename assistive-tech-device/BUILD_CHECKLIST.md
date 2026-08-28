@@ -87,7 +87,7 @@ Tools:
 - [ ] OpenSCAD installed
 - [ ] Access to a 3D printer (own, school, library, print service)
 
-The model is built to the sketched box: **67mm long (along the arm) × 30mm
+The model is built to the sketched box: **72mm long (along the arm) × 34mm
 wide × 52mm tall**, on a 7.2mm strap plinth underneath. Sensor window in
 the front wall, switch slot in the back wall, both USB ports in the lid,
 one 20mm strap tunnel through the plinth. The base prints 59.2mm tall and

@@ -61,7 +61,7 @@ before trusting them on a wrist.
   battery) are not done, and `obstacle_haptic.ino` has still never been
   flashed to the board.
 - [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
-  the builder's sketch — a 67 × 30 × 50mm box on a strap plinth — and
+  the builder's sketch — a 72 × 34 × 52mm box on a strap plinth — and
   render-verifies cleanly (headless OpenSCAD; base, lid, belt-clip and
   switch coupon all export as valid manifold geometry, with each cutout
   checked against its expected coordinates in the exported STL — see the
@@ -316,10 +316,18 @@ flat surface in a known position.
 
 | Part | Feature |
 | --- | --- |
-| Nano, TP4056 | four-walled pocket hanging from the lid, connector-end up |
-| Battery | same, but **one face left open** — a LiPo pouch swells with age, and a rigid box with no give is a bad place to find that out |
-| VL53L0X | picture-frame cradle on the inside of the front wall, centred on the window |
+| TP4056 | four-walled pocket hanging from the lid, connector-end up |
+| Nano | same, but **one face left open** so the soldered header pins have somewhere to go |
+| Battery | same again — a LiPo pouch swells with age, and a rigid box with no give is a bad place to find that out |
+| VL53L0X | two side rails plus a bottom ledge on the inside of the front wall; the board drops in from above |
 | Motor | raised ring on the cavity floor, front zone |
+
+The sensor cradle is deliberately **open at the top** rather than a closed
+frame. A closed frame has to be right in both axes or the board is locked
+out entirely — which is what happened with the first version, sized from a
+guessed 14 × 8mm board when a GY-53 is really 25 × 15.6mm. Rails only have
+to be right across the width; a taller-than-expected board stands proud
+instead of not fitting.
 
 The three pockets sit front to back down the pod's length: **Nano ·
 battery · TP4056**. That order isn't arbitrary — the Nano is nearest the
@@ -349,6 +357,11 @@ shell.
   wrong and the sensor spends its life staring at the inside of the wall,
   reading a permanent obstacle — and nothing about the device would *look*
   wrong, it would just always buzz.
+- **The lid's USB slots are wider than the connectors along the pod's
+  length.** That is deliberate: where each receptacle lands along X
+  depends on which way round its board sits and how thick its headers
+  are, none of which is measured yet. The slots stay tight across the
+  width, where the position *is* known.
 - The belt-clip alternative mount remains explicitly unvalidated (needs
   print-and-test iteration on real material and printer).
 

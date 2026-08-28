@@ -5,6 +5,66 @@ handoff summary of everything decided and built so far, written so a fresh
 session (no memory of prior conversations) can pick up exactly where things
 left off.
 
+## Session log — 2026-08-28: enclosure fit fixes, and a branch reset recovered
+
+Fourteenth pass. Three fit problems reported off the STLs, all of them
+caused by a **placeholder dimension nobody had replaced with a real one**.
+
+| Was | Now | Why |
+| --- | --- | --- |
+| `nano_stack_height` 8 | **13** | 8 was a bare board. Headers are soldered, so pin tails stand ~3.5mm proud of the solder side |
+| `tof_length/width` 14 × 8 | **25 × 15.6** | a GY-53's real published size. 14 × 8 was a guess, and small enough that the sensor physically would not enter its cradle |
+| `box_outer_*` 67 × 30 | **72 × 34** | builder asked for wire room, and the two fixes above independently needed it — at 30mm wide the cradle would not have fitted the cavity at all |
+
+Three design changes came with them:
+
+- **The Nano's pocket is now open on its -X face**, like the battery's.
+  A fourth wall there would either foul the soldered pin tails or force
+  the pocket wider still; open, they hang out into the cavity.
+- **The sensor cradle is no longer a closed picture-frame.** It is two
+  side rails plus a bottom ledge, open at the top, so the board drops in
+  from above. A closed frame has to be right in *both* Y and Z or the
+  board is locked out entirely — which is exactly what happened. Rails
+  only have to be right in Y; a taller-than-expected board just stands
+  proud instead of not fitting. Rail-to-rail gap is 25.6mm for a 25mm
+  board.
+- **`sensor_window_dia` 6 → 7.** The board now stands up to 8mm off the
+  wall on its header pins, turning the window into a short tunnel. At
+  6mm dia and 8mm deep the opening subtends ~41°, uncomfortably close to
+  the sensor's own 25° cone; 7mm takes it back to ~47°.
+
+### The USB holes are now deliberately loose along X
+
+Previously each lid opening was sized to its connector and centred on the
+pocket's slot. That assumed the board sits centred in its pocket — and
+with the Nano's pocket now open on one face, it doesn't; it beds against
+the remaining wall. Where the connector actually lands depends on which
+way round the board sits, how thick the headers are, and which wall it
+rests on. All three are still guesses.
+
+So the opening now spans nearly the whole slot along X (12.6mm for the
+Nano) and stays tight only along Y, where the position *is* known because
+every board is centred in the cavity. A slot 6mm wider than it needs to be
+is untidy and works; a slot 2mm off-centre is a reprint. The counterbore
+grew in Y only for the same reason — widening it in X would cut away the
+pocket walls the boards hang from.
+
+### Branch reset — what happened, and where the work was
+
+This session's container came back with `claude/follow-this-yo7wgl` reset
+to `main` (which by then carried PR #10's `learning/` curriculum). All
+eight enclosure commits were **absent from the clone entirely** — not
+just unmerged, gone: `git cat-file` couldn't resolve them.
+
+They were safe on GitHub in `refs/pull/8/head`. Recovery was
+`git fetch origin 'refs/pull/8/head:refs/remotes/pr8'` then a merge; the
+only conflict was `CLAUDE.md`, where both sides had added a session log,
+and both were kept.
+
+**Worth knowing for next time:** a PR ref survives a branch reset. If work
+seems to have vanished from a branch, check `refs/pull/N/head` before
+assuming it's lost.
+
 ## Session log — 2026-08-06: theory curriculum added at repo root (`../learning/`)
 
 Thirteenth pass, and **no code, hardware, sourcing or enclosure changes** —
@@ -62,7 +122,7 @@ looks forward. Sensor on that front face, switch on the back one.
 
 | Feature | Where | Verified |
 | --- | --- | --- |
-| Box | 67 × 30 × 52, on a 7.2mm plinth | base prints 67×30×**59.2** |
+| Box | 72 × 34 × 52, on a 7.2mm plinth | base prints 72×34×**59.2** |
 | Sensor window, ⌀6 | −X front wall, z 29.8–35.8 | ✅ |
 | Switch slot, 6.5 × 3 | +X back wall, z 31.3–34.3 | ✅ |
 | Sensor cradle | front wall, x 2.2–7.7, z 26.9–38.7 | ✅ |
@@ -97,7 +157,7 @@ short by 0.2mm, the kind of miss that only surfaces when the print is in
 your hand. An assert on `cavity_height` now enforces it, so going back to
 50 fails loudly.
 
-The plinth is the pod's full 67 × 30 footprint rather than a pedestal
+The plinth is the pod's full 72 × 34 footprint rather than a pedestal
 under the middle. A pedestal would use less material, but the box floor
 would then overhang it at ~71° from vertical — support-or-fail — and the
 ramp needed to bring that back to a printable 45° would reach nearly to
@@ -621,7 +681,7 @@ consent before naming or showing any test user.
   assembled — see `PURCHASE_LIST.md`. Blindfolded course test (with
   sighted spotter) not yet possible until hardware exists.
 - [~] **Weeks 3-4 — wearable enclosure.** `enclosure.scad` is modelled to
-  the builder's 67 × 30 × 50mm sketch, and base/lid/clip/coupon all
+  the builder's 72 × 34 × 52mm sketch, and base/lid/clip/coupon all
   render-verify cleanly with every cutout confirmed against exported STL
   coordinates (see the 2026-08-03 session log). Most dimensions are real
   caliper numbers now; `switch_actuator_length`/`_width` and

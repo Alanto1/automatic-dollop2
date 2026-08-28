@@ -15,8 +15,8 @@
 // measurements. Re-render after updating them, and before printing.
 //
 // Orientation convention used throughout this file:
-//   X axis - the pod's 67mm length, lying ALONG the arm.
-//   Y axis - the pod's 30mm width, so a 30mm end face looks forward, in
+//   X axis - the pod's 72mm length, lying ALONG the arm.
+//   Y axis - the pod's 34mm width, so a 34mm end face looks forward, in
 //            the direction of travel. The strap runs this way too, around
 //            the wrist, and the strap tunnel bores through in Y.
 //   Z axis - up. The lid (+Z) lifts off the top, away from the skin; a
@@ -52,7 +52,7 @@
 // aims wherever the pod happens to be pointing. Three things reduce it in
 // practice - the channel is a full tunnel rather than a pair of skids, so
 // the strap is captured on all four sides; the plinth is the pod's whole
-// 67 x 30 footprint, so the pod beds down on a wide flat face rather than
+// 72 x 34 footprint, so the pod beds down on a wide flat face rather than
 // balancing on a narrow pedestal; and that footprint is long enough to
 // settle against the arm. If it turns out to
 // wander in real use, the fix is to widen the channel's X span so it grips
@@ -75,10 +75,16 @@ part = "all";  // "base" | "lid" | "wristband_back" | "belt_clip_back" | "all"
 // "length" below is how far it hangs and "stack height" is how thick it
 // is once headers and components are counted. Both matter now: length
 // sets how deep the cavity has to be, stack height sets how much of the
-// pod's 67mm the pockets eat.
+// pod's 72mm the pockets eat.
 nano_length       = 45;  // Arduino Nano clone, long edge (hangs vertically)
 nano_width        = 18;  // short edge
-nano_stack_height = 8;   // PCB + soldered header pins + components
+// 13, not 8. With headers SOLDERED ON the board is no longer 1.6mm of PCB
+// plus a couple of components - it is pin tails standing ~3.5mm proud of
+// the solder side, the header body, the PCB, and the components on top.
+// 8mm was measured off a bare board and made the pocket unusable. The
+// Nano's pocket is also open on one face (see board_pockets) so those pin
+// tails have somewhere to go rather than fouling a wall.
+nano_stack_height = 13;
 
 // TP4056 charge module. Hangs USB-C end UP, like the Nano.
 // PLACEHOLDER - the numbers measured on 2026-08-02 were the connector,
@@ -87,10 +93,15 @@ tp4056_length       = 26;
 tp4056_width        = 17;
 tp4056_stack_height = 5;
 
-tof_length       = 14;  // VL53L0X breakout board (e.g. GY-53) - see
-tof_width        = 8;   // PURCHASE_LIST.md, no walk-in Almaty store had a
-tof_stack_height = 4;   // VL53L1X in stock as of this writing
-tof_window_dia   = 5;   // clear aperture needed in front of the sensor lens
+// GY-53 carrier board. 25 x 15.6mm is the real published size; the 14 x 8
+// that used to be here was a guess from "typical breakout", and it was
+// small enough that the sensor physically would not go into its cradle.
+// stack height allows for the soldered header's pins and solder blobs on
+// the back, not just the 4mm board.
+tof_length       = 25;    // along Y, across the pod
+tof_width        = 15.6;  // along Z, up the wall
+tof_stack_height = 8;     // board + soldered header/solder standing proud
+tof_window_dia   = 5;     // clear aperture needed in front of the sensor lens
 
 // Where the sensor's LENS sits relative to the CENTRE of its breakout
 // board, so the cradle can be shifted to put the lens on the window.
@@ -208,8 +219,11 @@ switch_clearance  = 0.5;
 // inside this opening, and nothing transparent may cover it. A window
 // over the sensor reflects the emitter straight back into the receiver
 // and it reads a permanent obstacle a few centimetres away.
-sensor_window_dia = 6;   // wider than the chip's 4.4mm so the 25 degree
-                         // field of view isn't clipped by a setback
+// 7mm. The board now sits up to 8mm off the wall on its header pins, which
+// turns the window into a short tunnel - at 6mm dia and 8mm deep the
+// opening subtends about 41 degrees, uncomfortably close to the sensor's
+// own 25 degree cone. 7mm takes that back to ~47 degrees.
+sensor_window_dia = 7;
 // sensor_window_z is derived below - centred in the cavity.
 
 // ============================================================
@@ -337,8 +351,14 @@ internal_height = measured_bundle_height > 0
 // electronics, measured from the top of the strap compartment upward. The
 // strap compartment is extra height BELOW it, not a slice out of it, so
 // the printed base comes out taller than this number. See base_height.
-box_outer_length = 67;
-box_outer_width  = 30;
+// 72 x 34, up from the sketched 67 x 30. The builder asked for a bit more
+// room for the wires, and two things independently needed it: the Nano's
+// pocket grew 5mm along X once soldered headers were counted, and the
+// sensor cradle grew 11mm along Y once the GY-53's real 25 x 15.6mm size
+// replaced the guess. At 30mm wide the cradle would not have fitted the
+// cavity at all.
+box_outer_length = 72;
+box_outer_width  = 34;
 // 52, not the sketched 50, and this is a forced change rather than a
 // preference. The Nano hangs from the lid on its long edge - the only
 // orientation that puts its mini-USB where the lid's hole is - so the
@@ -502,18 +522,30 @@ tp4056_pocket_x  = battery_pocket_x + battery_pocket_x_size + pocket_gap;
 // pocket rather than placing them independently is the point: a hole that
 // drifts a couple of millimetres off its board is a hole the plug fouls
 // on, and there is no way to see that in a render.
-usb_charge_w = usb_charge_height + usb_clearance;  // Type-C, narrow along X
-usb_charge_d = usb_charge_width  + usb_clearance;  // wide along Y
-usb_data_w   = usb_data_height   + usb_clearance;  // mini-USB, narrow along X
-usb_data_d   = usb_data_width    + usb_clearance;  // wide along Y
-
-usb_charge_x = tp4056_pocket_x + rib_thickness
-               + (tp4056_stack_height + pocket_clearance - usb_charge_w) / 2;
-usb_data_x   = nano_pocket_x + rib_thickness
-               + (nano_stack_height + pocket_clearance - usb_data_w) / 2;
-
+// ACROSS Y the position is known exactly: every board is centred in the
+// cavity, so the receptacle is centred too, and the opening is the
+// connector plus clearance.
+usb_charge_d = usb_charge_width + usb_clearance;
+usb_data_d   = usb_data_width + usb_clearance;
 usb_charge_y = (outer_width - usb_charge_d) / 2;
 usb_data_y   = (outer_width - usb_data_d) / 2;
+
+// ALONG X it is not known, and pretending otherwise is how you print a
+// lid whose holes miss. Where the connector lands depends on which way
+// round the board sits in its pocket, how thick its headers are, and -
+// for the Nano, whose pocket is open on one face - which wall it beds
+// against. Every one of those is a guess right now.
+//
+// So the opening spans nearly the whole pocket slot along X instead of
+// being sized to the connector. A slot 6mm wider than it needs to be is
+// cosmetically untidy and works; a slot 2mm off-centre is a lid you
+// reprint. The Y dimension still holds the plug square, which is the one
+// that matters for it feeling solid.
+usb_charge_w = tp4056_stack_height + pocket_clearance - 1;
+usb_data_w   = nano_stack_height + pocket_clearance - 1;
+
+usb_charge_x = tp4056_pocket_x + rib_thickness + 0.5;
+usb_data_x   = nano_pocket_x + rib_thickness + 0.5;
 
 // The lid's lip is inset from its edge, and the counterbore is cut into
 // that lip - so a port too close to the edge would break out of the side
@@ -521,25 +553,23 @@ usb_data_y   = (outer_width - usb_data_d) / 2;
 // lid's outer rectangle.
 lip_inset = wall_thickness + lid_lip_clearance;
 
-// The counterbore also has to stay INSIDE its pocket's footprint. The
-// pocket walls are glued to the lip's underside; a counterbore wider than
-// the pocket eats the material those walls hang from, and the pocket ends
-// up attached to nothing. With usb_body_margin at 2mm both clear by less
-// than a millimetre, so this is checked rather than assumed.
-assert(usb_data_x - usb_body_margin >= nano_pocket_x
-       && usb_data_x + usb_data_w + usb_body_margin
-          <= nano_pocket_x + nano_pocket_x_size,
-       "The data port's counterbore undercuts the Nano pocket's walls - reduce usb_body_margin.");
-assert(usb_charge_x - usb_body_margin >= tp4056_pocket_x
-       && usb_charge_x + usb_charge_w + usb_body_margin
-          <= tp4056_pocket_x + tp4056_pocket_x_size,
-       "The charging port's counterbore undercuts the TP4056 pocket's walls - reduce usb_body_margin.");
-assert(usb_data_x + usb_data_w + usb_body_margin
-       < usb_charge_x - usb_body_margin,
-       "The two USB counterbores overlap - they would merge into one trench.");
-assert(usb_data_x - usb_body_margin >= lip_inset
-       && usb_charge_x + usb_charge_w + usb_body_margin <= outer_length - lip_inset,
-       "A USB counterbore runs off the end of the lid's lip.");
+// Along X the opening must stay within its pocket's INNER SLOT. The
+// pocket walls hang off the lip's underside; an opening wider than the
+// slot cuts away the material they hang from and leaves them attached to
+// nothing.
+assert(usb_data_x - 0.5 >= nano_pocket_x + rib_thickness - 0.01
+       && usb_data_x + usb_data_w + 0.5
+          <= nano_pocket_x + nano_pocket_x_size - rib_thickness + 0.01,
+       "The data port's opening undercuts the Nano pocket's walls.");
+assert(usb_charge_x - 0.5 >= tp4056_pocket_x + rib_thickness - 0.01
+       && usb_charge_x + usb_charge_w + 0.5
+          <= tp4056_pocket_x + tp4056_pocket_x_size - rib_thickness + 0.01,
+       "The charging port's opening undercuts the TP4056 pocket's walls.");
+assert(usb_data_x + usb_data_w + 0.5 < usb_charge_x - 0.5,
+       "The two USB openings overlap - they would merge into one trench.");
+assert(usb_data_x - 0.5 >= lip_inset
+       && usb_charge_x + usb_charge_w + 0.5 <= outer_length - lip_inset,
+       "A USB opening runs off the end of the lid's lip.");
 assert(usb_charge_y - usb_body_margin >= lip_inset
        && usb_charge_y + usb_charge_d + usb_body_margin <= outer_width - lip_inset,
        "The charging port's counterbore runs off the side of the lid's lip.");
@@ -635,8 +665,14 @@ module board_pockets() {
     // All three, hanging from the lid's underside. Front to back:
     // Nano, battery, TP4056 - see the layout block above for why.
     translate([0, 0, -lid_lip_height]) {
+        // OPEN on the -X face. The Nano's headers are soldered, so pin
+        // tails stand proud of the solder side; a fourth wall there would
+        // either foul them or force the pocket wider still. Open, they
+        // simply hang out into the cavity. The board then beds against the
+        // +X wall, which is what the USB hole is positioned from.
         board_pocket(nano_pocket_x, nano_width, nano_stack_height,
-                     nano_length * pocket_grip);
+                     nano_length * pocket_grip,
+                     open_back = true);
 
         board_pocket(battery_pocket_x, battery_width, battery_thickness,
                      battery_length * battery_pocket_grip,
@@ -648,36 +684,43 @@ module board_pockets() {
 }
 
 module sensor_cradle() {
-    // A picture-frame standing proud of the INSIDE of the -X front wall,
-    // centred on the sensor window. Push the breakout in along -X until
-    // it is flat against the wall, then glue it.
+    // Two side rails and a bottom ledge on the inside of the -X front
+    // wall, centred on the sensor window. The breakout drops in from
+    // ABOVE, sits on the ledge, and gets glued.
     //
-    // The frame locates the board in Y and Z; the glue holds it in X.
-    // That division matters, because the alignment that actually has to
-    // be right is the lens sitting on the window - get that wrong by 3mm
-    // and the sensor spends its life staring at the inside of the wall,
-    // reading a permanent obstacle. Nothing about a working device would
-    // look wrong; it would just always buzz.
+    // It was a closed picture-frame and it did not fit - the frame was
+    // sized from a guessed 14 x 8mm board when a GY-53 is really
+    // 25 x 15.6mm. Rebuilt open-topped on purpose: a closed frame has to
+    // be right in BOTH Y and Z or the board will not go in at all, while
+    // rails plus a ledge only have to be right in Y. A board taller than
+    // expected simply stands proud of the rails instead of being locked
+    // out, which is the failure mode you can still glue your way out of.
     //
-    // If the chip is not centred on its breakout - and on a GY-53 it is
-    // not - set tof_lens_offset_y/z rather than moving anything here.
+    // What the ledge sets is the board's HEIGHT, and therefore whether
+    // the lens lands on the window. If the chip is not centred on its
+    // breakout - and on a GY-53 it is not - correct that with
+    // tof_lens_offset_y/z, not by moving anything here.
     cy = outer_width / 2 - tof_lens_offset_y;
     cz = sensor_window_z - tof_lens_offset_z;
     iw = tof_length + pocket_clearance;   // across, along Y
     ih = tof_width + pocket_clearance;    // up, along Z
+    depth = tof_stack_height + 1.5;       // how far it stands off the wall
 
+    // Side rails, running from the ledge up past the top of the board.
+    for (ry = [cy - iw / 2 - rib_thickness, cy + iw / 2])
+        translate([wall_thickness, ry, cz - ih / 2 - rib_thickness])
+            cube([depth, rib_thickness, ih + rib_thickness]);
+
+    // Bottom ledge, with a notch so the sensor's wires drop straight out
+    // instead of being pinched under the board.
     difference() {
-        translate([wall_thickness, cy - iw / 2 - rib_thickness, cz - ih / 2 - rib_thickness])
-            cube([tof_stack_height + 1.5, iw + rib_thickness * 2, ih + rib_thickness * 2]);
+        translate([wall_thickness, cy - iw / 2 - rib_thickness,
+                   cz - ih / 2 - rib_thickness])
+            cube([depth, iw + rib_thickness * 2, rib_thickness]);
 
-        translate([wall_thickness - 1, cy - iw / 2, cz - ih / 2])
-            cube([tof_stack_height + 3.5, iw, ih]);
-
-        // Notch in the lower rail so the sensor's wires drop straight out
-        // instead of being pinched against the frame.
         translate([wall_thickness - 1, cy - tof_wire_notch / 2,
                    cz - ih / 2 - rib_thickness - 1])
-            cube([tof_stack_height + 3.5, tof_wire_notch, rib_thickness + 2]);
+            cube([depth + 2, tof_wire_notch, rib_thickness + 2]);
     }
 }
 
@@ -724,8 +767,11 @@ module usb_port_cut(px, py, pw, pd) {
     translate([px, py, -0.5])
         cube([pw, pd, wall_thickness + 1]);
 
-    translate([px - usb_body_margin, py - usb_body_margin, -lid_lip_height - 1])
-        cube([pw + usb_body_margin * 2,
+    // Grown in Y ONLY. Along X the mouth already spans the pocket's inner
+    // slot, so widening it further would cut away the very pocket walls
+    // the board hangs from and leave them attached to nothing.
+    translate([px - 0.5, py - usb_body_margin, -lid_lip_height - 1])
+        cube([pw + 1,
               pd + usb_body_margin * 2,
               lid_lip_height + 1.5]);
 }
