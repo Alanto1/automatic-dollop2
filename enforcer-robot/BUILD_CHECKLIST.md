@@ -103,6 +103,31 @@ now turns a 5-week parts delay into zero schedule impact.
 **Demoable:** your own desk footage, labelled, with the robot's mood
 overlaid frame by frame. That is a competition-grade result on its own.
 
+### Also parallel — measure the pump head (20 minutes, needs no robot)
+
+`PUMP_HEAD_M` is guessed at 0.40 and it swings the whole firing envelope:
+20cm of head gives a 30cm maximum range, 60cm gives 82cm. That is the
+difference between a robot that must almost touch you and one that works
+across a desk, and it is currently a number nobody has measured.
+
+The pump is submersible and needs nothing else built:
+
+- [ ] Bucket or sink of water. **Only the pump body goes in** — the wire ends
+      stay dry and out of the water, always
+- [ ] Push the 6mm silicone line onto the outlet
+- [ ] Power it from **2× AA in series (3.0V)**. Not the 5V buck, and not USB,
+      until you have checked Adafruit's own rated range for your unit
+- [ ] ⚠️ **Never run it dry.** These pumps are lubricated and cooled by the
+      water they move; seconds of dry running is how you kill one
+- [ ] Raise the free end of the tube vertically until the flow just stops.
+      Measure from **water surface to tube end** — that is the maximum head
+- [ ] Set `PUMP_HEAD_M` in `cad/make_stl.py`, re-run `--test`, and read the
+      new `RANGE_MIN` / `RANGE_MAX`
+
+Do it with the **2mm nozzle tube** fitted too, and separately without. The
+narrow tip is what turns a weak pump into a jet, and the two numbers tell you
+how much it is buying you.
+
 ---
 
 ## Weeks 1–2 — Print and assemble Sesame
