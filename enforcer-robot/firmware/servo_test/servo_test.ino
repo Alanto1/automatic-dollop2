@@ -13,6 +13,11 @@
 //      gives you a leg with 30 degrees less travel on one side, and you do
 //      not find out until the robot walks in a curve.
 //
+// NO LIBRARIES. This drives LEDC directly rather than pulling in ESP32Servo,
+// using the same compatibility shim as board_test.ino -- which already
+// compiles and runs on this machine. One less thing to install, and one less
+// thing to be subtly the wrong version of.
+//
 // The pulse constants below are Sesame's, copied from
 // firmware/debugging-firmware/sesame-motor-tester.ino. They must match: 90
 // degrees here has to be the same shaft position as 90 degrees in the real
@@ -21,7 +26,6 @@
 // Arduino IDE setup for the S2 Mini:
 //   Board:              "LOLIN S2 Mini"  (ESP32 boards package)
 //   USB CDC On Boot:    ENABLED     <-- without this Serial prints nothing
-//   Library:            "ESP32Servo" by Kevin Harrington (Library Manager)
 //
 // WIRING -- read this before plugging anything in:
 //
@@ -36,35 +40,67 @@
 // and the servo will twitch or ignore you.
 
 #include <Arduino.h>
-#include <ESP32Servo.h>
 
 // Sesame's motor 0 pin, so this bench rig matches the real harness.
-const int SERVO_PIN = 1;
+static const int SERVO_PIN = 1;
 
-// Sesame's pulse width limits. Do not "improve" these -- see the header.
-const int MIN_PULSE = 732;
-const int MAX_PULSE = 2929;
+// 50Hz, and 14 bits because the ESP32-S2's LEDC timers cap there -- asking
+// for 16 makes ledcAttach fail outright. board_test.ino found that the hard
+// way; the comment there has the detail.
+static const int SERVO_HZ = 50;
+static const int SERVO_BITS = 14;
 
-const int CENTRE = 90;
+// Sesame's pulse width limits, in microseconds. Do not "improve" these.
+static const int MIN_PULSE = 732;
+static const int MAX_PULSE = 2929;
 
-Servo servo;
-bool attached = false;
+static const int CENTRE = 90;
 
-void attachIfNeeded() {
-  if (!attached) {
-    servo.attach(SERVO_PIN, MIN_PULSE, MAX_PULSE);
-    attached = true;
-  }
+static bool attached = false;
+
+static void servoAttach() {
+  if (attached) return;
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcAttach(SERVO_PIN, SERVO_HZ, SERVO_BITS);
+#else
+  ledcSetup(0, SERVO_HZ, SERVO_BITS);
+  ledcAttachPin(SERVO_PIN, 0);
+#endif
+  attached = true;
 }
 
-void go(int deg, const char *what) {
+static void servoDetach() {
+  if (!attached) return;
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcDetach(SERVO_PIN);
+#else
+  ledcDetachPin(SERVO_PIN);
+#endif
+  attached = false;
+}
+
+// One 50Hz frame is 20000us. Duty is the fraction of that the pin is high.
+static void writeMicros(int us) {
+  servoAttach();
+  uint32_t duty = (uint32_t)((us / 20000.0) * ((1 << SERVO_BITS) - 1));
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  ledcWrite(SERVO_PIN, duty);
+#else
+  ledcWrite(0, duty);
+#endif
+}
+
+static int degToMicros(int deg) {
+  return MIN_PULSE + (int)((long)(MAX_PULSE - MIN_PULSE) * deg / 180);
+}
+
+static void go(int deg, const char *what) {
   deg = constrain(deg, 0, 180);
-  attachIfNeeded();
-  servo.write(deg);
-  Serial.printf("  -> %d deg   %s\n", deg, what);
+  writeMicros(degToMicros(deg));
+  Serial.printf("  -> %3d deg  (%dus)  %s\n", deg, degToMicros(deg), what);
 }
 
-void menu() {
+static void menu() {
   Serial.println();
   Serial.println("  c        centre at 90 and HOLD -- press the horn on now");
   Serial.println("  s        slow sweep 0 -> 180 -> 0, twice");
@@ -82,8 +118,8 @@ void setup() {
   Serial.println("-----------------------------------");
   Serial.println("  MG90S bench tester");
   Serial.println("-----------------------------------");
-  Serial.printf("signal on GPIO %d, pulses %d-%dus (Sesame's)\n",
-                SERVO_PIN, MIN_PULSE, MAX_PULSE);
+  Serial.printf("signal on GPIO %d, %dHz, %d-bit, pulses %d-%dus (Sesame's)\n",
+                SERVO_PIN, SERVO_HZ, SERVO_BITS, MIN_PULSE, MAX_PULSE);
   Serial.println();
   Serial.println("A servo PASSES if all four are true:");
   Serial.println("  1. it moves to every commanded angle without stalling");
@@ -107,19 +143,17 @@ void loop() {
   if (cmd == "c") {
     go(CENTRE, "HOLDING -- press the horn on now, short side into the joint");
   } else if (cmd == "d") {
-    servo.detach();
-    attached = false;
+    servoDetach();
     Serial.println("  -> detached. Shaft is limp; safe to unplug.");
   } else if (cmd == "s") {
-    attachIfNeeded();
     Serial.println("  sweeping -- watch for stalls, buzzing and dead spots");
     for (int pass = 0; pass < 2; pass++) {
-      for (int d = 0; d <= 180; d += 2) { servo.write(d); delay(15); }
-      for (int d = 180; d >= 0; d -= 2) { servo.write(d); delay(15); }
+      for (int d = 0; d <= 180; d += 2) { writeMicros(degToMicros(d)); delay(15); }
+      for (int d = 180; d >= 0; d -= 2) { writeMicros(degToMicros(d)); delay(15); }
     }
     go(CENTRE, "sweep done, back to centre");
   } else if (cmd == "e") {
-    go(0, "low endpoint");   delay(700);
+    go(0, "low endpoint");    delay(700);
     go(180, "high endpoint"); delay(700);
     go(CENTRE, "back to centre -- were both ends equally far from here?");
   } else {

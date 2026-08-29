@@ -33,7 +33,15 @@ Board settings are the same ones that worked for `board_test`:
 
 - Board: **LOLIN S2 Mini**
 - **USB CDC On Boot: ENABLED** — without it Serial prints nothing
-- Library: **ESP32Servo** by Kevin Harrington, from Library Manager
+
+**No libraries.** This drives LEDC directly rather than pulling in
+ESP32Servo, using the same `ESP_ARDUINO_VERSION_MAJOR` shim as
+`board_test.ino` — which already compiles and runs on this machine. One less
+thing to install, and one less thing to be subtly the wrong version of.
+
+You *will* need ESP32Servo later, for Sesame's own
+`sesame-motor-tester.ino`. Install it when you get there; it is not a
+prerequisite for this sketch.
 
 ## Use
 
@@ -67,3 +75,9 @@ as you go.
 this sketch centres at a different pulse width than the robot later commands,
 every horn you aligned against it is aligned to nothing, and the error shows
 up as a robot that walks in a curve.
+
+One thing that looks wrong and is not: **90° comes out at 1830 µs**, not the
+textbook 1500 µs. That falls straight out of Sesame's band — 0° is 732 µs,
+180° is 2929 µs, and the midpoint of those is 1830. If you put a scope on it
+and expect 1500, you will think something is broken. Matching the robot
+matters more than matching the convention.
