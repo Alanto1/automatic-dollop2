@@ -65,6 +65,35 @@ Run `s` then `e` on each servo. It **passes** if:
 Buzzing that never settles is a dying servo. Number the good ones with tape
 as you go.
 
+## "Straight" is not at 90 degrees, and that is fine
+
+Expect each servo to sit mechanically neutral somewhere around 80-100 rather
+than exactly 90. Nothing is wrong. Three things stack up:
+
+- **The spline is coarse.** An MG90S horn has a 20-tooth spline, so it seats
+  in 18-degree steps. Mechanical alignment is never better than +/-9 degrees
+  however carefully the horn is pressed on.
+- **Sesame's 90 is not the servo's neutral.** Its band is 732-2929us, whose
+  midpoint is 1830us rather than the conventional 1500us. The two were never
+  going to coincide.
+- **Servos vary unit to unit.** The offset is a property of that individual
+  servo and horn, not of the design.
+
+**Sesame's firmware absorbs the remainder.** `sesame-firmware-main.ino` keeps
+a per-servo trim table:
+
+```c
+int8_t servoSubtrim[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+```
+
+settable live over serial with `subtrim <motor> <degrees>` (range +/-90), and
+`subtrim save` prints the array back to paste into the source.
+
+So while bench-testing, **write the offset down per servo** -- "#3 straight at
+80, offset -10" -- and carry the note to the calibration step. Do not try to
+fix it by rotating the horn beyond one tooth; you will run out of travel at
+one end of the sweep instead.
+
 ## Why the pulse widths matter
 
 `MIN_PULSE 732` and `MAX_PULSE 2929` are copied from Sesame's own
