@@ -143,6 +143,19 @@ Now measure it, because `PUMP_HEAD_M` is an estimate:
    band, and hard-code `RANGE_MIN` / `RANGE_MAX`. Outside the band the robot
    **walks closer instead of firing.**
 
+⚠️ **Measure at the pump's rated 3V.** A DC motor's speed follows voltage and
+a pump's head follows speed *squared*, so a test at 1.5V reads about a
+quarter of the truth — roughly 10cm of head where the real figure is 40. A
+whole design decision about how close the robot has to walk can rest on that
+factor of four, so get the voltage right before concluding anything.
+
+`RANGE_MIN_M` (20cm) is a **standoff preference, not a ballistic limit** —
+the robot should not fire from touching distance. `range_band` drops below it
+when the pump cannot reach that far, because a near limit above the far limit
+is an empty band, and an empty band means firing interlock 3 never passes and
+the pump never runs. A weak pump should make the robot walk closer. It must
+not make it mute.
+
 Measure range with the **VL53L0X** pointed forward. Bounding-box height works
 as a fallback but needs its own calibration and is much noisier.
 

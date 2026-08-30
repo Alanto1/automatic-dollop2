@@ -86,6 +86,13 @@ NOZZLE_H = 0.12             # nozzle height above the desk, robot + deck
 TARGET_H = 0.10             # hands and the phone, ON the desk -- not the torso
 PUMP_HEAD_M = 0.40          # Adafruit 3V submersible, ~30-50cm. MEASURE YOURS
 
+# Preferred standoff before firing. Not a ballistic limit -- the robot simply
+# should not squirt from touching distance. It is a *preference*: range_band
+# drops below it rather than returning an empty band, because a near limit
+# above the far limit means interlock 3 never passes and the pump never runs.
+# A weak pump makes the robot walk closer; it must not make it mute.
+RANGE_MIN_M = 0.20
+
 SEG = 24                    # facets per full circle
 
 # --------------------------------------------------------------------------
@@ -481,16 +488,24 @@ def head_needed_m(reach_m: float, **kw) -> float | None:
 
 
 def range_band(head_m: float = PUMP_HEAD_M):
-    """Furthest reach the pump can actually deliver, and a safe near limit."""
+    """Furthest reach the pump can actually deliver, and a safe near limit.
+
+    The near limit is a standoff, not a ballistic result: the robot should not
+    fire from touching distance, where the jet has no time to fall onto the
+    hands and where a person's reaction is to grab it. It has to stay well
+    under the far limit or interlock 3 -- "range inside the calibrated band"
+    -- can never be satisfied and the pump never runs.
+    """
     far = 0.0
-    r = 0.15
+    r = 0.05
     while r < 2.0:
         h = head_needed_m(r)
         if h is None or h > head_m:
             break
         far = r
         r += 0.01
-    return 0.20, far
+    near = min(RANGE_MIN_M, far * 0.6)
+    return near, far
 
 
 def reservoir_depth_mm(volume_ml: float, bottle_d_mm: float) -> float:
