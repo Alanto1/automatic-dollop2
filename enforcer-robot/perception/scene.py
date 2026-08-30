@@ -13,6 +13,7 @@ changes.
 
 from __future__ import annotations
 
+import math
 import os
 import statistics
 import sys
@@ -54,7 +55,29 @@ CONF_PHONE = 0.15
 # How far outside the person's box a phone still counts as "theirs", as a
 # fraction of the person's box size. A phone lying on the far side of the
 # desk is not an offence; a phone in your hand is.
+#
+# Only used when there are no wrists to go on -- see PHONE_NEEDS_WRIST.
 PHONE_NEAR_PAD = 0.15
+
+# Whether a phone must be near a WRIST to count as in hand.
+#
+# The person-box rule stopped working the moment the camera was aimed at the
+# desk, which it had to be, because that is where hands and phones are. On
+# the second recording it called 131 of 311 working frames "phone" -- 42% --
+# and every one was a correct detection of a phone lying on the desk. No
+# confidence threshold fixes that: YOLO is right, the geometry is wrong.
+#
+# Pose gives wrists for free, and "is it in a hand" is exactly what a wrist
+# answers. When wrists are visible the phone must be within
+# PHONE_WRIST_REACH of one; when they are not, the frame is not judged at all
+# rather than falling back to the looser rule, because the looser rule is
+# what produced the 42%.
+PHONE_NEEDS_WRIST = True
+
+# How close to a wrist a phone must be, as a fraction of the person's box
+# height. A hand holding a phone puts the two within roughly a hand's length,
+# and a person box is roughly seven hand-lengths tall.
+PHONE_WRIST_REACH = 0.22
 
 # Whether head-down is computed at all.
 #
@@ -94,7 +117,7 @@ HEAD_DOWN_SOURCE = "face"
 # bowed, and the two distributions did not overlap: working's 90th percentile
 # was 0.234, head-down's 10th was 0.309. evaluate.py sweeps every candidate
 # cut and reports the best one, which is how this number was found.
-FACE_LOW_IN_BOX = 0.30
+FACE_LOW_IN_BOX = 0.34
 
 # How much the person's box has to get *squatter* than their calibrated
 # upright baseline before it reads as head-down, as a fraction.
@@ -175,15 +198,35 @@ def pick_person(boxes: list[Box]) -> Box | None:
 def phone_in_hand(person: Box | None, boxes: list[Box]) -> Box | None:
     """The phone that belongs to this person, if any.
 
-    "Belongs to" means its centre lands inside the person's box grown by
-    PHONE_NEAR_PAD. Without this test the robot fires at you because your
-    phone is charging on the other side of the desk, which is both wrong and
-    the exact failure that makes people unplug a device like this.
+    Two rules, and which one applies depends on whether pose found wrists.
+
+    With wrists: the phone must be within PHONE_WRIST_REACH of one. This is
+    the only rule that separates "in my hand" from "on my desk" once the
+    camera is aimed at the desk, and aiming it there is not optional -- the
+    hands and the phone are what the robot cares about.
+
+    Without wrists: the phone's centre must land inside the person's box
+    grown by PHONE_NEAR_PAD. Looser, and it is what produced a 42%
+    false-positive rate on desk-facing footage, so PHONE_NEEDS_WRIST refuses
+    to fall back to it. A missed offence costs a slower reaction; a false one
+    costs someone a soaking they did not earn.
     """
     if person is None:
         return None
     phones = [b for b in boxes if b.label == "cell phone" and b.conf >= CONF_PHONE]
     if not phones:
+        return None
+
+    wrists = [b for b in boxes if b.label == "wrist"]
+    if wrists:
+        reach = person.h * PHONE_WRIST_REACH
+        near = [
+            p for p in phones
+            if any(math.hypot(p.cx - w.cx, p.cy - w.cy) <= reach for w in wrists)
+        ]
+        return max(near, key=lambda b: b.conf) if near else None
+
+    if PHONE_NEEDS_WRIST:
         return None
 
     padx = person.w * PHONE_NEAR_PAD

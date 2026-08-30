@@ -41,6 +41,14 @@ FACE_CASCADE = "haarcascade_frontalface_default.xml"
 # facing the camera, which is what head-down looks like.
 POSE_MODEL = "yolov8n-pose.pt"
 HEAD_KPTS = (0, 1, 2, 3, 4)
+
+# COCO keypoints 9 and 10 are the wrists, and they answer the question a
+# person box cannot: is the phone in a hand, or lying on the desk? Once the
+# camera looks at the desk -- which it must, because that is where hands and
+# phones are -- "inside the person's box" stops meaning anything.
+WRIST_KPTS = (9, 10)
+WRIST_BOX = 14.0    # px half-size of the emitted marker, at the sampled scale
+
 KPT_CONF = 0.30
 
 
@@ -174,6 +182,18 @@ def main() -> int:
                         boxes.append({"label": "face", "conf": 1.0,
                                       "x1": round(min(xs), 1), "y1": round(min(ys), 1),
                                       "x2": round(max(xs), 1), "y2": round(max(ys), 1)})
+
+                    for j in WRIST_KPTS:
+                        if kconf is not None and kconf[i][j] < KPT_CONF:
+                            continue
+                        wx, wy = float(xy[i][j][0]), float(xy[i][j][1])
+                        if wx == 0.0 and wy == 0.0:
+                            continue    # ultralytics reports a missing keypoint as origin
+                        boxes.append({"label": "wrist", "conf": 1.0,
+                                      "x1": round(wx - WRIST_BOX, 1),
+                                      "y1": round(wy - WRIST_BOX, 1),
+                                      "x2": round(wx + WRIST_BOX, 1),
+                                      "y2": round(wy + WRIST_BOX, 1)})
 
             if cascade is not None:
                 # Downscaled to 640 wide: Haar is the slow part otherwise, and

@@ -16,6 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 
 from scene import (  # noqa: F401
+    PHONE_NEEDS_WRIST,
     head_down_from_face,  # noqa: E402
     CONF_PERSON,
     CONF_PHONE,
@@ -79,11 +80,45 @@ def test_PickPerson_TakesTheBiggest():
 # -- the phone rule --------------------------------------------------------
 
 
+def wrist(cx, cy):
+    return Box("wrist", 1.0, cx - 14, cy - 14, cx + 14, cy + 14)
+
+
 def test_Phone_InHandCounts():
     c = _Ctx()
     p = person()
-    got = phone_in_hand(p, [p, phone(320, 300)])
-    c.check(got is not None, "phone inside the person's box is theirs")
+    w = wrist(320, 300)
+    got = phone_in_hand(p, [p, w, phone(320, 300)])
+    c.check(got is not None, "a phone at the wrist is in hand")
+    return c.passed
+
+
+def test_Phone_OnTheDeskWithWristsVisibleIsNot():
+    c = _Ctx()
+    # THE failure this rule exists for. Second recording, camera aimed at the
+    # desk: 131 of 311 working frames were called "phone", every one a correct
+    # detection of a phone lying on the desk inside the person's box. The box
+    # rule cannot tell that from a phone in a hand; a wrist can.
+    p = person(200, 100, 440, 480)
+    hands = [wrist(240, 300), wrist(400, 300)]
+    on_desk = phone(320, 460)          # inside the box, far from both wrists
+    c.check(phone_in_hand(p, [p] + hands + [on_desk]) is None,
+            "a phone on the desk, away from the wrists, is not in hand")
+    in_hand = phone(400, 308)          # same box, at a wrist
+    c.check(phone_in_hand(p, [p] + hands + [in_hand]) is not None,
+            "the same box, at a wrist, is")
+    return c.passed
+
+
+def test_Phone_NoWristsMeansNoOffence():
+    c = _Ctx()
+    # PHONE_NEEDS_WRIST: with no wrists to go on, the looser box rule is what
+    # produced 42% false positives, so the frame is not judged at all. A
+    # missed offence costs a slower reaction; a false one costs a soaking.
+    p = person(200, 100, 440, 480)
+    c.check(PHONE_NEEDS_WRIST, "the strict rule is the deployed default")
+    c.check(phone_in_hand(p, [p, phone(320, 300)]) is None,
+            "no wrists visible, no phone offence")
     return c.passed
 
 
@@ -97,15 +132,29 @@ def test_Phone_AcrossTheDeskDoesNot():
     return c.passed
 
 
-def test_Phone_JustOutsideTheBoxStillCounts():
+def test_Phone_HeldOutToTheSideStillCounts():
     c = _Ctx()
-    # Holding it out to the side is still using it, so the box is padded.
+    # Holding it out beyond the torso is still using it -- the wrist goes
+    # with the hand, so the rule follows it out of the box for free.
     p = person(200, 100, 440, 480)
-    just_outside = phone(p.x2 + p.w * 0.10, 300)
-    c.check(phone_in_hand(p, [p, just_outside]) is not None,
-            "held just outside the box still counts")
-    way_outside = phone(p.x2 + p.w * 0.40, 300)
-    c.check(phone_in_hand(p, [p, way_outside]) is None, "but not way outside")
+    out = wrist(p.x2 + p.w * 0.20, 300)
+    c.check(phone_in_hand(p, [p, out, phone(p.x2 + p.w * 0.20, 300)]) is not None,
+            "a phone at a wrist outside the box still counts")
+    return c.passed
+
+
+def test_Phone_ReachIsScaleInvariant():
+    c = _Ctx()
+    # Rolling the chair back shrinks everything in frame. The reach is a
+    # fraction of the person's height for exactly this reason.
+    for scale in (1.0, 0.5):
+        h = 380 * scale
+        p = Box("person", 0.9, 200, 100, 200 + 240 * scale, 100 + h)
+        w = wrist(p.cx, p.cy)
+        near = phone(p.cx + h * 0.15, p.cy)
+        far = phone(p.cx + h * 0.45, p.cy)
+        c.check(phone_in_hand(p, [p, w, near]) is not None, "near counts at %g" % scale)
+        c.check(phone_in_hand(p, [p, w, far]) is None, "far does not at %g" % scale)
     return c.passed
 
 
@@ -366,8 +415,11 @@ TESTS = [
     ("PickPerson_IgnoresLowConfidence", test_PickPerson_IgnoresLowConfidence),
     ("PickPerson_TakesTheBiggest", test_PickPerson_TakesTheBiggest),
     ("Phone_InHandCounts", test_Phone_InHandCounts),
+    ("Phone_OnTheDeskWithWristsVisibleIsNot", test_Phone_OnTheDeskWithWristsVisibleIsNot),
+    ("Phone_NoWristsMeansNoOffence", test_Phone_NoWristsMeansNoOffence),
+    ("Phone_ReachIsScaleInvariant", test_Phone_ReachIsScaleInvariant),
     ("Phone_AcrossTheDeskDoesNot", test_Phone_AcrossTheDeskDoesNot),
-    ("Phone_JustOutsideTheBoxStillCounts", test_Phone_JustOutsideTheBoxStillCounts),
+    ("Phone_HeldOutToTheSideStillCounts", test_Phone_HeldOutToTheSideStillCounts),
     ("Phone_NoPersonMeansNoPhone", test_Phone_NoPersonMeansNoPhone),
     ("Phone_LowConfidenceIgnored", test_Phone_LowConfidenceIgnored),
     ("Phone_ThresholdIsLooserThanPerson", test_Phone_ThresholdIsLooserThanPerson),
