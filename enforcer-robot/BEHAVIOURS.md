@@ -120,19 +120,25 @@ actually is, and it is a long way below anyone's face.
 
 ### Range calibration (do this once, write it down)
 
-The theory says, for a 3V submersible pump at ~40cm of head:
+**Measured: 20cm of head**, with 5.8cm of 6mm line and a needle tip, at the
+pump's rated 3V. Half the datasheet's 30-50cm — the needle is what costs it,
+and a tighter jet is what it buys.
 
 ```
-RANGE_MIN 20cm  RANGE_MAX 56cm
+RANGE_MIN 18cm  RANGE_MAX 30cm   (at 20cm of pump head)
 head needed vs reach (target = hands at 10cm):
    ok    30cm ->   20cm of head
-   ok    40cm ->   27cm of head
-   ok    50cm ->   35cm of head
-   OVER  60cm ->   43cm of head
-   OVER  80cm ->   58cm of head
+   OVER  40cm ->   27cm of head
 ```
 
-Now measure it, because `PUMP_HEAD_M` is an estimate:
+**So the robot walks to within 18–30cm and fires from there.** That is closer
+than the design first assumed and it is not a problem: a quadruped creeping
+right up to someone before it squirts them is a better demo than one sniping
+from half a metre. It does mean the walk-to-target loop matters more, because
+the robot has to close the distance rather than fire from where it stands.
+
+Re-measure and update `PUMP_HEAD_M` if the nozzle changes — dropping the
+needle for a plain 2mm tip should buy range back:
 
 1. Fill the reservoir. Set the robot **30 cm** from a sheet of paper laid on
    the desk. Fire a 200 ms pulse. Mark where it lands.

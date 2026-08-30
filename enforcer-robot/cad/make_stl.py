@@ -84,7 +84,10 @@ PHONE_G = 180.0             # a typical phone -- roughly half of Sesame again
 G = 9.81
 NOZZLE_H = 0.12             # nozzle height above the desk, robot + deck
 TARGET_H = 0.10             # hands and the phone, ON the desk -- not the torso
-PUMP_HEAD_M = 0.40          # Adafruit 3V submersible, ~30-50cm. MEASURE YOURS
+PUMP_HEAD_M = 0.20          # MEASURED, not the datasheet's 30-50cm. Adafruit
+                            # 3V submersible, 5.8cm of 6mm line plus a needle
+                            # tip, vertical rise test. The needle costs range
+                            # and buys a tighter jet -- that was the trade.
 
 # Preferred standoff before firing. Not a ballistic limit -- the robot simply
 # should not squirt from touching distance. It is a *preference*: range_band
