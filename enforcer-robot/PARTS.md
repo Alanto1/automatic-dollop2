@@ -604,3 +604,13 @@ only the top cover needs supports. Follow that for the 11 upstream parts.
 cradle — go to **4 walls and 25% infill**. Those carry the pump, the water and
 the aiming load; upstream's numbers are tuned for a shell that carries only
 itself.
+
+⚠️ **And for the four hip joints, R1 R2 L1 L2 — also 4 walls.** Measured the
+hard way: at upstream's 2 walls, the boss the horn screw threads into split
+on all four while the horn was being fitted. A self-tapping screw works by
+wedging plastic apart, so it needs material around it, and two 0.4mm
+perimeters is about 0.8mm of wall against a screw 2mm across.
+
+Every printed hole that takes a self-tapper wants the same treatment. It
+costs a few minutes of print time per part and saves a reprint after the
+part has already been half-assembled.
