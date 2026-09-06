@@ -17,10 +17,15 @@
 // --- WHAT TO DO WITH IT -----------------------------------------------
 //
 //   1. Flash it. Nothing moves: motors stay limp until commanded.
-//   2. Serial monitor at 115200, line ending "New Line".
+//   2. Serial monitor at 115200. The line-ending dropdown does not matter;
+//      this sketch accepts a command with or without a newline.
 //   3. Send  all,90
 //   4. NOW plug in motor 0. It should whir to position and hold.
 //   5. Plug in motors 1..7, ONE AT A TIME, watching each.
+//
+// If you cannot tell whether a servo moved at all, send  sweep,0  instead:
+// four moves through most of the travel, a second apart. That is impossible
+// to miss, and a servo that does nothing during a sweep is not being driven.
 //
 // Plugging them in one at a time is the whole point. A servo that goes to
 // the wrong joint, or fights its own end stop, is obvious when it is the
@@ -122,10 +127,26 @@ static void report() {
   }
 }
 
+// Big obvious motion on one motor. If you cannot tell whether a servo is
+// alive, this is the command to send: three moves, a second apart, through
+// most of the travel. A servo that is powered and wired WILL be visible.
+static void sweep(int id) {
+  Serial.printf("Sweeping motor %d (%s, GPIO %d). Watch it.\n",
+                id, JOINTS[id], SERVO_PINS[id]);
+  const int stops[] = {90, 30, 150, 90};
+  for (unsigned i = 0; i < sizeof(stops) / sizeof(stops[0]); i++) {
+    writeAngle(id, stops[i]);
+    delay(900);
+  }
+  Serial.println("Sweep done. It is still attached and holding 90.");
+  Serial.println("Try to turn the horn with your fingers: it should push back.");
+}
+
 static void menu() {
   Serial.println();
   Serial.println("  id,angle   one motor      e.g.  0,90");
   Serial.println("  all,angle  every motor    e.g.  all,90");
+  Serial.println("  sweep,id   big visible move, one motor   e.g.  sweep,0");
   Serial.println("  stop       detach all, shafts go limp");
   Serial.println("  list       what is attached and where");
   Serial.println();
@@ -152,9 +173,36 @@ void setup() {
   menu();
 }
 
+// Collect characters ourselves instead of readStringUntil('\n').
+//
+// The Serial Monitor's line-ending dropdown decides whether a newline is ever
+// sent at all, and on "No Line Ending" it is not. readStringUntil would then
+// block forever: you type 0,90, press enter, and the board never sees a
+// complete line. No echo, no pulse, no movement, and no way to tell that from
+// a dead servo. So: dispatch on \n, on \r, OR after 150ms of silence with
+// something in the buffer. Every dropdown setting now works.
+static String buf;
+static unsigned long lastChar = 0;
+
+static void handle(String in);
+
 void loop() {
-  if (!Serial.available()) return;
-  String in = Serial.readStringUntil('\n');
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (buf.length()) { handle(buf); buf = ""; }
+    } else {
+      buf += c;
+    }
+    lastChar = millis();
+  }
+  if (buf.length() && millis() - lastChar > 150) {
+    handle(buf);
+    buf = "";
+  }
+}
+
+static void handle(String in) {
   in.trim();
   if (!in.length()) return;
 
@@ -163,13 +211,22 @@ void loop() {
 
   int comma = in.indexOf(',');
   if (comma < 0) {
-    Serial.println("Error: use 'id,angle', 'all,angle', 'stop' or 'list'.");
+    Serial.println("Error: use 'id,angle', 'all,angle', 'sweep,id', 'stop' or 'list'.");
     menu();
     return;
   }
 
   String cmd = in.substring(0, comma);
   int angle = in.substring(comma + 1).toInt();
+
+  if (cmd.equalsIgnoreCase("sweep")) {
+    if (angle < 0 || angle > 7) {
+      Serial.println("Error: motor id must be 0-7.");
+      return;
+    }
+    sweep(angle);
+    return;
+  }
 
   if (cmd.equalsIgnoreCase("all")) {
     for (int i = 0; i < 8; i++) writeAngle(i, angle);
