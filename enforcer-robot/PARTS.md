@@ -596,6 +596,57 @@ not have yet. A fixed Kobra 2 Pro is a perfectly good PLA printer, and
 keeping it as the PLA workhorse alongside an enclosed machine later is the
 normal end state, not a compromise.
 
+## The ESP32-S2 pin budget
+
+Every pin is spoken for or deliberately free. Worth having in one place,
+because two of the constraints below are not obvious and both bite late.
+
+| Function | Pins | Note |
+|---|---|---|
+| 8 × MG90S servos | `1 2 4 6 8 10 13 14` | From Sesame's `servoPins[8]`. Uses all 8 LEDC channels |
+| I²C — OLED + VL53L0X | `33` SDA, `35` SCL | One bus, two addresses. OLED is `0x3C` |
+| 4 × TCRT5000 cliff | `3 5 7 9` | **ADC1 only** — see below |
+| Pump MOSFET gate | `11` | Plain digital out, 150–300 ms pulse |
+| Free | `12 15 16 17 18 21 34 36–40` | |
+| Never use | `0 45 46` strapping · `19 20` USB · `26–32` flash/PSRAM | |
+
+⚠️ **Cliff sensors must be on ADC1, which is GPIO 1–10.** ADC2 (GPIO 11–20) is
+used by the WiFi radio on the S2, and the Pi↔ESP32 link starts on WiFi — an
+ADC2 reading taken while the radio is up returns garbage. Servos already take
+`1 2 4 6 8 10`, which leaves exactly `3 5 7 9`. Four free ADC1 pins for four
+sensors, with none spare.
+
+⚠️ **All 8 LEDC channels are servos.** The S2 has 8, not the original ESP32's
+16. That is why the pump gets a series resistor instead of PWM — there is no
+ninth channel to give it.
+
+### Wiring one TCRT5000
+
+The bare sensor is two devices in one package: an IR LED and a
+phototransistor. Each needs its own resistor, both from **3.3 V**.
+
+```
+  3V3 ──[100Ω]──┤▶├── GND          the IR LED, always on
+
+  3V3 ──[10kΩ]──┬── collector      the phototransistor
+                │
+             ADC pin               emitter ── GND
+```
+
+- **Surface below** → IR reflects → transistor conducts → reading goes **low**
+- **Nothing below** → no reflection → pull-up wins → reading goes **high**
+
+⚠️ **Pull up to 3.3 V, not 5 V.** The ADC input is not 5 V tolerant, and a
+10 kΩ pull-up to the servo rail would put 5 V on the pin the moment the sensor
+sees a cliff — which is exactly when you need it working.
+
+Read it as an **analogue** value, not digital. The threshold belongs in
+software: a dark matte desk reflects far less than a white one, and a trim pot
+on a module is a screwdriver adjustment you cannot version-control. That is
+why the BOM specified the bare sensor over the Hailege module.
+
+Eight resistors total for four sensors, from the kit already bought.
+
 ### Settings for Sesame's parts
 
 Upstream specifies **PLA / PLA+, 8–10% infill, 2 wall loops, honeycomb**, and
