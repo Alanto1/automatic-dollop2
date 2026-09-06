@@ -75,6 +75,13 @@ WORST_LEG_SHARE = 0.5
 
 PHONE_G = 180.0             # a typical phone -- roughly half of Sesame again
 
+# Voice hardware. Bought, and it earns its place at tier 1 -- pre-recorded
+# taunt clips need the amp and the speaker and nothing else, no mic and no
+# LLM. WEIGH YOURS: a 3W speaker is mostly magnet, and the payload budget is
+# already within a few grams at 50ml of water.
+AMP_G = 2.0                 # MAX98357A, board only
+SPEAKER_G = 10.0            # ESTIMATE -- 3W 8ohm. Put it on a scale
+
 # --- the squirt, as ballistics -------------------------------------------
 # The nozzle angle is fixed in the printed mount, so the only thing that
 # aims the shot vertically is DISTANCE. These constants decide the range
@@ -525,11 +532,15 @@ def payload_cases():
     """
     deck_pi_cam = 30.0 + 11.0 + 5.0     # printed parts, Pi Zero, camera
     rig = 20.0                          # pump + tubing
+    voice = AMP_G + SPEAKER_G           # MAX98357A + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
     return [
         ("bare Sesame", 0.0),
         ("+ deck, Pi Zero, camera", deck_pi_cam),
+        ("+ water rig, 30ml", deck_pi_cam + rig + water(30)),
+        ("+ water rig, 30ml + voice", deck_pi_cam + rig + water(30) + voice),
         ("+ water rig, 50ml", deck_pi_cam + rig + water(50)),
+        ("+ water rig, 50ml + voice", deck_pi_cam + rig + water(50) + voice),
         ("+ water rig, 100ml", deck_pi_cam + rig + water(100)),
         ("Warden CARRYING a phone", deck_pi_cam + PHONE_G),
         ("Warden carrying phone + 50ml", deck_pi_cam + rig + water(50) + PHONE_G),

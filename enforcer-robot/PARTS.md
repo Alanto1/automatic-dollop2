@@ -66,6 +66,7 @@ if the Pi Zero actually fails.
 | 19 | **Logic-level MOSFET** (IRLZ44N) | 3 | 0,70 ea | Your wristband's transistor driver, scaled up for the pump's current |
 | 20 | **Flyback diode** (1N4007) | 5 | 0,05 ea | Across the pump. Same role as the 1N4148 on your vibration motor |
 | 21 | Silicone tubing + narrow nozzle | — | 3 | Aquarium airline tubing is ideal. Narrow nozzle = focused squirt at low flow |
+| 21b | **Series resistor for the pump**, ~22Ω | 2 | 0,01 | The pump is 3V, the rail is 5.1V, and all 8 LEDC channels are on servos so PWM is not available. Two 47Ω in parallel from the kit already bought. See BEHAVIOURS "The pump is 3V and the rail is 5V" |
 | 22 | **Wide-mouth bottle, ~60 ml** | 1 | 3 | Opening ≥26mm so the 23.5mm pump drops in. **Fill to 30ml**, not 60 — that's 29mm of depth in a 36mm bottle, enough to keep the intake covered at only 30g |
 | 22b | **Electrolytic capacitor, 1000µF+ 16V** | 2 | 0,50 ea | Bulk capacitance across the servo rail. Needed for the motion engine — see README "Making it move like a creature" — and the standard fix for pump inrush |
 

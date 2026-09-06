@@ -170,6 +170,41 @@ as a fallback but needs its own calibration and is much noisier.
 Pi sends `fire(ms)` → ESP32 pulses a GPIO → MOSFET → pump for **150–300 ms**.
 Short pulse, low pressure. It's a squirt, not a jet.
 
+#### The pump is 3V and the rail is 5V
+
+Adafruit rate this pump at **3V, 100mA**, and the listing gives no upper
+figure. The servo rail measures **5.1V**. Wiring the pump straight across it
+runs a 3V motor 70% over its rating.
+
+The obvious answer is PWM — the listing even endorses it — and it is not
+available here. **The ESP32-S2's LEDC peripheral has exactly 8 channels and
+all 8 drive servos.** `firmware/board_test` found that and says so: a ninth
+PWM output on this chip cannot come from LEDC. Software PWM or RMT could do
+it, but that is real firmware for a 200ms pulse.
+
+**Use a series resistor.** Dropping 2.1V at the pump's rated current:
+
+| pump draws | resistor | dissipates |
+|---|---|---|
+| 100 mA | 21 Ω | 0.21 W |
+| 150 mA | 14 Ω | 0.32 W |
+| 200 mA | 10.5 Ω | 0.42 W |
+
+It is also mildly self-correcting: more current means more drop, which means
+less voltage at the pump, which means less current.
+
+Practical version, from the resistor kit already bought: **two 47Ω in
+parallel = 23.5Ω**, each dissipating half the heat, which keeps both inside a
+quarter-watt part. Then measure the voltage across the pump while it runs and
+adjust. It only ever runs for 200ms at a time, so average heat is negligible.
+
+⚠️ **Measure, do not assume.** The 100mA figure is a no-load rating and a
+pump pushing water through a needle draws more. Put the meter in series once,
+get the real number, then size the resistor from it.
+
+If variable flow is ever wanted — a warning dribble versus a full squirt —
+that is when software PWM earns its complexity. Not before.
+
 **Five interlocks. All must pass, checked in firmware, not in Python:**
 
 1. a `person` is currently detected,
