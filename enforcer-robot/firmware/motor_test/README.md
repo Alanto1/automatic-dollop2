@@ -3,14 +3,19 @@
 Two sketches, same commands, same pins, same pulse widths. Flash whichever
 compiles.
 
-| file | needs | notes |
+| sketch | needs | notes |
 |---|---|---|
-| `sesame-motor-tester-UPSTREAM.ino` | **ESP32Servo** library | Sesame's own, Apache 2.0. The canonical one, and what its build guide refers to |
-| `motor_test.ino` | nothing | Drives LEDC directly, same way `board_test` and `servo_test` already do on this machine |
+| **`motor_test/`** ← this one | nothing | Drives LEDC directly, same way `board_test` and `servo_test` already do on this machine |
+| [`../sesame-motor-tester/`](../sesame-motor-tester/) | **ESP32Servo** library | Sesame's own, Apache 2.0. The canonical one, and what its build guide refers to |
 
-Use upstream's if `ESP32Servo` installs cleanly. Use the other one if it does
-not — a sketchbook on a non-ASCII path, or inside OneDrive, is enough to stop
-the library resolving, and there is nothing to be gained from fighting it.
+Use upstream's if `ESP32Servo` installs cleanly. Use this one if it does not —
+a sketchbook on a non-ASCII path, or inside OneDrive, is enough to stop the
+library resolving, and there is nothing to be gained from fighting it.
+
+⚠️ **They are in separate folders on purpose.** The Arduino IDE compiles every
+`.ino` in a folder as one program, so two complete sketches side by side gives
+two `setup()`s and two `loop()`s and a build that cannot succeed. One sketch
+per folder, always.
 
 ## Before you flash anything
 

@@ -1,18 +1,18 @@
 // Move all eight servos from the serial monitor. No libraries.
 //
-// This is a drop-in replacement for Sesame's own
-// firmware/debugging-firmware/sesame-motor-tester.ino, which sits next to
-// this file as sesame-motor-tester-UPSTREAM.ino. Same commands, same pins,
-// same pulse widths -- the only difference is that the upstream one needs
+// This is a drop-in replacement for Sesame's own motor tester, which is
+// vendored one folder over in ../sesame-motor-tester/. Same commands, same
+// pins, same pulse widths -- the only difference is that upstream's needs
 // the ESP32Servo library and this one drives LEDC directly.
 //
-// Use whichever compiles. If ESP32Servo installs cleanly, upstream's file is
-// the canonical one and is what its build guide refers to. If it does not --
+// Use whichever compiles. If ESP32Servo installs cleanly, upstream's is the
+// canonical one and is what its build guide refers to. If it does not --
 // which happens with a sketchbook on a non-ASCII path, or under OneDrive --
 // use this and lose nothing.
 //
-// Both are fine to keep. They cannot be flashed at once, and having the
-// upstream original to hand is worth more than tidiness.
+// They live in SEPARATE FOLDERS on purpose. The Arduino IDE compiles every
+// .ino in a folder as one program, so two sketches side by side means two
+// setup()s and two loop()s and a build that cannot succeed.
 //
 // --- WHAT TO DO WITH IT -----------------------------------------------
 //
