@@ -620,6 +620,40 @@ sensors, with none spare.
 16. That is why the pump gets a series resistor instead of PWM — there is no
 ninth channel to give it.
 
+### Motor number → joint → pin
+
+The one table that matters when eight servo plugs are in your hand. Motor
+numbers are from Sesame's `sesame-angle-guide.png`; pins from `servoPins[8]`.
+
+| motor | joint | GPIO | what it is |
+|---|---|---|---|
+| **0** | `R1` | 1 | right hip |
+| **1** | `R2` | 2 | right hip |
+| **2** | `L1` | 4 | left hip |
+| **3** | `L2` | 6 | left hip |
+| **4** | `R4` | 8 | right lower leg |
+| **5** | `R3` | 10 | right lower leg |
+| **6** | `L3` | 13 | left lower leg |
+| **7** | `L4` | 14 | left lower leg |
+
+Hips are 0–3, legs are 4–7 — but note the legs are **not** in alphabetical
+order: `R4` is motor 4 and `R3` is motor 5. Read the table, not the pattern.
+
+Upstream's line is worth keeping in mind while plugging them in: *"99% of the
+time, if your motor is moving in the wrong direction, crashing, or being
+sporadic, the motor is plugged into the wrong slot."*
+
+### Horns go in the hips only
+
+Four joints take a one-sided horn, and they are the four with a **flat pad and
+two holes** moulded into them: `R1 R2 L1 L2`. The horn's short side presses
+into the pad; an M2 × 5 goes through the horn's second hole.
+
+The lower legs — `R3 R4 L3 L4` — take a **whole servo inside the shell**, not
+a horn. Their far end is a plain pivot that rides on the hip joint's arm.
+
+So: **4 horns, 4 servos-in-shells, 4 servos in the frame.**
+
 ### Wiring one TCRT5000
 
 The bare sensor is two devices in one package: an IR LED and a
