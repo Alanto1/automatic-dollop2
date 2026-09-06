@@ -47,8 +47,9 @@ an assembly error.
       a scalper; do pull perception forward (next section).
       **Gate: not shipped by 10 Oct → switch to a Radxa Zero 3W.** Details in
       [`START_HERE.md`](START_HERE.md#-the-pi-zero-2-w-is-sold-out-across-europe)
-- [ ] Place **Bambu Lab EU** — 2× 14500 pack + the **XH2.54 charger** (€4.49).
-      A balance charger cannot charge this pack; see PURCHASE_LIST
+- [x] ~~**Bambu Lab EU** — 14500 pack + XH2.54 charger~~ — charged, reads 8.3 V
+- [x] ~~**Buck converter verified**~~ — Waveshare `DC5-36-TO-DC3V3-5`, jumper
+      on 5 V, output measured **5.1 V**. It is switchable, so check yours
 - [ ] Walk in to **Segor** (Kaiserin-Augusta-Allee 94; closed 13:30–14:30)
 
 Meanwhile, zero hardware:
@@ -134,14 +135,24 @@ how much it is buying you.
 
 Follow the upstream build guide. Don't improvise.
 
-- [ ] Print the 11-part set in PLA
-- [ ] **Centre every servo before installing a single horn** — upstream says
-      it, your old checklist said it, and it's still the #1 way to lose a day
+- [x] ~~Print the 11-part set in PLA~~
+- [x] ~~**Bench-test all 10 servos**~~ — 10/10 alive, neutral offsets recorded
+      per servo. Those numbers are the `servoSubtrim` table, collected early
+- [ ] ⚠️ **Reprint R1 R2 L1 L2 at 4 walls.** All four split at the horn screw
+      boss when printed at upstream's 2 walls. ~11 min each; print one and
+      fit a horn to it before committing to the other three
+- [x] ~~Servos into the four leg joints~~ — `R3 R4 L3 L4`, self-tapped
+- [x] ~~Four hip servos into the frame~~
 - [ ] Hand-wire the ESP32-S2 Mini harness (skip the custom PCB for now)
+      — breakout board and rails in progress. Pin map is
+      `{1, 2, 4, 6, 8, 10, 13, 14}`, OLED on SDA 33 / SCL 35
 - [ ] Install OLED + power switch in the top cover
 - [ ] Main assembly, route wires into the underside channels
-- [ ] Flash stock firmware; run the motor tester; fix any wrong-slot motors
-- [ ] Calibrate
+- [ ] Flash the motor tester; plug servos in **one at a time**; fix wrong slots
+- [ ] ⚠️ **Pull the hip joints off the shafts before calibrating** if the
+      M2.5 centre screws are not in yet. Every shaft must spin freely, or a
+      misaligned horn can stall a servo the moment it powers up
+- [ ] Calibrate, then press each hip joint on while the motor holds Stand
 
 **Demoable:** it walks, poses, and pulls faces, driven from the web page.
 That's already a robot on a table.
@@ -205,7 +216,12 @@ Do this **before** designing anything around the reservoir.
 - [ ] Measure the bottle's internal diameter, set `BOTTLE_D`, re-run the test
 - [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
       and that's a fine project
-- [ ] Wire the pump via **MOSFET + flyback diode**; fire it dry, then wet
+- [x] ~~Measure the pump head~~ — **20 cm** at 3 V with a needle tip, giving an
+      **18–30 cm** firing band. Half the datasheet; the needle is the trade
+- [ ] Wire the pump via **MOSFET + flyback diode**, with a **~22Ω series
+      resistor** — it is a 3 V motor on a 5.1 V rail and all 8 LEDC channels
+      are on servos, so PWM is not available. Measure the real current first
+- [ ] Fire it dry, then wet
 - [ ] ⚠️ **Range calibration.** Fire a 200ms pulse at 30/40/50/60cm onto paper
       laid on the desk; mark each landing point. Theory says a 20–56cm band.
       Set `PUMP_HEAD_M` from what you measure, then hard-code
