@@ -82,14 +82,30 @@ firmware, with no LLM in the path.
 
 ---
 
-## Hardware to add: one part
+## Hardware: all of it is bought
 
-| Item | ~€ | Note |
-|---|---|---|
-| **INMP441 I2S MEMS microphone** | ~4 | Shares the I2S bus with the MAX98357A you already have — mic on receive, amp on transmit, same clock lines. Known-good Pi configuration |
+| Item | Note |
+|---|---|
+| **MAX98357A I2S amp + 8 Ω speaker** | Output. Tier 1 needs only these |
+| **INMP441 I2S MEMS microphone** | Input. Shares the amp's clock lines — mic on receive, amp on transmit |
 
-~2 g, negligible power, nothing else needed. You already own the amp and the
-8 Ω speaker.
+Both hang off the **Pi**, not the ESP32, even though the mic is sold for ESP32
+projects. The wake word runs on the Pi, the clips live on its SD card, and if
+the LLM ever lands, Piper's audio comes back to the Pi. Keeping audio off the
+microcontroller also leaves it free for timing-critical work.
+
+Pi I2S, sharing the clock pair:
+
+| | pin |
+|---|---|
+| BCLK — both devices | GPIO 18 |
+| LRCLK / WS — both devices | GPIO 19 |
+| **mic** SD → Pi | GPIO 20 (PCM_DIN) |
+| **amp** DIN ← Pi | GPIO 21 (PCM_DOUT) |
+| mic L/R select | tie to GND for the left channel |
+
+~14 g for amp, mic and speaker together, which `make_stl.py --test` now
+carries in the payload cases. Negligible power.
 
 ---
 

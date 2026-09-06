@@ -80,6 +80,7 @@ PHONE_G = 180.0             # a typical phone -- roughly half of Sesame again
 # LLM. WEIGH YOURS: a 3W speaker is mostly magnet, and the payload budget is
 # already within a few grams at 50ml of water.
 AMP_G = 2.0                 # MAX98357A, board only
+MIC_G = 2.0                 # INMP441, on the same I2S bus as the amp
 SPEAKER_G = 10.0            # ESTIMATE -- 3W 8ohm. Put it on a scale
 
 # --- the squirt, as ballistics -------------------------------------------
@@ -532,7 +533,7 @@ def payload_cases():
     """
     deck_pi_cam = 30.0 + 11.0 + 5.0     # printed parts, Pi Zero, camera
     rig = 20.0                          # pump + tubing
-    voice = AMP_G + SPEAKER_G           # MAX98357A + 8ohm speaker
+    voice = AMP_G + MIC_G + SPEAKER_G   # amp + mic + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
     return [
         ("bare Sesame", 0.0),

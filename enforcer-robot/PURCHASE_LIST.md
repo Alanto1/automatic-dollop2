@@ -59,6 +59,7 @@ Design rationale for each part: [`PARTS.md`](PARTS.md).
 | Item | Note |
 |---|---|
 | AZDelivery MAX98357A I2S amp | Board only |
+| **INMP441 I2S MEMS microphone** | Shares the amp's I2S clock lines — mic on receive, amp on transmit. Voice is now tier 2, not hypothetical |
 | LuluDa mini speaker, 3W **8Ω**, JST-PH2.0 ×4 | 8Ω is the safer load. Amp has screw terminals, so cut the plug or add a socket |
 | Preciva 60W soldering station | |
 | KELLYSHUN flux + desoldering braid | |
@@ -72,7 +73,6 @@ Design rationale for each part: [`PARTS.md`](PARTS.md).
 |---|---|---|
 | **Bambu Lab 7.4V charger, XH2.54** ([EU store](https://eu.store.bambulab.com/en/collections/power-supplies)) | **4.49** | The *only* thing that can charge your pack — see below |
 | **2nd Bambu 14500 pack** | ~10 | 17 min of walking per charge. One pack is one demo |
-| INMP441 I2S microphone | ~4 | Only if you want voice — [`LLM_VOICE.md`](LLM_VOICE.md) |
 
 ---
 
