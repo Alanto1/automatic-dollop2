@@ -145,6 +145,14 @@ Follow the upstream build guide. Don't improvise.
       `R3 R4 L3 L4`. Measured: the bosses have only 1.50-1.59 mm of wall, so
       at upstream's 2 perimeters they are 0.8 mm of shell plus honeycomb and
       they split. 4 perimeters = 1.6 mm = solid boss. ~11 min each
+- [ ] ⚠️ **Through-bolt `R3 R4 L3 L4` rather than self-tapping them.** The
+      boss cannot be thickened — 1.5 mm of wall with the servo pocket on one
+      side and the end face on the other. Drill the existing bore through with
+      2.2 mm (only 0.69 mm more material), then M2 x 14-16 machine screw +
+      washer + nut. Axial clamp, no wedging, nothing to strip
+- [ ] Buy: 8x M2 x 14-16 machine screws, 8x M2 nuts, 8x M2 washers
+- [ ] Any future reprint of the joints: **PETG or PLA+, not plain PLA.** PLA
+      cracks rather than yielding, which is this exact failure
 - [ ] Repair, don't reprint, anything already assembled: melt PLA filament
       into the stripped hole at 180-200 C, cool, re-drill 1.7 mm. See
       [`PARTS.md`](PARTS.md) for the other three methods

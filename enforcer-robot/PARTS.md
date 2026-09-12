@@ -746,6 +746,64 @@ Note that going above 4 gains nothing *here*: 4 perimeters already asks for
 1.6 mm against the 1.5 mm available, so the boss is solid and there is no
 infill left to displace. 6 walls would print the same boss.
 
+### The boss cannot be made thicker — measured
+
+4 walls helped and the wall is still only 1.5 mm, so the obvious next move is
+a fatter boss. It is not available. Ray-casting the wall thickness all the way
+around `R3`'s two servo-flange bores, every 5°:
+
+```
+        along y          along z
+  0°   7.4 mm       90°   1.59 mm      <- thin
+ 180°  7.4 mm      270°   1.74 mm      <- thin
+```
+
+The boss is not uniformly thin; it is a **thin slab**. There is 7–9 mm of
+plastic sideways and 1.5 mm along the leg. And a boolean test says a 7 mm
+collar would be 493 mm³ of material that is *already solid* plus only 84 mm³
+of new — because the missing material is all in that one direction.
+
+What is in that direction: the part's own end face on one side (the bore
+centre sits 2.6 mm from it) and the **servo pocket** on the other. Thickening
+means either growing the part past its end or filling the space the MG90S
+occupies. Upstream did not leave 1.5 mm out of carelessness — there is nowhere
+else to put it.
+
+So: **the fix is to change the fastener, not the part.**
+
+### Through-bolt the four lower legs
+
+`R3 R4 L3 L4` hold the servo by two M2 self-tappers on the MG90S's 27.8 mm
+flange pitch. Measured, those bores stop **0.69 mm short of the far face** —
+the bore is 8.0 mm deep and the shell is 9.53 mm thick there.
+
+So drill them through and bolt instead:
+
+| | |
+|---|---|
+| Drill | **2.2 mm** straight through — 0.69 mm more than the existing bore |
+| Screw | **M2 × 14–16 machine screw**, in from the servo side |
+| Far side | M2 washer + **M2 nut** |
+
+A machine screw pulled up against a nut loads the plastic **axially, in
+compression**. There is no radial wedging at all, which is the entire reason
+the bosses split. Nothing left to strip, and it can be taken apart and put
+back as many times as you like.
+
+⚠️ Check nut clearance on the outside of the leg before committing to all
+four — the nut stands ~1.6 mm off the surface.
+
+⚠️ **An M2 heat-set insert is still out.** It needs a 3.2 mm bore, which in a
+1.5 mm wall leaves 0.65 mm. The 6.97 and 7.96 mm bosses on the coupon take one
+happily; nothing on the actual robot does.
+
+### If you reprint these again, change filament
+
+PLA fails by **brittle cracking** — it does not yield first, it just splits,
+which is exactly the failure here. **PETG, PLA+ or a "tough PLA"** deforms
+instead of cracking and is the biggest remaining lever on a wall that cannot
+be made thicker. Same 4 walls, same geometry, tougher polymer.
+
 ### When a boss has already stripped
 
 For joints already assembled, in ascending order of effort. Reprinting means
