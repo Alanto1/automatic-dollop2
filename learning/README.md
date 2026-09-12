@@ -125,6 +125,7 @@ Numbers in brackets are the module files in this directory.
 
 | Phase | Duration @ 8h/wk | Math | Electrical | Computer | Mechanical |
 |---|---|---|---|---|---|
+| **0 — Ground floor** *(skip if you have it)* | ~9–12 months, mostly in parallel | Algebra, trig, calculus | Physics I & II, a little chemistry | — | Mechanics |
 | **1 — Foundations** | ~4 months | Algebra/trig repair, Calculus I | DC circuits, first semiconductors | Digital logic, number systems | Statics, kinematics |
 | **2 — The core** | ~5 months | Calculus II, complex numbers, ODEs | AC/impedance, transients, op-amps | Computer architecture, MCU internals | Dynamics, DC motor model |
 | **3 — Systems** | ~6 months | Laplace, Fourier, linear algebra | Filters, noise, signal conditioning | RTOS, real-time constraints | Control theory, estimation |
@@ -182,9 +183,11 @@ are at the bottom of this file.
 
 **Scoring.**
 
-- Struggled with Tier A → start at [`00-math-backbone.md`](00-math-backbone.md)
-  §1, and do it properly. This is the highest-leverage month you will
-  spend. Nothing downstream works without it.
+- Struggled with Tier A → start at [`FOUNDATIONS.md`](FOUNDATIONS.md) §1
+  and §2, and do them properly. This is the highest-leverage couple of
+  months you will spend. Nothing downstream works without it — and see
+  that file's "fast path" section, because you can begin Module 01
+  after about six weeks rather than waiting for the whole ground floor.
 - Tier A fine, Tier B shaky → start Phase 1 at full speed; you'll clear
   it in half the listed time.
 - Tier A+B fine → start Phase 2 directly. Skim Module 01 as review.
@@ -232,6 +235,7 @@ wasteful and it is not.
 
 | File | What it is |
 |---|---|
+| [`FOUNDATIONS.md`](FOUNDATIONS.md) | **The ground floor** — physics, math, trigonometry, a little chemistry, calculus. The general science everything else assumes. Start here if you're starting from scratch; it's the only file covering physics and chemistry. |
 | [`00-math-backbone.md`](00-math-backbone.md) | The math track, sequenced by what it unlocks. Start here if the placement test says so. |
 | [`01-circuits.md`](01-circuits.md) | DC and AC circuit theory. Ohm → KCL/KVL → Thevenin → impedance → resonance. |
 | [`02-electronics-analog.md`](02-electronics-analog.md) | Semiconductors, diodes, BJTs/MOSFETs, op-amps, power. Your motor driver lives here. |
