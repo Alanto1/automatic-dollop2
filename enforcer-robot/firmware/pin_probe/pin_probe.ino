@@ -86,6 +86,19 @@ static void squareWave(unsigned long ms) {
 }
 
 void setup() {
+  // Park every servo pin first: uploading soft-resets the CPU but not LEDC,
+  // so a pin the previous sketch left pulsing goes on pulsing and will be
+  // blamed on wiring. Only PIN gets driven from here on.
+  static const int ALL[8] = {1, 2, 4, 6, 8, 10, 13, 14};
+  for (int i = 0; i < 8; i++) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+    ledcDetach(ALL[i]);
+#else
+    ledcDetachPin(ALL[i]);
+#endif
+    pinMode(ALL[i], INPUT);
+  }
+
   Serial.begin(115200);
   unsigned long t0 = millis();
   while (!Serial && millis() - t0 < 3000) {}

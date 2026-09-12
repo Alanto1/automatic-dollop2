@@ -16,7 +16,8 @@
 //
 // --- WHAT TO DO WITH IT -----------------------------------------------
 //
-//   1. Flash it. Nothing moves: motors stay limp until commanded.
+//   1. Flash it. Nothing moves: motors stay limp until commanded, and any
+//      pin left pulsing by a previous sketch is parked on boot.
 //   2. Serial monitor at 115200. The line-ending dropdown does not matter;
 //      this sketch accepts a command with or without a newline.
 //   3. Send  all,90
@@ -152,7 +153,26 @@ static void menu() {
   Serial.println();
 }
 
+// Uploading a sketch only soft-resets the CPU. The LEDC peripheral is NOT
+// reset, and neither is the GPIO matrix routing its output, so a pin left
+// pulsing by the PREVIOUS sketch keeps pulsing into this one -- a servo that
+// holds position on a pin this sketch has not touched, which is impossible to
+// tell from a bridged signal trace. Park all eight before doing anything.
+static void parkAll() {
+  for (int i = 0; i < 8; i++) {
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+    ledcDetach(SERVO_PINS[i]);
+#else
+    ledcDetachPin(SERVO_PINS[i]);
+#endif
+    pinMode(SERVO_PINS[i], INPUT);
+    attached[i] = false;
+  }
+}
+
 void setup() {
+  parkAll();
+
   Serial.begin(115200);
   unsigned long t0 = millis();
   while (!Serial && millis() - t0 < 3000) {}
