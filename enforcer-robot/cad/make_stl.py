@@ -52,6 +52,34 @@ TCRT_H = 6.2
 PIZERO_HOLES = (58.0, 23.0)  # Raspberry Pi Zero 2 W mounting pattern
 CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 
+# --- the screw bosses that keep splitting --------------------------------
+#
+# MEASURED off Sesame's own STLs, by ray-casting outward from each bore and
+# taking the gap between the first and second hit:
+#
+#     R3/R4/L3/L4   bore 1.72mm, 8.0mm deep, 1.50-1.59mm of wall
+#     R1/R2/L1/L2   horn boss, same M2 x 5 self-tapper
+#
+# 1.72mm is the RIGHT pilot for an M2 self-tapper. The bore is not the
+# problem. The wall is: a self-tapper cuts no chips, it wedges plastic
+# sideways, so the boss is a pressure vessel for as long as the screw is
+# turning. 1.5mm of wall survives that only if it is SOLID, and at
+# upstream's 2 perimeters it is 0.8mm of shell plus honeycomb -- which is
+# why all four hip bosses split here, and why the legs follow.
+#
+# Four perimeters at 0.4mm is 1.6mm, which is more than the 1.5mm available:
+# the boss prints solid with no infill in it at all. That is the whole fix,
+# and it is a slicer setting rather than a geometry change.
+#
+# An M2 heat-set insert wants a 3.2mm bore. Around Sesame's 4.7mm boss that
+# leaves 0.75mm of wall, which is thinner than what is already failing --
+# so inserts are NOT a drop-in here. They need a boss about 7mm across,
+# which is what the larger steps on the coupon below are for.
+BOSS_BORE = 1.7             # M2 self-tapper pilot, as measured
+BOSS_DEPTH = 8.0            # as measured
+BOSS_ODS = (4.7, 6.0, 7.0, 8.0)   # [0] is Sesame's; [2:] can take an insert
+BOSS_PITCH = 13.0
+
 # Camera and nozzle both point this far above horizontal. They must match:
 # the robot yaws to aim, so horizontal centring is the only closed loop, and
 # the vertical angle is a mechanical decision made once, here.
@@ -676,6 +704,43 @@ def cliff_bracket():
     )
 
 
+def boss_coupon():
+    """Four screw bosses on a bar, so you can break them instead of a leg.
+
+    Print it TWICE -- once at 2 perimeters, once at 4 -- and drive an M2 x 5
+    self-tapper into each boss until it either seats or splits. That is a
+    ~20 minute answer to "do I reprint eight joints, or do I need a bigger
+    boss", and it costs one small part rather than four hours and a
+    disassembled robot.
+
+    Bosses ascend left to right, 4.7mm (Sesame's own) to 8.0mm. The 3mm
+    marker hole sits beside the 4.7mm end so the bar cannot be read
+    backwards once it is off the plate.
+
+    The two widest also take an M2 heat-set insert: bore them to 3.2mm and
+    press one in with a soldering iron. That converts the joint from a
+    self-tapper in plastic to a machine screw in brass, which is the only
+    version of this that survives being taken apart and back together.
+    """
+    n = len(BOSS_ODS)
+    w = BOSS_PITCH * n + 8.0
+    xs = [(i - (n - 1) / 2) * BOSS_PITCH for i in range(n)]
+
+    # The bar itself is solid: the bores are blind, stopping on its top face,
+    # so the screw bottoms out at BOSS_DEPTH exactly like it does in a leg.
+    tris = extrude(rounded_rect(0.0, 0.0, w, 18.0, 3.0),
+                   [circle(xs[0], 6.5, 3.0)], 0.0, PLATE_T)
+
+    for x, od in zip(xs, BOSS_ODS):
+        # Sunk 0.6mm into the bar so the two solids interpenetrate rather
+        # than merely touching -- coplanar faces are where slicers get
+        # creative.
+        tris += extrude(circle(x, 0.0, od, cw=False),
+                        [circle(x, 0.0, BOSS_BORE)],
+                        PLATE_T - 0.6, PLATE_T + BOSS_DEPTH)
+    return tris
+
+
 def phone_tray():
     """Warden mode. A lip at each end so the phone can't slide off when the
     robot walks away with it."""
@@ -697,6 +762,7 @@ PARTS = {
     "nozzle_mount": (nozzle_mount, 1),
     "camera_mount": (camera_mount, 1),
     "cliff_bracket": (cliff_bracket, 4),
+    "boss_coupon": (boss_coupon, 1),
     "phone_tray": (phone_tray, 1),
 }
 

@@ -53,12 +53,21 @@ and a scale.
 | # | Plate | Supports | est. |
 |---|---|---|---|
 | 0 | 20 mm calibration cube | no | 20 min |
+| 0b | `boss_coupon` at **2 walls**, then again at **4** | no | 2 x 12 min |
 | 1 | **one** joint — `R1-v117` | no | 11 min |
 | 2 | remaining 7 joints + 4× `cliff_bracket` + `nozzle_mount` | no | ≈ 1.9 h |
 | 3 | `Internal-Frame-v121` + `Bottom-Cover-v121` | no | ≈ 1.6 h |
 | 4 | `Top-Cover-Enclosed-v117` | **yes** | ≈ 50 min |
 | — | *assemble, get it walking, weigh it, measure it* | | |
 | 5 | `payload_deck` + `camera_mount` + 2× `reservoir_cradle` | no | ≈ 1.1 h |
+
+**Plate 0b decides the wall count for everything else.** The joints' screw
+bosses have a measured 1.50-1.59 mm of wall around a 1.72 mm bore, which is
+too little to survive a self-tapper unless it prints solid. The coupon has
+four bosses — 4.68 mm (Sesame's own), 5.97, 6.97, 7.96 — bored like a real
+leg. Print it at 2 perimeters and at 4, drive an M2 x 5 into each, and see
+which ones split. 24 minutes and 10 g against reprinting eight joints on a
+guess. Details and the repair methods are in [`../../PARTS.md`](../../PARTS.md).
 
 **Plate 1 is one joint, on purpose.** Test-fit an MG90S in it before
 committing to the other seven. A servo pocket that is 0.2 mm tight is a
@@ -121,6 +130,7 @@ Set them, re-run `python3 make_stl.py --test`, *then* print:
 | `reservoir_cradle` | 2 | 6 | 16 min | `BOTTLE_D` |
 | `cliff_bracket` | 4 | 6 | 16 min | nothing — print with batch 1 if you like |
 | `nozzle_mount` | 1 | 3 | 7 min | nothing |
+| `boss_coupon` | 2 | 5 | 12 min | nothing — print this FIRST, see plate 0b |
 | `camera_mount` | 1 | 4 | 10 min | see below |
 | | **9** | **33 g** | **≈ 1.4 h** | |
 

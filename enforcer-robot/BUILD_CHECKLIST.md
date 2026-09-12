@@ -138,9 +138,16 @@ Follow the upstream build guide. Don't improvise.
 - [x] ~~Print the 11-part set in PLA~~
 - [x] ~~**Bench-test all 10 servos**~~ — 10/10 alive, neutral offsets recorded
       per servo. Those numbers are the `servoSubtrim` table, collected early
-- [ ] ⚠️ **Reprint R1 R2 L1 L2 at 4 walls.** All four split at the horn screw
-      boss when printed at upstream's 2 walls. ~11 min each; print one and
-      fit a horn to it before committing to the other three
+- [ ] ⚠️ **Print `boss_coupon` twice — 2 perimeters and 4 — and break it.**
+      5 g, ~12 min each. Drive an M2 x 5 into all four bosses on both bars.
+      This decides the item below before it costs four hours
+- [ ] ⚠️ **Reprint all eight joints at 4 walls** — `R1 R2 L1 L2` *and*
+      `R3 R4 L3 L4`. Measured: the bosses have only 1.50-1.59 mm of wall, so
+      at upstream's 2 perimeters they are 0.8 mm of shell plus honeycomb and
+      they split. 4 perimeters = 1.6 mm = solid boss. ~11 min each
+- [ ] Repair, don't reprint, anything already assembled: melt PLA filament
+      into the stripped hole at 180-200 C, cool, re-drill 1.7 mm. See
+      [`PARTS.md`](PARTS.md) for the other three methods
 - [x] ~~Servos into the four leg joints~~ — `R3 R4 L3 L4`, self-tapped
 - [x] ~~Four hip servos into the frame~~
 - [ ] Hand-wire the ESP32-S2 Mini harness (skip the custom PCB for now)

@@ -691,11 +691,80 @@ cradle — go to **4 walls and 25% infill**. Those carry the pump, the water and
 the aiming load; upstream's numbers are tuned for a shell that carries only
 itself.
 
-⚠️ **And for the four hip joints, R1 R2 L1 L2 — also 4 walls.** Measured the
-hard way: at upstream's 2 walls, the boss the horn screw threads into split
-on all four while the horn was being fitted. A self-tapping screw works by
-wedging plastic apart, so it needs material around it, and two 0.4mm
-perimeters is about 0.8mm of wall against a screw 2mm across.
+⚠️ **And for all eight joints — R1 R2 L1 L2 *and* R3 R4 L3 L4 — 4 walls.**
+Originally this said the four hips; the legs went the same way in service, so
+it now says all eight.
+
+### Why the bosses split, with the measurement
+
+Ray-cast out of every bore in Sesame's own STLs, taking the gap between the
+first and second surface hit:
+
+| Part | Bore | Depth | Wall around it |
+|---|---|---|---|
+| `R3 R4 L3 L4` motor screws | **1.72 mm** | 8.0 mm | **1.50–1.59 mm** |
+| `R1 R2 L1 L2` horn screw | 1.72 mm | ~10 mm | same boss family |
+
+**1.72 mm is the correct pilot for an M2 self-tapper.** The bore is not the
+fault and drilling it out makes things worse.
+
+The wall is the fault. A self-tapper cuts no chips — it *wedges* plastic
+sideways to form its thread, so while the screw turns, the boss is a pressure
+vessel. 1.5 mm of wall takes that only if it is **solid**. At upstream's 2
+perimeters it is 0.8 mm of shell plus honeycomb, so the screw is pushing
+against roughly half the material the geometry implies, and the boss splits
+along a layer line.
+
+**Four perimeters at 0.4 mm is 1.6 mm — more than the 1.5 mm available.** The
+boss prints with no infill inside it at all. That is the entire fix, and it is
+a slicer setting, not a geometry change. Nothing needs redesigning.
+
+⚠️ **An M2 heat-set insert does not drop into these parts.** Inserts want a
+3.2 mm bore; around Sesame's 4.7 mm boss that leaves 0.75 mm of wall, thinner
+than what is already failing. Inserts need a boss about **7 mm** across. That
+is what the wider steps on `boss_coupon` are for — and why the recommendation
+here is 4 walls rather than brass.
+
+### Before reprinting eight joints, print the coupon
+
+`cad/stl/boss_coupon.stl` — 5 g, ~12 min. A bar with four bosses: **4.68 mm**
+(Sesame's own, measured), 5.97, 6.97, 7.96 mm, every one bored 1.69 mm × 8 mm
+deep like a real leg.
+
+Print it **twice**, once at 2 perimeters and once at 4, and drive an M2 × 5
+into each boss until it seats or splits. Twenty minutes, and it answers "do 4
+walls actually fix this, or do I need a bigger boss" destructively, on a part
+that is not holding a robot together.
+
+### When a boss has already stripped
+
+For joints already assembled, in ascending order of effort. Reprinting means
+full disassembly, so these come first.
+
+1. **Weld it with PLA — the best repair.** Push a short offcut of PLA filament
+   into the hole, touch it with a soldering iron at **180–200 °C** until it
+   slumps and fills, let it cool *completely*, then re-drill **1.7 mm** and
+   drive the screw. Same polymer as the part, so it fuses rather than glues:
+   this comes back close to original strength and is the only repair that
+   survives being undone and redone.
+2. **Toothpick and thin CA.** A wooden toothpick plus a drop of thin
+   cyanoacrylate, snapped off flush, cured, re-drilled 1.7 mm. Ninety seconds
+   and good enough for a joint that will not be opened again. Weaker than a
+   weld — the glue line is the failure plane.
+3. **Go up one size.** An **M2.5 × 5** self-tapper bites fresh plastic outside
+   the chewed zone. Works, but it wedges *harder* into a wall that is already
+   marginal, so it is a one-shot fix and not one to use on all eight.
+4. **Through-bolt.** Drill 2.2 mm straight through and use an M2 machine screw
+   with a nut and washer on the far side. No plastic thread at all, so nothing
+   left to strip. Only where the back face is reachable — check before
+   drilling.
+
+⚠️ **And stop tightening so hard.** Upstream is explicit: *"Do not
+over-tighten self-threading screws. Since the threads are plastic,
+over-tightening will permanently damage the hole."* A self-tapper in PLA is
+done the moment it goes snug. Hand-drive it with a small screwdriver, never a
+power driver — a cordless driver reaches stripping torque faster than a hand
+can react.
 
 Every printed hole that takes a self-tapper wants the same treatment. It
 costs a few minutes of print time per part and saves a reprint after the
