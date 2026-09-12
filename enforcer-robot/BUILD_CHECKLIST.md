@@ -138,9 +138,9 @@ Follow the upstream build guide. Don't improvise.
 - [x] ~~Print the 11-part set in PLA~~
 - [x] ~~**Bench-test all 10 servos**~~ — 10/10 alive, neutral offsets recorded
       per servo. Those numbers are the `servoSubtrim` table, collected early
-- [ ] ⚠️ **Print `boss_coupon` twice — 2 perimeters and 4 — and break it.**
-      5 g, ~12 min each. Drive an M2 x 5 into all four bosses on both bars.
-      This decides the item below before it costs four hours
+- [x] ~~**Print `boss_coupon` and break it.**~~ At 4 perimeters all four
+      bosses held, the 4.68 mm one included. Only deformation was inside the
+      bore, which is the self-tapper cutting its thread. **4 walls confirmed**
 - [ ] ⚠️ **Reprint all eight joints at 4 walls** — `R1 R2 L1 L2` *and*
       `R3 R4 L3 L4`. Measured: the bosses have only 1.50-1.59 mm of wall, so
       at upstream's 2 perimeters they are 0.8 mm of shell plus honeycomb and

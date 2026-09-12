@@ -736,6 +736,16 @@ into each boss until it seats or splits. Twenty minutes, and it answers "do 4
 walls actually fix this, or do I need a bigger boss" destructively, on a part
 that is not holding a robot together.
 
+✅ **Result, measured on the bench: at 4 perimeters all four bosses held,
+including the 4.68 mm one.** The 4.68 mm bore deformed slightly on the inside
+as the screw went in — that is the self-tapper forming its thread, which is
+what it is supposed to do. No crack on any boss. So 4 walls is the fix and no
+geometry change is needed.
+
+Note that going above 4 gains nothing *here*: 4 perimeters already asks for
+1.6 mm against the 1.5 mm available, so the boss is solid and there is no
+infill left to displace. 6 walls would print the same boss.
+
 ### When a boss has already stripped
 
 For joints already assembled, in ascending order of effort. Reprinting means
