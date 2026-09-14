@@ -636,6 +636,27 @@ numbers are from Sesame's `sesame-angle-guide.png`; pins from `servoPins[8]`.
 | **6** | `L3` | 13 | left lower leg |
 | **7** | `L4` | 14 | left lower leg |
 
+### Which two motors are the same leg
+
+The table above is ordered the way the firmware is, which is *not* by leg.
+Measured off the STLs — they are exported in assembly position, and each hip
+sits 3.25 mm from its own lower leg and 67 mm from any other:
+
+| Leg | Hip | GPIO | Lower leg | GPIO | Motors |
+|---|---|---|---|---|---|
+| Right, one end | `R1` | 1 | `R3` | 10 | **0 and 5** |
+| Right, other end | `R2` | 2 | `R4` | 8 | **1 and 4** |
+| Left, one end | `L1` | 4 | `L3` | 13 | **2 and 6** |
+| Left, other end | `L2` | 6 | `L4` | 14 | **3 and 7** |
+
+The rule is **1 pairs with 3, 2 pairs with 4**, on each side. But motor 0's
+partner is motor **5**, not motor 4 — so when one leg misbehaves, the two
+motors to look at are never adjacent numbers.
+
+One leg is two servos: the frame servo swings the hip joint through a horn,
+and a second servo living inside the lower leg shell works the knee, with the
+lower leg's far end pivoting on the hip joint's arm.
+
 Hips are 0–3, legs are 4–7 — but note the legs are **not** in alphabetical
 order: `R4` is motor 4 and `R3` is motor 5. Read the table, not the pattern.
 
