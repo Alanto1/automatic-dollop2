@@ -136,8 +136,12 @@ how much it is buying you.
 Follow the upstream build guide. Don't improvise.
 
 - [x] ~~Print the 11-part set in PLA~~
-- [x] ~~**Bench-test all 10 servos**~~ — 10/10 alive, neutral offsets recorded
-      per servo. Those numbers are the `servoSubtrim` table, collected early
+- [x] ~~**Bench-test all 10 servos**~~ — 10/10 alive. The per-servo neutral
+      readings (80, 84, 175, 84, 80, 85, 72, 84, 154, 134) are **not** a trim
+      table and should not be carried forward: they were taken with horns in
+      whatever position they happened to be in, and calibration re-seats every
+      horn. Sesame has no `servoSubtrim` — alignment is mechanical, set by
+      pressing each joint on while the motor holds Stand
 - [x] ~~**Print `boss_coupon` and break it.**~~ At 4 perimeters all four
       bosses held, the 4.68 mm one included. Only deformation was inside the
       bore, which is the self-tapper cutting its thread. **4 walls confirmed**
@@ -164,10 +168,22 @@ Follow the upstream build guide. Don't improvise.
 - [ ] Install OLED + power switch in the top cover
 - [ ] Main assembly, route wires into the underside channels
 - [ ] Flash the motor tester; plug servos in **one at a time**; fix wrong slots
-- [ ] ⚠️ **Pull the hip joints off the shafts before calibrating** if the
-      M2.5 centre screws are not in yet. Every shaft must spin freely, or a
-      misaligned horn can stall a servo the moment it powers up
-- [ ] Calibrate, then press each hip joint on while the motor holds Stand
+- [ ] ⚠️ **Pull EVERY joint off its shaft before calibrating.** Upstream:
+      *"Never run calibration with joints attached. A misaligned horn can
+      stall or strip a servo instantly."* Every shaft must spin freely
+- [ ] Calibrate, in upstream's order:
+    - [ ] Power up, join Sesame's Wi-Fi AP, open the portal
+    - [ ] Tap **Standby** to initialise the PWM channels
+    - [ ] Plug motors in **from Motor 0 up**, one at a time — each whirs to
+          position as it is connected
+    - [ ] Switch to **Stand**, then *"push the hip joint onto the motor shaft
+          at a 45-degree angle"* while the motor is holding
+    - [ ] Toggle **Rest ↔ Stand** to check alignment before committing
+    - [ ] Fasten with the **M2.5 machine screw** through the centre hole
+    - [ ] Repeat for the leg joints; check nothing collides, then screw
+- [ ] Walk: `forward` `backward` `left` `right` run until stopped. Poses are
+      rest, stand, wave, dance, swim, point, pushup, bow, cute, freaky, worm,
+      shake, shrug, dead, crab
 
 **Demoable:** it walks, poses, and pulls faces, driven from the web page.
 That's already a robot on a table.

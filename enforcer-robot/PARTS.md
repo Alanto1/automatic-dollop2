@@ -709,6 +709,43 @@ directly off the ESP32's own 5 V and GND pins, with nothing else connected.
 One unloaded MG90S is well within what USB supplies, and if it works there the
 fault is downstream of the board, guaranteed.
 
+### The horn IS the calibration — there is no trim table
+
+Bench-testing the servos produced neutral readings all over the place: 80, 84,
+175, 84, 80, 85, 72, 84, 154, 134. That looks like it demands per-servo
+offsets in code. It does not, and **Sesame has no `servoSubtrim` or equivalent
+— alignment is mechanical.**
+
+Every one of those readings was taken with a horn in whatever position it
+happened to be pressed on at. Calibration re-seats every horn, so they all
+become obsolete the moment it starts.
+
+The procedure inverts the problem. Instead of measuring where a servo's zero
+is and correcting for it in software, you **hold the servo at a known pose and
+build the joint around it**:
+
+1. Every joint **off** its shaft, every shaft spinning free.
+2. Power up, join Sesame's Wi-Fi AP, tap **Standby** to initialise PWM.
+3. Plug motors in from Motor 0 up. Each whirs to position as it connects.
+4. Switch to **Stand**. Now, with the motor *holding*, press the hip joint on
+   — upstream says at a 45° angle.
+5. Toggle **Rest ↔ Stand** to confirm it tracks before committing.
+6. M2.5 machine screw through the centre.
+
+Whatever the servo's internal zero was, the joint now points the right way at
+Stand. The 154 never has to be known.
+
+**The residual, and what to do about it.** An MG90S spline has ~21 teeth, so
+the horn can only be seated in ~17° steps and the best you can do is within
+**±8.5°**. If a joint looks off at Stand, pull it and rotate it by **one
+tooth** — that is the adjustment, not a number in a file. If it is still wrong
+in both positions, the error is larger than half a tooth and something else is
+off: wrong motor in the slot, or the joint on the wrong leg.
+
+⚠️ Upstream's warning is not decoration: *"Never run calibration with joints
+attached. A misaligned horn can stall or strip a servo instantly."* A stalled
+MG90S strips its gears in seconds.
+
 ### Wiring one TCRT5000
 
 The bare sensor is two devices in one package: an IR LED and a
