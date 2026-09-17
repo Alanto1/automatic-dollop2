@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Enforcer Mood Simulator</title>
+<style>
+  /* ---------------------------------------------------------------
+     Tokens. Dark is the primary read (this is an instrument panel for
+     a robot that mostly runs at a desk at night); light is re-picked
+     for contrast, not a naive inversion. prefers-color-scheme sets the
+     OS default; [data-theme] (the toggle, persisted locally) overrides
+     it either direction.
+  ----------------------------------------------------------------*/
+  :root {
+    color-scheme: dark;
+    --bg: #12100e;
+    --surface: #1b1815;
+    --surface-2: #241f1a;
+    --border: #352d25;
+    --text: #f1ece6;
+    --text-muted: #a2958a;
+    --accent: #ff8c32;
+    --mood-chill: #4fd8c4;
+    --mood-suspicious: #f2c14e;
+    --mood-warning: #f2924e;
+    --mood-strike: #f2554e;
+    --mood-smug: #b98cf0;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ed;
+      --surface: #ffffff;
+      --surface-2: #ebe6e0;
+      --border: #d8d0c7;
+      --text: #1c1814;
+      --text-muted: #6b6058;
+      --accent: #c25c0a;
+      --mood-chill: #0e8c7a;
+      --mood-suspicious: #9c6a0a;
+      --mood-warning: #b3551a;
+      --mood-strike: #c43a32;
+      --mood-smug: #7040b8;
+      --shadow: rgba(40, 30, 20, 0.12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #12100e; --surface: #1b1815; --surface-2: #241f1a; --border: #352d25;
+    --text: #f1ece6; --text-muted: #a2958a; --accent: #ff8c32;
+    --mood-chill: #4fd8c4; --mood-suspicious: #f2c14e; --mood-warning: #f2924e;
+    --mood-strike: #f2554e; --mood-smug: #b98cf0; --shadow: rgba(0, 0, 0, 0.45);
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f1ed; --surface: #ffffff; --surface-2: #ebe6e0; --border: #d8d0c7;
+    --text: #1c1814; --text-muted: #6b6058; --accent: #c25c0a;
+    --mood-chill: #0e8c7a; --mood-suspicious: #9c6a0a; --mood-warning: #b3551a;
+    --mood-strike: #c43a32; --mood-smug: #7040b8; --shadow: rgba(40, 30, 20, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 16px 48px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; }
+
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 20px; }
+  .sub code { font-family: var(--font-mono); font-size: 0.85em; }
+
+  #theme {
+    margin-left: auto; background: var(--surface-2); color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px;
+    font-size: 0.78rem; cursor: pointer; font-family: inherit;
+  }
+  #theme:hover { color: var(--text); }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 14px;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+  .panel h2 {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.09em;
+    color: var(--text-muted); margin: 0 0 12px; font-weight: 600;
+  }
+
+  /* -- the robot's current state -- */
+  .state { display: grid; grid-template-columns: 128px 1fr; gap: 18px; align-items: center; }
+  @media (max-width: 560px) { .state { grid-template-columns: 1fr; } }
+
+  .face {
+    height: 96px; border-radius: 10px; background: #05070a;
+    border: 1px solid var(--border); display: grid; place-items: center;
+  }
+  .face svg { width: 100%; height: 100%; }
+
+  .mood-name { font-size: 1.6rem; font-weight: 650; letter-spacing: -0.02em; line-height: 1.1; }
+  .mood-why { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+
+  .bar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+  .bar > i { display: block; height: 100%; width: 0; border-radius: 999px; transition: width 90ms linear; }
+  .bar-legend {
+    display: flex; justify-content: space-between; font-family: var(--font-mono);
+    font-size: 0.72rem; color: var(--text-muted); margin-top: 5px;
+  }
+
+  .fire {
+    display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 6px;
+    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
+    background: var(--mood-strike); color: #fff; opacity: 0; transition: opacity 120ms;
+  }
+  .fire.on { opacity: 1; }
+
+  /* -- controls -- */
+  .rows { display: flex; flex-wrap: wrap; gap: 8px; }
+  button.tog {
+    font-family: inherit; font-size: 0.85rem; padding: 8px 14px; cursor: pointer;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-muted);
+  }
+  button.tog[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: #12100e; font-weight: 600;
+  }
+  :root[data-theme="light"] button.tog[aria-pressed="true"],
+  button.tog[aria-pressed="true"] { color: #12100e; }
+  button.tog:hover { color: var(--text); }
+  button.tog[aria-pressed="true"]:hover { color: #12100e; }
+
+  .clock {
+    font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted);
+    margin-left: auto; align-self: center;
+  }
+
+  /* -- timeline -- */
+  #tl { width: 100%; height: 90px; display: block; }
+  .key { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); }
+  .key span { display: flex; align-items: center; gap: 6px; }
+  .key i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* -- tuning -- */
+  .knobs { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px 20px; }
+  .knob label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 3px; }
+  .knob label b { font-family: var(--font-mono); font-weight: 600; color: var(--accent); }
+  .knob input { width: 100%; accent-color: var(--accent); }
+  .knob p { font-size: 0.72rem; color: var(--text-muted); margin: 3px 0 0; }
+
+  /* -- log -- */
+  #log {
+    font-family: var(--font-mono); font-size: 0.78rem; max-height: 190px;
+    overflow-y: auto; margin: 0; padding: 0; list-style: none;
+  }
+  #log li { padding: 2px 0; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  #log li:last-child { border-bottom: 0; }
+  #log b { color: var(--text); font-weight: 600; }
+  #log .t { color: var(--text-muted); opacity: 0.7; }
+
+  footer { color: var(--text-muted); font-size: 0.78rem; margin-top: 20px; }
+  footer code { font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Enforcer mood simulator</h1>
+  <button id="theme" type="button">theme</button>
+</header>
+<p class="sub">
+  A line-for-line JS port of <code>brain/mood.py</code>. Toggle what the camera
+  sees and watch the robot escalate. Nothing here talks to hardware — the point
+  is to tune the timings by feel <em>before</em> the parts arrive, then copy the
+  numbers back into the Python.
+</p>
+
+<!-- ================= current state ================= -->
+<div class="panel">
+  <h2>Right now</h2>
+  <div class="state">
+    <div class="face"><svg id="face" viewBox="0 0 128 96" aria-hidden="true"></svg></div>
+    <div>
+      <div class="mood-name" id="moodName">CHILL</div>
+      <div class="mood-why" id="moodWhy">working, left alone</div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="bar-legend">
+        <span id="held">held 0.0s</span>
+        <span id="next">—</span>
+      </div>
+      <span class="fire" id="fire">PUMP 250ms</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= what the camera sees ================= -->
+<div class="panel">
+  <h2>What the camera sees</h2>
+  <div class="rows">
+    <button class="tog" type="button" id="bPerson" aria-pressed="true">person present</button>
+    <button class="tog" type="button" id="bPhone" aria-pressed="false">phone visible</button>
+    <button class="tog" type="button" id="bHead" aria-pressed="false">head down</button>
+    <button class="tog" type="button" id="bDrop" aria-pressed="false">drop frames (25%)</button>
+    <button class="tog" type="button" id="bRun" aria-pressed="true">running</button>
+    <button class="tog" type="button" id="bReset" aria-pressed="false">reset</button>
+    <span class="clock" id="clock">t = 0.0s</span>
+  </div>
+  <p class="sub" style="margin:12px 0 0">
+    <b>drop frames</b> is the one worth playing with: it randomly throws away a
+    quarter of the detections, the way YOLO does when a hand crosses the phone.
+    Escalation should survive it. If it doesn't, <code>CLEAR_GRACE</code> is too
+    low for your real frame rate.
+  </p>
+</div>
+
+<!-- ================= timeline ================= -->
+<div class="panel">
+  <h2>Last 40 seconds</h2>
+  <canvas id="tl" width="1800" height="180"></canvas>
+  <div class="key">
+    <span><i style="background:var(--mood-chill)"></i>chill</span>
+    <span><i style="background:var(--mood-suspicious)"></i>suspicious</span>
+    <span><i style="background:var(--mood-warning)"></i>warning</span>
+    <span><i style="background:var(--mood-strike)"></i>strike</span>
+    <span><i style="background:var(--mood-smug)"></i>smug</span>
+  </div>
+</div>
+
+<!-- ================= tuning ================= -->
+<div class="panel">
+  <h2>Timings — copy the ones you like into mood.py</h2>
+  <div class="knobs" id="knobs"></div>
+</div>
+
+<!-- ================= log ================= -->
+<div class="panel">
+  <h2>Decisions (only when something changes)</h2>
+  <ul id="log"></ul>
+</div>
+
+<footer>
+  Behaviour spec: <code>BEHAVIOURS.md</code> · state machine:
+  <code>brain/mood.py</code> · tests: <code>brain/tests/run_tests.sh</code>.<br>
+  The arbitration stack outranks everything shown here — the cliff reflex and
+  the flee reflex live on the ESP32 and can pre-empt any decision on this page.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   The state machine. Kept a deliberate line-for-line mirror of mood.py:
+   same constant names, same order of checks, same reason strings. If you
+   change one, change the other, and re-run brain/tests/run_tests.sh.
+   ===================================================================== */
+
+const C = {
+  NOTICE_AFTER: 1.0,
+  PHONE_DWELL: 3.0,
+  HEAD_DOWN_DWELL: 6.0,
+  ABSENT_DWELL: 20.0,
+  STRIKE_AFTER_WARNING: 3.0,
+  SMUG_DURATION: 4.0,
+  COOLDOWN: 15.0,
+  CLEAR_GRACE: 1.5,
+};
+
+const MOOD = { CHILL: "chill", SUSPICIOUS: "suspicious", WARNING: "warning",
+               STRIKE: "strike", SMUG: "smug" };
+const OFF = { NONE: "none", PHONE: "phone", HEAD_DOWN: "head_down", ABSENT: "absent" };
+
+function dwellFor(offence) {
+  if (offence === OFF.PHONE) return C.PHONE_DWELL;
+  if (offence === OFF.HEAD_DOWN) return C.HEAD_DOWN_DWELL;
+  return C.ABSENT_DWELL;
+}
+
+function classify(scene) {
+  if (!scene.person) return OFF.ABSENT;
+  if (scene.phone) return OFF.PHONE;
+  if (scene.headDown) return OFF.HEAD_DOWN;
+  return OFF.NONE;
+}
+
+// ABSENT escalates but can never reach STRIKE: interlock 1 in BEHAVIOURS.md
+// needs a detected person before the pump may run.
+function canEverFire(offence) {
+  return offence === OFF.PHONE || offence === OFF.HEAD_DOWN;
+}
+
+class MoodMachine {
+  constructor() { this.reset(0); }
+
+  reset(now) {
+    this.mood = MOOD.CHILL;
+    this.offence = OFF.NONE;
+    this.offenceSince = null;
+    this.clearSince = null;
+    this.moodSince = now;
+    this.lastFire = null;
+    this.firedThisEpisode = false;
+  }
+
+  _go(mood, now) {
+    if (mood !== this.mood) { this.mood = mood; this.moodSince = now; }
+  }
+
+  _coolingDown(now) {
+    return this.lastFire !== null && (now - this.lastFire) < C.COOLDOWN;
+  }
+
+  update(scene, now) {
+    const current = classify(scene);
+
+    if (current === OFF.NONE) {
+      if (this.clearSince === null) this.clearSince = now;
+      if (now - this.clearSince >= C.CLEAR_GRACE) {
+        this.offenceSince = null;
+        this.offence = OFF.NONE;
+        this.firedThisEpisode = false;
+      }
+    } else {
+      this.clearSince = null;
+      if (current !== this.offence || this.offenceSince === null) {
+        this.offence = current;
+        this.offenceSince = now;
+        this.firedThisEpisode = false;
+      }
+    }
+
+    const held = this.offenceSince === null ? 0 : now - this.offenceSince;
+
+    if (this.mood === MOOD.SMUG) {
+      if (now - this.moodSince >= C.SMUG_DURATION) this._go(MOOD.CHILL, now);
+      else return { mood: this.mood, offence: this.offence, fire: 0, held, reason: "gloating" };
+    }
+
+    if (this.offenceSince === null) {
+      this._go(MOOD.CHILL, now);
+      return { mood: this.mood, offence: OFF.NONE, fire: 0, held: 0, reason: "working, left alone" };
+    }
+
+    const dwell = dwellFor(this.offence);
+
+    if (held >= dwell + C.STRIKE_AFTER_WARNING && canEverFire(this.offence)) {
+      if (this.firedThisEpisode) {
+        this._go(MOOD.WARNING, now);
+        return { mood: this.mood, offence: this.offence, fire: 0, held, reason: "already fired" };
+      }
+      if (this._coolingDown(now)) {
+        this._go(MOOD.WARNING, now);
+        const left = C.COOLDOWN - (now - this.lastFire);
+        return { mood: this.mood, offence: this.offence, fire: 0, held,
+                 reason: "cooling down, " + left.toFixed(1) + "s left" };
+      }
+      this._go(MOOD.STRIKE, now);
+      this.lastFire = now;
+      this.firedThisEpisode = true;
+      return { mood: this.mood, offence: this.offence, fire: 250, held, reason: "FIRE" };
+    }
+
+    if (held >= dwell) {
+      this._go(MOOD.WARNING, now);
+      return { mood: this.mood, offence: this.offence, fire: 0, held, reason: "escalating" };
+    }
+
+    if (held >= C.NOTICE_AFTER) {
+      this._go(MOOD.SUSPICIOUS, now);
+      return { mood: this.mood, offence: this.offence, fire: 0, held, reason: "noticed" };
+    }
+
+    this._go(MOOD.CHILL, now);
+    return { mood: this.mood, offence: this.offence, fire: 0, held, reason: "below notice threshold" };
+  }
+}
+
+// Called once the pump has actually run. Separate for the same reason as in
+// the Python: a shot the interlocks refused must leave the robot angry, not
+// smugly celebrating a hit it never landed.
+function postStrike(m, now) {
+  if (m.mood === MOOD.STRIKE) m._go(MOOD.SMUG, now);
+}
+
+/* =====================================================================
+   Wiring
+   ===================================================================== */
+
+const $ = (id) => document.getElementById(id);
+
+const scene = { person: true, phone: false, headDown: false };
+let dropFrames = false;
+let running = true;
+let t = 0;
+const DT = 0.1;              // simulated seconds per tick
+const machine = new MoodMachine();
+let lastSeen = { person: true, phone: false, headDown: false };  // survives a dropped frame
+let lastReason = "";
+let lastMood = null;
+let fireUntil = -1;
+const history = [];          // {t, mood, offence, fire}
+const WINDOW = 40;
+
+/* -- toggles -- */
+function toggle(btn, get, set) {
+  btn.addEventListener("click", () => {
+    set(!get());
+    btn.setAttribute("aria-pressed", String(get()));
+  });
+}
+toggle($("bPerson"), () => scene.person, (v) => { scene.person = v; });
+toggle($("bPhone"), () => scene.phone, (v) => { scene.phone = v; });
+toggle($("bHead"), () => scene.headDown, (v) => { scene.headDown = v; });
+toggle($("bDrop"), () => dropFrames, (v) => { dropFrames = v; });
+toggle($("bRun"), () => running, (v) => { running = v; });
+$("bReset").addEventListener("click", () => {
+  t = 0; machine.reset(0); history.length = 0; $("log").innerHTML = "";
+  lastMood = null; lastReason = ""; fireUntil = -1;
+});
+
+/* -- the knobs -- */
+const KNOBS = [
+  ["NOTICE_AFTER", 0, 5, 0.1, "Ignore anything shorter than this."],
+  ["PHONE_DWELL", 0.5, 15, 0.5, "A phone in your hand is unambiguous — judge it fast."],
+  ["HEAD_DOWN_DWELL", 0.5, 20, 0.5, "You might be reading paper. Be slower."],
+  ["STRIKE_AFTER_WARNING", 0, 10, 0.5, "The 'you have been warned' window. Never 0."],
+  ["CLEAR_GRACE", 0, 5, 0.1, "How long you must be clean before it de-escalates. The one that matters."],
+  ["COOLDOWN", 0, 60, 1, "Minimum gap between shots, whatever the scene says."],
+];
+const knobs = $("knobs");
+for (const [name, min, max, step, why] of KNOBS) {
+  const d = document.createElement("div");
+  d.className = "knob";
+  d.innerHTML =
+    '<label>' + name + ' <b id="v_' + name + '">' + C[name].toFixed(1) + 's</b></label>' +
+    '<input type="range" id="k_' + name + '" min="' + min + '" max="' + max +
+    '" step="' + step + '" value="' + C[name] + '">' +
+    '<p>' + why + '</p>';
+  knobs.appendChild(d);
+  d.querySelector("input").addEventListener("input", (e) => {
+    C[name] = parseFloat(e.target.value);
+    $("v_" + name).textContent = C[name].toFixed(1) + "s";
+  });
+}
+
+/* -- faces. Five expressions, drawn to match the OLED's two-colour look -- */
+const FACES = {
+  chill:      '<g stroke="#4fd8c4" stroke-width="5" stroke-linecap="round" fill="none"><path d="M34 38h14M80 38h14"/><path d="M48 62q16 10 32 0"/></g>',
+  suspicious: '<g stroke="#f2c14e" stroke-width="5" stroke-linecap="round" fill="none"><path d="M32 34l16 6M96 34l-16 6"/><path d="M34 44h14M80 44h14"/><path d="M50 66h28"/></g>',
+  warning:    '<g stroke="#f2924e" stroke-width="6" stroke-linecap="round" fill="none"><path d="M30 30l20 12M98 30l-20 12"/><path d="M34 50h12M82 50h12"/><path d="M48 70q16-12 32 0"/></g>',
+  strike:     '<g stroke="#f2554e" stroke-width="6" stroke-linecap="round" fill="none"><path d="M30 28l22 14M98 28l-22 14"/><path d="M36 52h10M82 52h10"/><path d="M44 72h40"/><path d="M44 72l6-8M84 72l-6-8"/></g>',
+  smug:       '<g stroke="#b98cf0" stroke-width="5" stroke-linecap="round" fill="none"><path d="M32 40q8-8 16 0M80 40q8-8 16 0"/><path d="M46 62q18 14 36 -6"/></g>',
+};
+
+/* -- the tick -- */
+function tick() {
+  if (running) {
+    t += DT;
+
+    // A dropped frame means perception reports nothing new, so the caller
+    // re-submits what it last saw. That is exactly what the Pi does at 1-2
+    // FPS, and it is what CLEAR_GRACE has to absorb.
+    let observed;
+    if (dropFrames && Math.random() < 0.25) {
+      observed = { person: true, phone: false, headDown: false };
+    } else {
+      observed = { person: scene.person, phone: scene.phone, headDown: scene.headDown };
+      lastSeen = observed;
+    }
+
+    const d = machine.update(observed, t);
+
+    if (d.fire > 0) {
+      fireUntil = t + d.fire / 1000;
+      // In the real robot the firmware confirms the pump ran before the mood
+      // is allowed to become SMUG. Here the shot always lands.
+      postStrike(machine, t);
+    }
+
+    history.push({ t, mood: d.mood, offence: d.offence, fire: d.fire > 0 });
+    while (history.length && history[0].t < t - WINDOW) history.shift();
+
+    render(d);
+    if (d.reason !== lastReason || d.mood !== lastMood) {
+      log(t, d);
+      lastReason = d.reason;
+      lastMood = d.mood;
+    }
+  }
+  drawTimeline();
+}
+
+function render(d) {
+  $("clock").textContent = "t = " + t.toFixed(1) + "s";
+  $("moodName").textContent = d.mood.toUpperCase() +
+    (d.offence !== OFF.NONE ? "  ·  " + d.offence : "");
+  $("moodName").style.color = "var(--mood-" + d.mood + ")";
+  $("moodWhy").textContent = d.reason;
+  $("face").innerHTML = FACES[d.mood];
+
+  // The bar is progress toward the *next* threshold, which is the thing you
+  // actually want to see while tuning.
+  const dwell = dwellFor(machine.offence);
+  const strikeAt = dwell + C.STRIKE_AFTER_WARNING;
+  let frac = 0, next = "—";
+  if (machine.offenceSince !== null) {
+    if (d.held < dwell) { frac = d.held / dwell; next = "warning at " + dwell.toFixed(1) + "s"; }
+    else if (canEverFire(machine.offence)) {
+      frac = Math.min(1, d.held / strikeAt);
+      next = "strike at " + strikeAt.toFixed(1) + "s";
+    } else { frac = 1; next = "never fires (nobody there)"; }
+  }
+  $("bar").style.width = (frac * 100).toFixed(1) + "%";
+  $("bar").style.background = "var(--mood-" + d.mood + ")";
+  $("held").textContent = "held " + d.held.toFixed(1) + "s";
+  $("next").textContent = next;
+  $("fire").classList.toggle("on", t < fireUntil);
+}
+
+function log(time, d) {
+  const li = document.createElement("li");
+  li.innerHTML = '<span class="t">' + time.toFixed(1).padStart(6) + 's</span> ' +
+                 '<b>' + d.mood.toUpperCase() + '</b> ' + d.reason;
+  const ul = $("log");
+  ul.insertBefore(li, ul.firstChild);
+  while (ul.children.length > 120) ul.removeChild(ul.lastChild);
+}
+
+/* -- timeline -- */
+const cv = $("tl");
+const ctx = cv.getContext("2d");
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function drawTimeline() {
+  const w = cv.width, h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+  if (!history.length) return;
+
+  const t0 = Math.max(0, t - WINDOW);
+  const x = (tt) => ((tt - t0) / WINDOW) * w;
+
+  // mood band
+  for (let i = 0; i < history.length; i++) {
+    const a = history[i], b = history[i + 1];
+    ctx.fillStyle = cssVar("--mood-" + a.mood);
+    ctx.fillRect(x(a.t), 18, Math.max(1, x(b ? b.t : t) - x(a.t)) + 0.6, 62);
+  }
+
+  // offence ticks under the band
+  ctx.fillStyle = cssVar("--text-muted");
+  ctx.globalAlpha = 0.5;
+  for (const p of history) {
+    if (p.offence !== OFF.NONE) ctx.fillRect(x(p.t), 88, 2, 14);
+  }
+  ctx.globalAlpha = 1;
+
+  // shots
+  for (const p of history) {
+    if (!p.fire) continue;
+    ctx.fillStyle = cssVar("--mood-strike");
+    ctx.fillRect(x(p.t) - 2, 6, 5, 100);
+    ctx.font = "600 22px " + cssVar("--font-mono");
+    ctx.fillText("FIRE", x(p.t) + 8, 132);
+  }
+
+  // second gridlines
+  ctx.strokeStyle = cssVar("--border");
+  ctx.fillStyle = cssVar("--text-muted");
+  ctx.font = "20px " + cssVar("--font-mono");
+  ctx.lineWidth = 1;
+  for (let s = Math.ceil(t0 / 5) * 5; s <= t; s += 5) {
+    ctx.beginPath();
+    ctx.moveTo(x(s), 0); ctx.lineTo(x(s), 110);
+    ctx.stroke();
+    ctx.fillText(s + "s", x(s) + 5, 168);
+  }
+}
+
+/* -- theme -- */
+const themeBtn = $("theme");
+try {
+  const saved = localStorage.getItem("enforcer-theme");
+  if (saved) document.documentElement.setAttribute("data-theme", saved);
+} catch (e) { /* private mode: just use the OS default */ }
+themeBtn.addEventListener("click", () => {
+  const root = document.documentElement;
+  const now = root.getAttribute("data-theme");
+  const isDark = now ? now === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = isDark ? "light" : "dark";
+  root.setAttribute("data-theme", next);
+  try { localStorage.setItem("enforcer-theme", next); } catch (e) { /* ignore */ }
+});
+
+setInterval(tick, DT * 1000);
+tick();
+</script>
+</body>
+</html>
