@@ -675,6 +675,40 @@ a horn. Their far end is a plain pivot that rides on the hip joint's arm.
 
 So: **4 horns, 4 servos-in-shells, 4 servos in the frame.**
 
+### Measure power under load, not with a continuity check
+
+This cost more bench time than every other fault on this build combined, and
+it presented four different ways before the pattern was obvious:
+
+| Symptom | Looked like | Actually was |
+|---|---|---|
+| Buck output read 5.1 V, servo limp | dead servo | fine — measured unloaded |
+| 5 V and GND rails both read 5 V | code or firmware | GND rail not bonded |
+| `R2` dead, signal verified good | dead GPIO 2 | 5 V joint not conducting |
+| `L3` dead, signal verified good | dead GPIO 13 | GND joint not conducting |
+
+**A multimeter draws microamps. An MG90S draws hundreds of milliamps.** A cold
+solder joint, a screw terminal gripping insulation, or a dupont pin sitting
+beside its contact rather than in it will all pass a continuity check and a
+no-load voltage reading, then collapse the moment a servo actually pulls
+current. The reading is not wrong — it is answering a different question.
+
+So when a servo will not move:
+
+1. **Voltage at the servo's own plug, red to brown, WHILE it is sweeping.**
+   ~5.1 V means power is genuinely there. A drop to 2 V or a flicker is a bad
+   joint, no matter what an ohmmeter said with the power off.
+2. Only then look at signal: **GPIO to GND, ~0.3 V** when holding 90°. That is
+   3.3 V × 1830 µs / 20000 µs — the meter averages the pulse train.
+3. A servo that is powered but unsignalled is **limp and spins freely**, which
+   is indistinguishable by hand from one that is unpowered. Free-spinning
+   means "not being driven", never "not powered".
+
+And the fastest way to clear the whole power path at once: run the servo
+directly off the ESP32's own 5 V and GND pins, with nothing else connected.
+One unloaded MG90S is well within what USB supplies, and if it works there the
+fault is downstream of the board, guaranteed.
+
 ### Wiring one TCRT5000
 
 The bare sensor is two devices in one package: an IR LED and a
