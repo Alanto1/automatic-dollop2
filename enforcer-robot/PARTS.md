@@ -709,6 +709,35 @@ directly off the ESP32's own 5 V and GND pins, with nothing else connected.
 One unloaded MG90S is well within what USB supplies, and if it works there the
 fault is downstream of the board, guaranteed.
 
+### Servo inventory — which physical motor is where
+
+Ten MG90S, numbered 1–10 at bench test. The "neutral" column is what each one
+read as straight during that test; it is recorded for provenance only and is
+**not** used for anything — see *The horn IS the calibration* below.
+
+| # | Neutral | Joint | Kind | Motor | GPIO |
+|---|---|---|---|---|---|
+| 1 | 80° | `L4` | lower leg | 7 | 14 |
+| 2 | 84° | `R4` | lower leg | 4 | 8 |
+| **3** | 175° | **`L1`** | hip | 2 | 4 |
+| 4 | 84° | `L2` | hip | 3 | 6 |
+| 5 | 80° | `R3` | lower leg | 5 | 10 |
+| 6 | 85° | `R1` | hip | 0 | 1 |
+| 7 | 72° | *spare* | — | — | — |
+| 8 | 84° | `R2` | hip | 1 | 2 |
+| ~~9~~ | ~~154°~~ | **RETIRED** | — | — | — |
+| 10 | 134° | `L3` | lower leg | 6 | 13 |
+
+**#9 was `L1` and is retired, not spare.** It drove itself into the chassis
+during a pin test and stalled. Mark it and keep it apart from the good ones —
+a stalled MG90S often still sweeps freely on the bench and only skips under
+load, so it will pass a retest and fail when the robot first stands. That is
+the worst way to lose an afternoon.
+
+⚠️ **One spare left.** Ten bought, eight fitted, one retired. Order more MG90S
+now rather than when the next one strips — a quadruped that cannot be repaired
+is a quadruped that stops mid-build waiting on shipping.
+
 ### The bench sketches do not mirror the left legs
 
 `firmware/pin_probe`, `motor_test` and the little one-servo sweep all send the
