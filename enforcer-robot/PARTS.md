@@ -709,6 +709,29 @@ directly off the ESP32's own 5 V and GND pins, with nothing else connected.
 One unloaded MG90S is well within what USB supplies, and if it works there the
 fault is downstream of the board, guaranteed.
 
+### The bench sketches do not mirror the left legs
+
+`firmware/pin_probe`, `motor_test` and the little one-servo sweep all send the
+**same raw pulse to every pin**. Sesame's firmware inverts the angle for the
+left-side motors, because the left legs are mirror images of the right; the
+bench sketches do not, and are not meant to.
+
+So an `L` joint turning opposite to an `R` joint under a test sketch is
+**correct behaviour and not a fault**. Those sketches answer exactly one
+question — *does this servo respond on this pin* — and direction, range and
+pose are calibration's job, not theirs.
+
+⚠️ **Which is why the joints have to be off the shafts.** A ±20° sweep with a
+joint fitted at an unknown angle can drive a leg straight into the chassis,
+and the servo will keep pushing, because a hobby servo has no idea it has hit
+anything. That is a stall, and a stalled MG90S strips its gears in seconds.
+Happened here to `L1`.
+
+A servo that has been stalled often still sweeps freely afterwards and only
+skips **under load** — so it passes the bench test and fails when the robot
+tries to stand. Listen for grinding or clicking, and if the horn can be
+turned by hand while the servo is holding, the gears are gone.
+
 ### The horn IS the calibration — there is no trim table
 
 Bench-testing the servos produced neutral readings all over the place: 80, 84,
