@@ -709,6 +709,33 @@ directly off the ESP32's own 5 V and GND pins, with nothing else connected.
 One unloaded MG90S is well within what USB supplies, and if it works there the
 fault is downstream of the board, guaranteed.
 
+### Measured safe travel of the hips, as currently clocked
+
+⚠️ **Temporary.** These describe where the horns happen to sit today, not the
+design. Re-seating a horn at calibration invalidates its row. They exist so
+bench testing cannot stall a servo against the chassis, nothing more — do not
+build poses or gaits on them.
+
+| Joint | GPIO | Range | Low µs | High µs | Travel | Park at |
+|---|---|---|---|---|---|---|
+| `R1` | 1 | 45°–155° | 1281 | 2624 | 110° | **1952** |
+| `R2` | 2 | 20°–130° | 976 | 2313 | 110° | **1644** |
+| `L1` | 4 | 0°–40° | 732 | 1220 | **40°** | **976** |
+| `L2` | 6 | 0°–80° | 732 | 1708 | 80° | **1220** |
+
+Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
+
+⚠️ **1830 is no longer a safe centre.** It is 90°, but `L1` tops out at 1220,
+so parking at 1830 drives it into its stop — which is how servo 9 was lost.
+Every joint now parks at the midpoint of its *own* range.
+
+`L1` having 40° of travel where `R1` and `R2` get 110° is not a property of
+the joint. It is how badly that horn is clocked, and it is the clearest single
+argument for doing calibration properly rather than working around the
+positions the horns landed in during first assembly.
+
+The lower legs `R3 R4 L3 L4` are deliberately unmeasured and unused for now.
+
 ### Servo inventory — which physical motor is where
 
 Ten MG90S, numbered 1–10 at bench test. The "neutral" column is what each one
