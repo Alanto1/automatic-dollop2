@@ -732,6 +732,25 @@ Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
 All eight servos respond and hold. The bench test is complete; what is left is
 mechanical.
 
+### Leg directions check out against the mirror pairs
+
+After reseating all four lower legs, which command end puts the leg up:
+
+| Leg | 0 = | Mirror | Its 0 = | |
+|---|---|---|---|---|
+| `R3` | top | `L4` | top | ✅ |
+| `R4` | bottom | `L3` | bottom | ✅ |
+
+**Both mirror pairs agree**, which is what correct assembly looks like:
+mirrored parts with mirrored servo mounting give the same visual motion from
+the same command. The two pairs being opposite to *each other* is just the
+front and rear leg assemblies sitting 180° apart on the body.
+
+⚠️ **Direction cannot be changed by reseating a horn.** Rotating the horn adds
+a constant offset; it never reverses which way the leg travels. Direction is
+fixed by how the servo is pushed into its leg shell. Worth knowing before
+anyone spends an evening rotating a horn trying to flip a direction.
+
 ### ⚠️ These servos stop tracking above ~2624 µs
 
 Found on the spare servo and confirmed on `R3`: commanding above about
