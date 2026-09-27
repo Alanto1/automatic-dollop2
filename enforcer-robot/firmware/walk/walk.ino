@@ -32,6 +32,7 @@
 //   s   stand -- ease into STAND[] and hold
 //   w   walk forward        r   walk backward
 //   <   turn left           >   turn right       (on the spot)
+//   y   swap the rear legs' sides -- if turning slides sideways instead
 //   a   steer left          d   steer right      (trim while it walks)
 //   z   raise left side     c   raise right side (level it)
 //   u   lift feet higher    j   lift feet lower
@@ -137,6 +138,19 @@ static int   lean    = 0;     // + raises the right side of the body
 static int   selHip  = 0;     // hip being posed with 1-4 and + / -  (0 = R1)
 static int   turnMode = 0;    // 0 straight, -1 turn left, +1 turn right (on the spot)
 
+// Which side each leg is on. Walking straight does not care -- every leg
+// pushes the same way -- so a wrong side assignment is invisible until the
+// robot turns. If the rear legs are on the opposite sides from what SIDE[]
+// says, a "turn" opposes diagonal pairs instead of left against right, and the
+// robot slides sideways rather than spinning. 'y' swaps the rear pair live.
+static bool  rearSwapped = false;
+
+static int sideOf(int leg) {
+  int sd = SIDE[leg];
+  if (rearSwapped && (leg == 1 || leg == 3)) sd = -sd;   // R2+R4, L2+L4
+  return sd;
+}
+
 static void attachAll() {
   if (attached) return;
   for (int i = 0; i < 8; i++) {
@@ -178,7 +192,7 @@ static void limp() {
 // Lean is split across both sides -- half the feet on one side go down, half
 // on the other go up -- so levelling the body does not change its height.
 static int kneeLean(int m) {
-  return (int)(DIR[m] * (-SIDE[LEG_OF[m]] * lean * 0.5f));
+  return (int)(DIR[m] * (-sideOf(LEG_OF[m]) * lean * 0.5f));
 }
 
 static int standTarget(int m) {
@@ -206,13 +220,13 @@ static void gaitStep(float t) {
 
     // Steering: one side takes a longer stride than the other. Trim corrects a
     // straight walk, so it is left out while turning on the spot.
-    float stride = swingAmt * (turnMode == 0 ? (1.0f + SIDE[leg] * trim) : 1.0f);
+    float stride = swingAmt * (turnMode == 0 ? (1.0f + sideOf(leg) * trim) : 1.0f);
 
     // Turning on the spot: one side walks forward and the other backward.
     // With the legs splayed on the diagonals, each foot's swing already runs
     // roughly round the body, so this spins it rather than walking it off.
     // turnMode +1 (right): left legs forward, right legs back -> clockwise.
-    float sideFactor = (turnMode == 0) ? 1.0f : (float)(-turnMode * SIDE[leg]);
+    float sideFactor = (turnMode == 0) ? 1.0f : (float)(-turnMode * sideOf(leg));
 
     float hipOff, lift;
     if (u < 0.25f) {                     // swing: foot in the air, going forward
@@ -284,6 +298,7 @@ static void menu() {
   Serial.println("\n  f check each hip and fix any that go backwards (robot on a box)");
   Serial.println("  s stand    w forward    r backward    x stop / limp");
   Serial.println("  < turn left on the spot    > turn right on the spot");
+  Serial.println("  y  swap which side the rear legs are on (if turning slides sideways)");
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
@@ -343,6 +358,10 @@ void loop() {
                                 walking = true; Serial.println("  turning left."); }
     if (c == '>')             { if (!attached) stand(); walkDir = +1; turnMode = +1;
                                 walking = true; Serial.println("  turning right."); }
+    if (c == 'y' || c == 'Y') { rearSwapped = !rearSwapped;
+                                Serial.println(rearSwapped
+                                  ? "  sides: R1 + L2 right,  L1 + R2 left   (rear swapped)"
+                                  : "  sides: R1 + R2 right,  L1 + L2 left"); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
     if (c >= '1' && c <= '4') { selHip = c - '1';
