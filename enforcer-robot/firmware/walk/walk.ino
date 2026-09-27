@@ -60,10 +60,12 @@ static const char *NAME[8] = {"R1", "R2", "L1", "L2", "R4", "R3", "L3", "L4"};
 static const int LO[8] = { 45,   5,   5,   0,   0,   0,   0,   0 };
 static const int HI[8] = {155, 130, 150, 130, 155, 155, 155, 155 };
 
-// Found with stand_easy: hips at their range midpoints, all four knees 39
-// steps down from the middle, each in its own direction. The mirror-image
-// 39 / 117 pairs are the knee directions in DIR[] confirming themselves.
-static int STAND[8] = { 100,  68,  78,  65,  39, 117,  39, 117 };
+// Knees found with stand_easy: all four 39 steps down from the middle, each in
+// its own direction -- the 39 / 117 pairs are DIR[] confirming itself.
+// Hips posed by eye on the robot (1-4, + / -) into an even X: front legs
+// angled forward, rear legs angled back. The first hip values were range
+// midpoints, which splayed the legs so their pushes came out sideways.
+static int STAND[8] = {  85,  62,  75,  74,  39, 117,  39, 117 };
 
 // Which way each joint moves the leg where we want it.
 //   hips  (0-3): +1 if a BIGGER number swings the leg FORWARD
@@ -72,9 +74,10 @@ static int STAND[8] = { 100,  68,  78,  65,  39, 117,  39, 117 };
 // bottom. R1's direction was never established -- flip it if leg R1 walks
 // backwards while the others walk forwards.
 // Not const: the 'f' check flips any hip the user says went the wrong way,
-// and 'v' flips R1 by hand. Once the check has run, write the result in here.
+// and 'v' flips R1 by hand. All four hips were CONFIRMED by the 'f' check on
+// the robot, R1 included -- none needed flipping.
 static int DIR[8] = {
-  +1,   // R1  hip   <- UNVERIFIED. 'v' flips it live; keep whichever walks
+  +1,   // R1  hip   confirmed by the 'f' check
   -1,   // R2  hip   5 = front, so forward is downward
   -1,   // L1  hip   5 = front
   +1,   // L2  hip   0 = left, 130 = front
