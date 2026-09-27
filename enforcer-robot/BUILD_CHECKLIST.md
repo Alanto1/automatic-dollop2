@@ -184,7 +184,13 @@ Follow the upstream build guide. Don't improvise.
 - [x] ~~**First walk**~~ — on `firmware/walk/walk.ino`, a crawl gait over the
       measured ranges, with the STAND pose found by `stand_easy`. Slow at
       first (SWING 18 / 3000 ms); retuned to SWING 28 / 2000 ms
-- [ ] Walk: `forward` `backward` `left` `right` run until stopped. Poses are
+- [x] ~~Walk forward and backward, straight~~ — on our own `walk.ino`, not stock
+      Sesame firmware. Hips posed by eye into an even X, all four hip
+      directions confirmed with the `f` check. **Decision: stay on our own
+      firmware.** It walks on this robot's measured joints; stock would mean
+      recalibrating and narrowing the pulse band to replace something working
+- [ ] **Turn on the spot** — the robot aims by yawing, so this comes before
+      anything that points the nozzle
       rest, stand, wave, dance, swim, point, pushup, bow, cute, freaky, worm,
       shake, shrug, dead, crab
 
