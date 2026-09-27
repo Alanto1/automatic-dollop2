@@ -723,8 +723,34 @@ build poses or gaits on them.
 | `L1` | 4 | 0°–40° | 732 | 1220 | **40°** | **976** |
 | `L2` | 6 | 0°–80° | 732 | 1708 | 80° | **1220** |
 | `R3` | 10 | 0°–22° | 732 | 1000 | **22°** | **866** |
+| `R4` | 8 | 0°–32° | 732 | 1123 | **32°** | **927** |
+| `L3` | 13 | 0°–157° | 732 | 2648 | 157° | **1690** |
+| `L4` | 14 | 0°–124° | 732 | 2246 | 124° | **1489** |
 
 Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
+
+All eight servos respond and hold. The bench test is complete; what is left is
+mechanical.
+
+### The mis-clocking is mirrored, not random
+
+| | Right | Left |
+|---|---|---|
+| **Hips** | `R1` 110°, `R2` 110° ✅ | `L1` 40°, `L2` 80° ❌ |
+| **Lower legs** | `R3` 22°, `R4` 32° ❌ | `L3` 157°, `L4` 124° ✅ |
+
+The pattern is **inverted between hips and legs**: right hips good, left hips
+bad; left legs good, right legs bad.
+
+That is the signature of fitting mirror-image parts against the same visual
+reference — correct on one side, wrong on its mirror, and the error flips
+depending on which subassembly was being worked on. It means the four bad
+joints are wrong in a *consistent* direction and should re-seat predictably.
+
+So only `L1 L2 R3 R4` actually need re-clocking. **All eight still come off the
+shafts before calibration** — a joint fitted at an unknown angle can stall on
+power-up, which is how servo 9 was lost — and wide travel does not guarantee
+the right *position*, only a better chance that Stand falls inside it.
 
 ### Three joints are pinned against the bottom of the band
 
