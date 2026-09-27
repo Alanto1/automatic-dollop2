@@ -716,16 +716,35 @@ design. Re-seating a horn at calibration invalidates its row. They exist so
 bench testing cannot stall a servo against the chassis, nothing more — do not
 build poses or gaits on them.
 
-| Joint | GPIO | Range | Low µs | High µs | Travel | Park at |
-|---|---|---|---|---|---|---|
-| `R1` | 1 | 45°–155° | 1281 | 2624 | 110° | **1952** |
-| `R2` | 2 | 20°–130° | 976 | 2313 | 110° | **1644** |
-| `L1` | 4 | 0°–40° | 732 | 1220 | **40°** | **976** |
-| `L2` | 6 | 0°–80° | 732 | 1708 | 80° | **1220** |
-| `R3` | 10 | 0°–22° | 732 | 1000 | **22°** | **866** |
-| `R4` | 8 | 0°–32° | 732 | 1123 | **32°** | **927** |
-| `L3` | 13 | 0°–157° | 732 | 2648 | 157° | **1690** |
-| `L4` | 14 | 0°–124° | 732 | 2246 | 124° | **1489** |
+**AFTER RESEATING** — all four lower legs and three of the four hips. The
+band ceiling is **155 / 2624 µs**; see the tracking-limit section below.
+
+| Joint | GPIO | Motor | Range | Low µs | High µs | Travel | Park at | 0° is |
+|---|---|---|---|---|---|---|---|---|
+| `R1` | 1 | 0 | 45–155 | 1281 | 2624 | 110 | **1953** | — |
+| `R2` | 2 | 1 | 5–130 | 793 | 2319 | 125 | **1562** | front |
+| `L1` | 4 | 2 | 5–150 | 793 | 2563 | 145 | **1684** | front |
+| `L2` | 6 | 3 | 0–130 | 732 | 2319 | 130 | **1525** | left |
+| `R4` | 8 | 4 | 0–155 | 732 | 2624 | 155 | **1684** | bottom |
+| `R3` | 10 | 5 | 0–155 | 732 | 2624 | 155 | **1684** | top |
+| `L3` | 13 | 6 | 0–155 | 732 | 2624 | 155 | **1684** | bottom |
+| `L4` | 14 | 7 | 0–155 | 732 | 2624 | 155 | **1684** | top |
+
+What reseating bought:
+
+| Joint | Before | After | Gained |
+|---|---|---|---|
+| `L1` | 40 | **145** | +105 |
+| `R3` | 22 | **155** | +133 |
+| `R4` | 32 | **155** | +123 |
+| `L2` | 80 | **130** | +50 |
+| `R2` | 110 | **125** | +15 |
+| `R1` | 110 | 110 | not reseated |
+
+**`R1` is the last one worth touching.** Its 155 upper limit is the servo
+ceiling, not the chassis, so mechanical travel is being clipped above it.
+Rotating ~2 teeth down would move the window to roughly 15–155 and recover
+about 30 units. Optional — 110 is workable.
 
 Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
 
@@ -802,7 +821,10 @@ shafts before calibration** — a joint fitted at an unknown angle can stall on
 power-up, which is how servo 9 was lost — and wide travel does not guarantee
 the right *position*, only a better chance that Stand falls inside it.
 
-### Three joints are pinned against the bottom of the band
+### ~~Three joints are pinned against the bottom of the band~~ (resolved)
+
+*Kept as the reasoning that led to reseating. All three were fixed; see the
+table above.*
 
 `L1`, `L2` and `R3` all start at exactly **0° / 732 µs**, and `R3` has
 mechanical room left when the *command* range runs out. That is the
