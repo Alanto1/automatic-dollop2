@@ -193,10 +193,13 @@ Follow the upstream build guide. Don't improvise.
       directions confirmed with the `f` check. **Decision: stay on our own
       firmware.** It walks on this robot's measured joints; stock would mean
       recalibrating and narrowing the pulse band to replace something working
-- [ ] **Turn on the spot** — the robot aims by yawing, so this comes before
-      anything that points the nozzle. Written: `<` and `>` in `walk.ino`,
-      left legs forward and right legs back (or the reverse). Needs trying on
-      the robot
+- [x] ~~**Turn on the spot**~~ — `<` and `>` in `walk.ino`. First try slid
+      sideways, which exposed that the rear legs are on the opposite sides from
+      their letters (`R2` back-left, `L2` back-right); fixed, and it spins
+- [x] ~~**Slide sideways**~~ — `,` and `.`, kept on purpose: the crab from that
+      first turning attempt, useful for lining up without turning away
+- [ ] Measure **degrees turned per gait cycle** -- aiming will need it to know
+      how long to turn toward a target
       rest, stand, wave, dance, swim, point, pushup, bow, cute, freaky, worm,
       shake, shrug, dead, crab
 

@@ -33,7 +33,6 @@
 //   w   walk forward        r   walk backward
 //   <   turn left           >   turn right       (on the spot)
 //   ,   slide left          .   slide right      (sideways, no turning)
-//   y   swap the rear legs' sides -- if turning slides sideways instead
 //   a   steer left          d   steer right      (trim while it walks)
 //   z   raise left side     c   raise right side (level it)
 //   u   lift feet higher    j   lift feet lower
@@ -93,7 +92,16 @@ static int DIR[8] = {
 // One leg is a hip and a knee, and they are not adjacent motor numbers.
 static const int HIP[4]  = {0, 1, 2, 3};      // R1  R2  L1  L2
 static const int KNEE[4] = {5, 4, 6, 7};      // R3  R4  L3  L4
-static const int SIDE[4] = {+1, +1, -1, -1};  // right, right, left, left
+// Which side of the robot each leg is on -- measured, not taken from the
+// names. The REAR legs are on the opposite sides from their letters: the R2
+// servo drives the back-LEFT leg and L2 the back-RIGHT. Walking straight
+// could not show this (every leg pushes the same way); turning could, and
+// did -- it slid sideways until the rear pair was swapped, then it spun.
+//                               R1   R2   L1   L2
+static const int SIDE[4]    = {+1,  -1,  -1,  +1};   // + right, - left
+// The two diagonals: front-right + back-left against front-left + back-right.
+// Opposing these is what makes the robot slide sideways -- see strafeMode.
+static const int DIAG[4]    = {+1,  +1,  -1,  -1};
 static const int LEG_OF[8] = {0, 1, 2, 3, 1, 0, 2, 3};   // motor -> leg
 
 // Flips the whole robot's idea of forward in one place, so DIR[] can stay a
@@ -102,20 +110,26 @@ static const int LEG_OF[8] = {0, 1, 2, 3, 1, 0, 2, 3};   // motor -> leg
 // directions that have nothing to do with this sign.
 static const int FORWARD_SIGN = +1;
 
-// The FRONT of the robot is the R1 / L1 end, so the legs are:
-//     R1+R3 front-right    L1+L3 front-left
-//     R2+R4 rear-right     L2+L4 rear-left
+// The FRONT of the robot is the R1 / L1 end, and the layout -- measured -- is:
+//
+//            FRONT
+//      L1+L3      R1+R3
+//        [   body   ]
+//      R2+R4      L2+L4
+//            BACK
 //
 // When each leg swings, as a fraction of the cycle. This is the lateral-
-// sequence crawl -- rear-left, front-left, rear-right, front-right -- which
-// is the statically most stable order for a quadruped: each rear foot lands
-// under the body just before the front foot on the same side lifts.
+// sequence crawl -- rear-left, front-left, rear-right, front-right -- the
+// statically most stable order for a quadruped: each rear foot lands under
+// the body just before the front foot on the same side lifts.
 //
-// The first version guessed the front and got it wrong, which lifted the feet
-// in a circle round the body. That rotates the robot, tilts it, and makes
-// backward not the mirror of forward -- all three were seen.
+// History: the first version guessed the front wrong and lifted the feet in a
+// circle round the body (rotated, tilted, reverse not a mirror). The second
+// assumed R2 was back-right, which made the order rear-right, front-left,
+// rear-left, front-right -- a diagonal sequence. It walked, but with less
+// margin; this is the order the measured layout actually calls for.
 //                               R1     R2     L1     L2
-static const float PHASE[4] = {0.75f, 0.50f, 0.25f, 0.00f};
+static const float PHASE[4] = {0.75f, 0.00f, 0.25f, 0.50f};
 
 // Speed is stride over cycle time: 2*SWING of hip travel per CYCLE_MS.
 //
@@ -139,25 +153,11 @@ static int   lean    = 0;     // + raises the right side of the body
 static int   selHip  = 0;     // hip being posed with 1-4 and + / -  (0 = R1)
 static int   turnMode = 0;    // 0 straight, -1 turn left, +1 turn right (on the spot)
 
-// Which side each leg is on. Walking straight does not care -- every leg
-// pushes the same way -- so a wrong side assignment is invisible until the
-// robot turns. If the rear legs are on the opposite sides from what SIDE[]
-// says, a "turn" opposes diagonal pairs instead of left against right, and the
-// robot slides sideways rather than spinning. 'y' swaps the rear pair live.
-static bool  rearSwapped = false;
-
 // Sliding sideways -- kept on purpose. It is what the first turning attempt
 // actually did: opposing one diagonal pair against the other cancels the
-// fore-aft pushes and adds the sideways ones, so the robot crabs. It reads
-// SIDE[] directly and ignores 'y', so it keeps doing exactly this whatever
-// the rear legs turn out to be.
+// fore-aft pushes and adds the sideways ones, so the robot crabs. It uses
+// DIAG[], so it is independent of the side table.
 static int   strafeMode = 0;  // 0 off, -1 slide left, +1 slide right
-
-static int sideOf(int leg) {
-  int sd = SIDE[leg];
-  if (rearSwapped && (leg == 1 || leg == 3)) sd = -sd;   // R2+R4, L2+L4
-  return sd;
-}
 
 static void attachAll() {
   if (attached) return;
@@ -200,7 +200,7 @@ static void limp() {
 // Lean is split across both sides -- half the feet on one side go down, half
 // on the other go up -- so levelling the body does not change its height.
 static int kneeLean(int m) {
-  return (int)(DIR[m] * (-sideOf(LEG_OF[m]) * lean * 0.5f));
+  return (int)(DIR[m] * (-SIDE[LEG_OF[m]] * lean * 0.5f));
 }
 
 static int standTarget(int m) {
@@ -229,15 +229,15 @@ static void gaitStep(float t) {
     // Steering: one side takes a longer stride than the other. Trim corrects a
     // straight walk, so it is left out while turning on the spot.
     bool straight = (turnMode == 0 && strafeMode == 0);
-    float stride = swingAmt * (straight ? (1.0f + sideOf(leg) * trim) : 1.0f);
+    float stride = swingAmt * (straight ? (1.0f + SIDE[leg] * trim) : 1.0f);
 
     // Turning on the spot: one side walks forward and the other backward.
     // With the legs splayed on the diagonals, each foot's swing already runs
     // roughly round the body, so this spins it rather than walking it off.
     // turnMode +1 (right): left legs forward, right legs back -> clockwise.
     float sideFactor = 1.0f;
-    if (turnMode)   sideFactor = (float)(-turnMode   * sideOf(leg));
-    if (strafeMode) sideFactor = (float)(-strafeMode * SIDE[leg]);   // the crab
+    if (turnMode)   sideFactor = (float)(-turnMode   * SIDE[leg]);
+    if (strafeMode) sideFactor = (float)(-strafeMode * DIAG[leg]);   // the crab
 
     float hipOff, lift;
     if (u < 0.25f) {                     // swing: foot in the air, going forward
@@ -310,7 +310,6 @@ static void menu() {
   Serial.println("  s stand    w forward    r backward    x stop / limp");
   Serial.println("  < turn left on the spot    > turn right on the spot");
   Serial.println("  , slide left sideways      . slide right sideways");
-  Serial.println("  y  swap which side the rear legs are on (if turning slides sideways)");
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
@@ -374,10 +373,6 @@ void loop() {
                                 walking = true; Serial.println("  sliding left."); }
     if (c == '.')             { if (!attached) stand(); walkDir = +1; turnMode = 0; strafeMode = +1;
                                 walking = true; Serial.println("  sliding right."); }
-    if (c == 'y' || c == 'Y') { rearSwapped = !rearSwapped;
-                                Serial.println(rearSwapped
-                                  ? "  sides: R1 + L2 right,  L1 + R2 left   (rear swapped)"
-                                  : "  sides: R1 + R2 right,  L1 + L2 left"); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
     if (c >= '1' && c <= '4') { selHip = c - '1';
