@@ -31,6 +31,7 @@
 //   f   check each hip in turn and FIX any that go backwards (robot on a box)
 //   s   stand -- ease into STAND[] and hold
 //   w   walk forward        r   walk backward
+//   <   turn left           >   turn right       (on the spot)
 //   a   steer left          d   steer right      (trim while it walks)
 //   z   raise left side     c   raise right side (level it)
 //   u   lift feet higher    j   lift feet lower
@@ -134,6 +135,7 @@ static int   walkDir = +1;    // +1 forward, -1 backward: runs the cycle in reve
 static float trim    = 0.0f;  // + lengthens the right-side stride: steers left
 static int   lean    = 0;     // + raises the right side of the body
 static int   selHip  = 0;     // hip being posed with 1-4 and + / -  (0 = R1)
+static int   turnMode = 0;    // 0 straight, -1 turn left, +1 turn right (on the spot)
 
 static void attachAll() {
   if (attached) return;
@@ -202,8 +204,15 @@ static void gaitStep(float t) {
     float u = t - PHASE[leg];
     while (u < 0.0f) u += 1.0f;
 
-    // Steering: one side takes a longer stride than the other.
-    float stride = swingAmt * (1.0f + SIDE[leg] * trim);
+    // Steering: one side takes a longer stride than the other. Trim corrects a
+    // straight walk, so it is left out while turning on the spot.
+    float stride = swingAmt * (turnMode == 0 ? (1.0f + SIDE[leg] * trim) : 1.0f);
+
+    // Turning on the spot: one side walks forward and the other backward.
+    // With the legs splayed on the diagonals, each foot's swing already runs
+    // roughly round the body, so this spins it rather than walking it off.
+    // turnMode +1 (right): left legs forward, right legs back -> clockwise.
+    float sideFactor = (turnMode == 0) ? 1.0f : (float)(-turnMode * SIDE[leg]);
 
     float hipOff, lift;
     if (u < 0.25f) {                     // swing: foot in the air, going forward
@@ -217,7 +226,7 @@ static void gaitStep(float t) {
     }
 
     int h = HIP[leg], n = KNEE[leg];
-    put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * hipOff));
+    put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * sideFactor * hipOff));
     put(n, STAND[n] + (int)(DIR[n] * lift) + kneeLean(n));
   }
 }
@@ -274,6 +283,7 @@ static void forwardCheck() {
 static void menu() {
   Serial.println("\n  f check each hip and fix any that go backwards (robot on a box)");
   Serial.println("  s stand    w forward    r backward    x stop / limp");
+  Serial.println("  < turn left on the spot    > turn right on the spot");
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
@@ -325,10 +335,14 @@ void loop() {
   while (Serial.available()) {
     char c = Serial.read();
     if (c == 's' || c == 'S') { walking = false; stand(); }
-    if (c == 'w' || c == 'W') { if (!attached) stand(); walkDir = +1;
+    if (c == 'w' || c == 'W') { if (!attached) stand(); walkDir = +1; turnMode = 0;
                                 walking = true; Serial.println("  walking forward."); }
-    if (c == 'r' || c == 'R') { if (!attached) stand(); walkDir = -1;
+    if (c == 'r' || c == 'R') { if (!attached) stand(); walkDir = -1; turnMode = 0;
                                 walking = true; Serial.println("  walking backward."); }
+    if (c == '<')             { if (!attached) stand(); walkDir = +1; turnMode = -1;
+                                walking = true; Serial.println("  turning left."); }
+    if (c == '>')             { if (!attached) stand(); walkDir = +1; turnMode = +1;
+                                walking = true; Serial.println("  turning right."); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
     if (c >= '1' && c <= '4') { selHip = c - '1';
