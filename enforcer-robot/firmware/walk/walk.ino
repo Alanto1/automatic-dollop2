@@ -35,6 +35,7 @@
 //   z   raise left side     c   raise right side (level it)
 //   u   lift feet higher    j   lift feet lower
 //   q   slower              e   faster
+//   k   longer steps        i   shorter steps
 //   x   stop and go limp
 //
 // a/d/z/c print the current trim and lean. Once it walks straight and level,
@@ -111,7 +112,7 @@ static const float PHASE[4] = {0.75f, 0.50f, 0.25f, 0.00f};
 // swing (tightest is L2 at 37-93 of 0-130). Do not take CYCLE_MS much below
 // ~1200 -- swing is a quarter of the cycle, and under ~300ms an MG90S cannot
 // lift, swing and land, so feet drag and it gets slower, not faster.
-static const int   SWING    = 28;      // hip travel either side of stand
+static int         swingAmt = 28;      // hip travel either side of stand (k / i live)
 static int         liftAmt  = 25;      // knee travel during swing   (u / j live)
 static int         cycleMs  = 2000;    // one full gait cycle        (q / e live)
 static const int   STEP_MS  = 20;
@@ -190,7 +191,7 @@ static void gaitStep(float t) {
     while (u < 0.0f) u += 1.0f;
 
     // Steering: one side takes a longer stride than the other.
-    float stride = SWING * (1.0f + SIDE[leg] * trim);
+    float stride = swingAmt * (1.0f + SIDE[leg] * trim);
 
     float hipOff, lift;
     if (u < 0.25f) {                     // swing: foot in the air, going forward
@@ -219,11 +220,11 @@ static void forwardCheck() {
     int h = HIP[leg];
     Serial.printf("  %s ...\n", NAME[h]);
     for (int k = 0; k <= 25; k++) {
-      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * SWING * k / 25)); delay(20);
+      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * swingAmt * k / 25)); delay(20);
     }
     delay(1500);
     for (int k = 25; k >= 0; k--) {
-      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * SWING * k / 25)); delay(20);
+      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * swingAmt * k / 25)); delay(20);
     }
     delay(500);
   }
@@ -236,12 +237,13 @@ static void menu() {
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
-  Serial.println("  q slower             e faster\n");
+  Serial.println("  q slower             e faster");
+  Serial.println("  k longer steps       i shorter steps\n");
 }
 
 static void showTrim() {
-  Serial.printf("  trim %+.2f   lean %+d   lift %d   cycle %d ms\n",
-                trim, lean, liftAmt, cycleMs);
+  Serial.printf("  trim %+.2f   lean %+d   lift %d   stride %d   cycle %d ms\n",
+                trim, lean, liftAmt, swingAmt, cycleMs);
 }
 
 static bool walking = false;
@@ -285,11 +287,18 @@ void loop() {
     if (c == 'j' || c == 'J') { liftAmt -= 5;  retrim = true; }
     if (c == 'q' || c == 'Q') { cycleMs += 250; retrim = true; }
     if (c == 'e' || c == 'E') { cycleMs -= 250; retrim = true; }
+    if (c == 'k' || c == 'K') { swingAmt += 2; retrim = true; }
+    if (c == 'i' || c == 'I') { swingAmt -= 2; retrim = true; }
     if (retrim) {
       trim = constrain(trim, -0.4f, 0.4f);
       lean = constrain(lean, -20, 20);
       liftAmt = constrain(liftAmt, 10, 50);
       cycleMs = constrain(cycleMs, 1200, 8000);   // below ~1200 the feet cannot keep up
+      // Capped at 34. Past that, a front leg at the back of its stroke and the
+      // rear leg on the same side at the front of its stroke point at almost
+      // the same spot -- and in the lateral sequence that is the exact moment
+      // the rear leg lands, so they meet.
+      swingAmt = constrain(swingAmt, 12, 34);
       showTrim();
       if (attached && !walking)          // standing: show the new lean at once
         for (int i = 0; i < 8; i++) put(i, standTarget(i));
