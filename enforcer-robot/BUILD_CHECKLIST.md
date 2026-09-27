@@ -41,7 +41,11 @@ an assembly error.
       Extreme Pro A1 32GB €26.90, `RPIZ-CAM-15` camera €17.50 — **not** the
       160° fisheye, **not** the `RPIC-ZSAD` adapter)
 - [ ] Place **Reichelt** (MOSFETs, diodes)
-- [ ] **Pi Zero 2 W — back in stock 2026-09-25.** Sold out everywhere right
+- [ ] ⚠️ **Order a Raspberry Pi 3 Model A+ and the `RPIC-ZSAD` camera adapter**
+      (BerryBase, both in stock). The Zero 2 W did not come back -- still sold
+      out EU-wide on 2026-09-27. See PARTS.md "Switched to a Raspberry Pi 3
+      Model A+". Keep the Zero back-order: it swaps straight back in
+- [ ] ~~**Pi Zero 2 W — back in stock 2026-09-25.**~~ Did not happen. Sold out everywhere right
       now, but that date lands the week you need it. Back-order it and set
       back-in-stock alerts at **two** shops, then cancel the loser. Don't pay
       a scalper; do pull perception forward (next section).

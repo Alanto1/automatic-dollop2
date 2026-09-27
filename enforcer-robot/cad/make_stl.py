@@ -50,6 +50,20 @@ TCRT_W = 10.6               # TCRT5000 module body
 TCRT_H = 6.2
 
 PIZERO_HOLES = (58.0, 23.0)  # Raspberry Pi Zero 2 W mounting pattern
+
+# The brain. The Pi Zero 2 W is sold out across Europe (checked 2026-09-27,
+# no firm restock date; resellers asking EUR 130+), so the build moves to a
+# Raspberry Pi 3 Model A+: identical software, the same OV5647 camera through
+# the RPIC-ZSAD adapter, in stock in Germany. It costs 12g and a footprint
+# twice as wide (65 x 56.5mm, holes 58 x 49mm).
+#
+# ⚠️ The payload deck below is still drawn for the Zero -- its hole pattern
+# would collide with the strap slots, and the 3A+ covers most of the deck.
+# It gets redrawn once DECK_L / DECK_W are measured, not twice.
+#
+# If a Zero 2 W turns up later, set these back: nothing else changes.
+BRAIN = "Pi 3 Model A+"
+BRAIN_G = 23.0              # Pi Zero 2 W: 11.0
 CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 
 # --- the screw bosses that keep splitting --------------------------------
@@ -559,13 +573,13 @@ def payload_cases():
     cannot: a phone is ~half of Sesame's own mass, and the torque needed at
     any usable stance is past what MG90S can hold. See BEHAVIOURS.md.
     """
-    deck_pi_cam = 30.0 + 11.0 + 5.0     # printed parts, Pi Zero, camera
+    deck_pi_cam = 30.0 + BRAIN_G + 5.0  # printed parts, brain, camera
     rig = 20.0                          # pump + tubing
     voice = AMP_G + MIC_G + SPEAKER_G   # amp + mic + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
     return [
         ("bare Sesame", 0.0),
-        ("+ deck, Pi Zero, camera", deck_pi_cam),
+        (f"+ deck, {BRAIN}, camera", deck_pi_cam),
         ("+ water rig, 30ml", deck_pi_cam + rig + water(30)),
         ("+ water rig, 30ml + voice", deck_pi_cam + rig + water(30) + voice),
         ("+ water rig, 50ml", deck_pi_cam + rig + water(50)),
@@ -889,7 +903,7 @@ def self_test():
     payload = {
         "water": water_g,
         "printed parts": 30.0,
-        "Pi Zero 2 W": 11.0,
+        BRAIN: BRAIN_G,
         "camera + ribbon": 5.0,
         "pump + tubing": 20.0,
     }

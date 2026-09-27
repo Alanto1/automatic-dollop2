@@ -58,6 +58,43 @@ that costs you in frame rate.
 same footprint with up to 4GB. Weaker software support, so only reach for it
 if the Pi Zero actually fails.
 
+### ⚠️ Switched to a Raspberry Pi 3 Model A+ (2026-09-27)
+
+The Zero 2 W never came back. Checked 2026-09-27: sold out across European
+retailers, no firm restock date, third-party sellers asking EUR 130+.
+
+| | Pi Zero 2 W | **Pi 3 Model A+** | Radxa Zero 3W |
+|---|---|---|---|
+| Availability | sold out, EU-wide | **in stock** — BerryBase €26.90, Reichelt €29.90 | sold out in EU; Hong Kong only, 1–3 weeks + customs |
+| Software | Raspberry Pi OS | **identical** | Debian, no picamera2 — camera via v4l2 / GStreamer |
+| Camera (our OV5647, Zero plug) | plugs in | needs **`RPIC-ZSAD`** adapter | plugs in (same 22-pin socket) |
+| CPU | 4× A53 @ 1.0 GHz | 4× A53 @ **1.4 GHz** | 4× A55 @ 1.6 GHz + NPU |
+| RAM | 512 MB | 512 MB | 1–8 GB |
+| Size | 65 × 30 mm | **65 × 56.5 mm** | 65 × 30 mm |
+| Weight | 11 g | **23 g** | ~11 g |
+| Power, loaded | ~3 W | ~4.1 W | ~3–4 W |
+
+The Radxa is the better board and the closer physical fit, but it cannot be
+had quickly, and it changes the software. The 3A+ can be here in days and
+changes **no code at all** — and it is ~40% faster than the Zero.
+
+What it costs:
+
+- **Buy `RPIC-ZSAD`** (Zero-to-standard camera adapter) with it. The camera
+  has the narrow Zero plug; the 3A+ has the full-size socket.
+- **+12 g.** Payload is now 139 g. Per `make_stl.py --test`, 30 ml + voice
+  still fits (1.20 of 1.21 kg-cm — marginal) and **50 ml no longer does**.
+  The load test decides it for real; do it at 139 g, not 127.
+- **The payload deck must be redrawn.** The 3A+'s 58 × 49 mm hole pattern
+  hits the strap slots, and the board covers most of a 90 × 60 deck. Redraw
+  it with the measured `DECK_L` / `DECK_W`, likely with the board stacked on
+  standoffs over the reservoir.
+- **~1 W more** from the 7.4 V pack — roughly 10–15% less runtime. Check the
+  Pi's buck is rated at least 2 A.
+
+Keep the Zero 2 W back-order alive. It is a drop-in swap back — set `BRAIN`
+and `BRAIN_G` in `make_stl.py` and nothing else changes.
+
 ### The water rig — the signature
 
 | # | Item | Qty | ~€ | Notes |
