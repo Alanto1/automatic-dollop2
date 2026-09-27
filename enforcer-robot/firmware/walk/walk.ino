@@ -37,6 +37,9 @@
 //   q   slower              e   faster
 //   k   longer steps        i   shorter steps
 //   v   flip R1's direction -- the one hip never measured
+//   1-4 pick a hip (R1 R2 L1 L2), + / - turn it, p prints the STAND[] line.
+//       Pose by eye while it stands: front legs angled forward, rear legs
+//       angled back, an X from above.
 //   x   stop and go limp
 //
 // a/d/z/c print the current trim and lean. Once it walks straight and level,
@@ -127,6 +130,7 @@ static int   cur[8];
 static int   walkDir = +1;    // +1 forward, -1 backward: runs the cycle in reverse
 static float trim    = 0.0f;  // + lengthens the right-side stride: steers left
 static int   lean    = 0;     // + raises the right side of the body
+static int   selHip  = 0;     // hip being posed with 1-4 and + / -  (0 = R1)
 
 static void attachAll() {
   if (attached) return;
@@ -272,7 +276,20 @@ static void menu() {
   Serial.println("  u lift feet higher   j lift feet lower");
   Serial.println("  q slower             e faster");
   Serial.println("  k longer steps       i shorter steps");
-  Serial.println("  v flip R1's direction (the one never measured)\n");
+  Serial.println("  v flip R1's direction (the one never measured)");
+  Serial.println("  1 2 3 4  pick hip R1 R2 L1 L2   + / -  turn it   p  print pose\n");
+}
+
+// Print the stand pose so it can be written back into STAND[], and warn about
+// any hip posed so close to a limit that the gait's stride will get cut short
+// on one side -- which walks crooked, because that leg pushes less.
+static void showStand() {
+  Serial.print("  static int STAND[8] = { ");
+  for (int i = 0; i < 8; i++) Serial.printf("%d%s", STAND[i], i < 7 ? ", " : " ");
+  Serial.println("};");
+  for (int h = 0; h < 4; h++)
+    if (STAND[h] - LO[h] < swingAmt || HI[h] - STAND[h] < swingAmt)
+      Serial.printf("  (%s is near its limit -- its steps will be cut short)\n", NAME[h]);
 }
 
 static void showTrim() {
@@ -311,6 +328,14 @@ void loop() {
                                 walking = true; Serial.println("  walking backward."); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
+    if (c >= '1' && c <= '4') { selHip = c - '1';
+                                Serial.printf("  posing %s   (stand %d)\n", NAME[selHip], STAND[selHip]); }
+    if (c == '+' || c == '=' || c == '-') {
+      STAND[selHip] = constrain(STAND[selHip] + (c == '-' ? -3 : 3), LO[selHip], HI[selHip]);
+      if (attached && !walking) put(selHip, STAND[selHip]);   // see it move now
+      Serial.printf("  %s stand = %d\n", NAME[selHip], STAND[selHip]);
+    }
+    if (c == 'p' || c == 'P') showStand();
     if (c == 'v' || c == 'V') { DIR[0] = -DIR[0];
                                 Serial.printf("  R1 direction is now %+d\n", DIR[0]); }
 
