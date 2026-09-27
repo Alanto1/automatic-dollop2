@@ -36,6 +36,7 @@
 //   u   lift feet higher    j   lift feet lower
 //   q   slower              e   faster
 //   k   longer steps        i   shorter steps
+//   v   flip R1's direction -- the one hip never measured
 //   x   stop and go limp
 //
 // a/d/z/c print the current trim and lean. Once it walks straight and level,
@@ -67,8 +68,10 @@ static int STAND[8] = { 100,  68,  78,  65,  39, 117,  39, 117 };
 // From the measured table: R3 and L4 have 0 at the top, R4 and L3 at the
 // bottom. R1's direction was never established -- flip it if leg R1 walks
 // backwards while the others walk forwards.
-static const int DIR[8] = {
-  +1,   // R1  hip   <- UNVERIFIED, flip if wrong
+// Not const: R1 can be flipped live with 'v', because it is the one entry
+// that was never measured. Once the right sign is known, write it in here.
+static int DIR[8] = {
+  +1,   // R1  hip   <- UNVERIFIED. 'v' flips it live; keep whichever walks
   -1,   // R2  hip   5 = front, so forward is downward
   -1,   // L1  hip   5 = front
   +1,   // L2  hip   0 = left, 130 = front
@@ -114,7 +117,9 @@ static const float PHASE[4] = {0.75f, 0.50f, 0.25f, 0.00f};
 // lift, swing and land, so feet drag and it gets slower, not faster.
 static int         swingAmt = 28;      // hip travel either side of stand (k / i live)
 static int         liftAmt  = 25;      // knee travel during swing   (u / j live)
-static int         cycleMs  = 2000;    // one full gait cycle        (q / e live)
+static int         cycleMs  = 1500;    // one full gait cycle        (q / e live)
+                                       // 1500 tuned on the robot: fastest it
+                                       // walks cleanly with lift 25
 static const int   STEP_MS  = 20;
 
 static bool  attached = false;
@@ -238,7 +243,8 @@ static void menu() {
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
   Serial.println("  q slower             e faster");
-  Serial.println("  k longer steps       i shorter steps\n");
+  Serial.println("  k longer steps       i shorter steps");
+  Serial.println("  v flip R1's direction (the one never measured)\n");
 }
 
 static void showTrim() {
@@ -277,6 +283,8 @@ void loop() {
                                 walking = true; Serial.println("  walking backward."); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
+    if (c == 'v' || c == 'V') { DIR[0] = -DIR[0];
+                                Serial.printf("  R1 direction is now %+d\n", DIR[0]); }
 
     bool retrim = false;
     if (c == 'a' || c == 'A') { trim += 0.05f; retrim = true; }
