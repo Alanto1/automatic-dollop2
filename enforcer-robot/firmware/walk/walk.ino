@@ -28,7 +28,7 @@
 // hip pushes back through the remaining three quarters. That last part is
 // stance, and it is what actually moves the robot.
 //
-//   f   check each hip points FORWARD in turn (robot on a box)
+//   f   check each hip in turn and FIX any that go backwards (robot on a box)
 //   s   stand -- ease into STAND[] and hold
 //   w   walk forward        r   walk backward
 //   a   steer left          d   steer right      (trim while it walks)
@@ -68,8 +68,8 @@ static int STAND[8] = { 100,  68,  78,  65,  39, 117,  39, 117 };
 // From the measured table: R3 and L4 have 0 at the top, R4 and L3 at the
 // bottom. R1's direction was never established -- flip it if leg R1 walks
 // backwards while the others walk forwards.
-// Not const: R1 can be flipped live with 'v', because it is the one entry
-// that was never measured. Once the right sign is known, write it in here.
+// Not const: the 'f' check flips any hip the user says went the wrong way,
+// and 'v' flips R1 by hand. Once the check has run, write the result in here.
 static int DIR[8] = {
   +1,   // R1  hip   <- UNVERIFIED. 'v' flips it live; keep whichever walks
   -1,   // R2  hip   5 = front, so forward is downward
@@ -215,29 +215,57 @@ static void gaitStep(float t) {
   }
 }
 
-// Swing each hip forward on its own and hold it, so a wrong direction is
-// obvious and attributable. Robot on a box, legs hanging: the feet must be
-// free to move.
+// Swing each hip forward on its own, hold it, and ASK. A 'n' flips that hip's
+// DIR on the spot, so the check fixes what it finds rather than reporting it.
+// Robot on a box, legs hanging: the feet must be free to move.
+//
+// Why this matters more than it looks: the legs stand splayed in an X, so each
+// foot pushes diagonally. When all four agree, the sideways parts cancel and
+// the robot goes straight. When one DIAGONAL pair disagrees with the other,
+// the fore-aft parts cancel and the sideways parts add -- and the robot crabs
+// sideways, one way on 'w' and the other on 'r'. That was seen.
+static char waitAnswer() {
+  while (true) {
+    while (!Serial.available()) delay(10);
+    char c = Serial.read();
+    if (c == 'y' || c == 'Y') return 'y';
+    if (c == 'n' || c == 'N') return 'n';
+    if (c == 's' || c == 'S') return 's';
+  }
+}
+
 static void forwardCheck() {
   stand();
-  Serial.println("\n  Each hip in turn should point toward the R1/L1 end (the front).");
+  Serial.println("\n  Each hip swings on its own. For each, answer:");
+  Serial.println("  did the FOOT move toward the FRONT (the R1 / L1 end)?");
+  Serial.println("    y = yes    n = no, it went toward the back    s = straight sideways\n");
   for (int leg = 0; leg < 4; leg++) {
     int h = HIP[leg];
-    Serial.printf("  %s ...\n", NAME[h]);
     for (int k = 0; k <= 25; k++) {
       put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * swingAmt * k / 25)); delay(20);
     }
-    delay(1500);
+    Serial.printf("  %s  -- toward the front?  y / n / s  ", NAME[h]);
+    char a = waitAnswer();
+    if (a == 'n') {
+      DIR[h] = -DIR[h];
+      Serial.printf("flipped, now %+d\n", DIR[h]);
+    } else if (a == 's') {
+      Serial.println("sideways -- this leg points along the body; tell me which");
+    } else {
+      Serial.println("ok");
+    }
     for (int k = 25; k >= 0; k--) {
       put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * swingAmt * k / 25)); delay(20);
     }
-    delay(500);
+    delay(300);
   }
-  Serial.println("  done. Any that swung toward the BACK has its DIR flipped.\n");
+  Serial.printf("\n  hips now:  R1 %+d   R2 %+d   L1 %+d   L2 %+d\n",
+                DIR[0], DIR[1], DIR[2], DIR[3]);
+  Serial.println("  Send me that line. Then set it down: s, then w.\n");
 }
 
 static void menu() {
-  Serial.println("\n  f check each hip's forward direction (robot on a box)");
+  Serial.println("\n  f check each hip and fix any that go backwards (robot on a box)");
   Serial.println("  s stand    w forward    r backward    x stop / limp");
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side");
