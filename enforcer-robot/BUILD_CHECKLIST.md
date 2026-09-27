@@ -256,7 +256,12 @@ Do this **before** designing anything around the reservoir.
       11g, camera 5g, pump + tubing 20g (`make_stl.py --test` prints this)
 - [ ] Tape that much dead weight to it. Does it still walk? Then try **30ml**
       of water (the budgeted figure) and 50ml
-- [ ] **Decide reservoir size from that measurement**, not from hope
+- [x] ~~**Decide reservoir size from that measurement**~~ — **load test skipped
+      by decision (2026-09-27). Reservoir is 30 ml.** Without a measurement,
+      take the conservative end: with the Pi 3A+ the model puts 30 ml + voice
+      at 1.20 of 1.21 kg-cm and 50 ml over. The test happens implicitly the
+      first time it walks with the real deck on -- if it struggles then, drop
+      the voice hardware before the water
 - [ ] Measure the bottle's internal diameter, set `BOTTLE_D`, re-run the test
 - [ ] If it can't walk loaded → Squirt mode goes stationary (scope ladder),
       and that's a fine project
