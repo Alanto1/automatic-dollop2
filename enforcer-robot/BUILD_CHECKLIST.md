@@ -181,6 +181,9 @@ Follow the upstream build guide. Don't improvise.
     - [ ] Toggle **Rest ↔ Stand** to check alignment before committing
     - [ ] Fasten with the **M2.5 machine screw** through the centre hole
     - [ ] Repeat for the leg joints; check nothing collides, then screw
+- [x] ~~**First walk**~~ — on `firmware/walk/walk.ino`, a crawl gait over the
+      measured ranges, with the STAND pose found by `stand_easy`. Slow at
+      first (SWING 18 / 3000 ms); retuned to SWING 28 / 2000 ms
 - [ ] Walk: `forward` `backward` `left` `right` run until stopped. Poses are
       rest, stand, wave, dance, swim, point, pushup, bow, cute, freaky, worm,
       shake, shrug, dead, crab

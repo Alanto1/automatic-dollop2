@@ -77,9 +77,16 @@ static const int KNEE[4] = {5, 4, 6, 7};      // R3  R4  L3  L4
 // not be adjacent legs or the support triangle collapses under the robot.
 static const float PHASE[4] = {0.50f, 0.25f, 0.75f, 0.00f};
 
+// Speed is stride over cycle time: 2*SWING of hip travel per CYCLE_MS.
+//
+// First walk was at SWING 18 / CYCLE 3000 and it walked, slowly. SWING 28 is
+// checked against STAND: every hip stays inside its measured range at full
+// swing (tightest is L2 at 37-93 of 0-130). Do not take CYCLE_MS much below
+// ~1200 -- swing is a quarter of the cycle, and under ~300ms an MG90S cannot
+// lift, swing and land, so feet drag and it gets slower, not faster.
 static const int   LIFT     = 25;      // knee travel during swing
-static const int   SWING    = 18;      // hip travel either side of stand
-static const int   CYCLE_MS = 3000;    // one full gait cycle
+static const int   SWING    = 28;      // hip travel either side of stand
+static const int   CYCLE_MS = 2000;    // one full gait cycle; try 1500 next
 static const int   STEP_MS  = 20;
 
 static bool attached = false;
