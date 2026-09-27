@@ -47,8 +47,10 @@ static const char *NAME[8] = {"R1", "R2", "L1", "L2", "R4", "R3", "L3", "L4"};
 static const int LO[8] = { 45,   5,   5,   0,   0,   0,   0,   0 };
 static const int HI[8] = {155, 130, 150, 130, 155, 155, 155, 155 };
 
-// >>> FILL THESE IN. Placeholders are range midpoints and will NOT stand. <<<
-static int STAND[8] = { 100,  68,  78,  65,  78,  78,  78,  78 };
+// Found with stand_easy: hips at their range midpoints, all four knees 39
+// steps down from the middle, each in its own direction. The mirror-image
+// 39 / 117 pairs are the knee directions in DIR[] confirming themselves.
+static int STAND[8] = { 100,  68,  78,  65,  39, 117,  39, 117 };
 
 // Which way each joint moves the leg where we want it.
 //   hips  (0-3): +1 if a BIGGER number swings the leg FORWARD
