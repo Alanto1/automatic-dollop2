@@ -722,8 +722,30 @@ build poses or gaits on them.
 | `R2` | 2 | 20°–130° | 976 | 2313 | 110° | **1644** |
 | `L1` | 4 | 0°–40° | 732 | 1220 | **40°** | **976** |
 | `L2` | 6 | 0°–80° | 732 | 1708 | 80° | **1220** |
+| `R3` | 10 | 0°–22° | 732 | 1000 | **22°** | **866** |
 
 Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
+
+### Three joints are pinned against the bottom of the band
+
+`L1`, `L2` and `R3` all start at exactly **0° / 732 µs**, and `R3` has
+mechanical room left when the *command* range runs out. That is the
+diagnosis, not a coincidence: those horns are seated one or two teeth off, so
+the servo's 180° command window and the leg's mechanical window barely
+overlap.
+
+Rotating a horn one tooth (~17°) slides the usable window back into the middle
+of the band, which is where the full travel is. `R1` and `R2` get 110°; there
+is no reason `R3` should get 22° other than where its horn landed.
+
+⚠️ **Do not widen the band below 732 µs to get more room.** An MG90S will
+physically accept ~500 µs, but that is into its own internal end stop, and
+Sesame chose 732 deliberately. Trading a five-minute horn re-seat for a
+stalled servo is the wrong way round — and this build has already lost servo 9
+that way.
+
+For bench testing, a cramped range is fine: 22° is more than enough to prove a
+servo responds. Just do not build anything on these numbers.
 
 ⚠️ **1830 is no longer a safe centre.** It is 90°, but `L1` tops out at 1220,
 so parking at 1830 drives it into its stop — which is how servo 9 was lost.
