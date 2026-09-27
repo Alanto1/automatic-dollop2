@@ -28,6 +28,7 @@
 // hip pushes back through the remaining three quarters. That last part is
 // stance, and it is what actually moves the robot.
 //
+//   f   check each hip points FORWARD in turn (robot on a box)
 //   s   stand -- ease into STAND[] and hold
 //   w   walk forward        r   walk backward
 //   a   steer left          d   steer right      (trim while it walks)
@@ -80,14 +81,26 @@ static const int KNEE[4] = {5, 4, 6, 7};      // R3  R4  L3  L4
 static const int SIDE[4] = {+1, +1, -1, -1};  // right, right, left, left
 static const int LEG_OF[8] = {0, 1, 2, 3, 1, 0, 2, 3};   // motor -> leg
 
-// The first walk went BACKWARDS with the hips driven straight from DIR[].
-// Rather than flip all four entries -- DIR[] is a record of what was
-// measured on each joint -- flip the gait's idea of forward here.
-static const int FORWARD_SIGN = -1;
+// Flips the whole robot's idea of forward in one place, so DIR[] can stay a
+// record of what was measured on each joint. Set it from the 'f' check, not
+// from watching the walk: a gait with the wrong swing order drifts in
+// directions that have nothing to do with this sign.
+static const int FORWARD_SIGN = +1;
 
-// When each leg swings, as a fraction of the cycle. Consecutive swings must
-// not be adjacent legs or the support triangle collapses under the robot.
-static const float PHASE[4] = {0.50f, 0.25f, 0.75f, 0.00f};
+// The FRONT of the robot is the R1 / L1 end, so the legs are:
+//     R1+R3 front-right    L1+L3 front-left
+//     R2+R4 rear-right     L2+L4 rear-left
+//
+// When each leg swings, as a fraction of the cycle. This is the lateral-
+// sequence crawl -- rear-left, front-left, rear-right, front-right -- which
+// is the statically most stable order for a quadruped: each rear foot lands
+// under the body just before the front foot on the same side lifts.
+//
+// The first version guessed the front and got it wrong, which lifted the feet
+// in a circle round the body. That rotates the robot, tilts it, and makes
+// backward not the mirror of forward -- all three were seen.
+//                               R1     R2     L1     L2
+static const float PHASE[4] = {0.75f, 0.50f, 0.25f, 0.00f};
 
 // Speed is stride over cycle time: 2*SWING of hip travel per CYCLE_MS.
 //
@@ -103,7 +116,7 @@ static const int   STEP_MS  = 20;
 
 static bool  attached = false;
 static int   cur[8];
-static int   walkDir = +1;    // +1 forward, -1 backward
+static int   walkDir = +1;    // +1 forward, -1 backward: runs the cycle in reverse
 static float trim    = 0.0f;  // + lengthens the right-side stride: steers left
 static int   lean    = 0;     // + raises the right side of the body
 
@@ -189,13 +202,35 @@ static void gaitStep(float t) {
     }
 
     int h = HIP[leg], n = KNEE[leg];
-    put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * walkDir * hipOff));
+    put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * hipOff));
     put(n, STAND[n] + (int)(DIR[n] * lift) + kneeLean(n));
   }
 }
 
+// Swing each hip forward on its own and hold it, so a wrong direction is
+// obvious and attributable. Robot on a box, legs hanging: the feet must be
+// free to move.
+static void forwardCheck() {
+  stand();
+  Serial.println("\n  Each hip in turn should point toward the R1/L1 end (the front).");
+  for (int leg = 0; leg < 4; leg++) {
+    int h = HIP[leg];
+    Serial.printf("  %s ...\n", NAME[h]);
+    for (int k = 0; k <= 25; k++) {
+      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * SWING * k / 25)); delay(20);
+    }
+    delay(1500);
+    for (int k = 25; k >= 0; k--) {
+      put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * SWING * k / 25)); delay(20);
+    }
+    delay(500);
+  }
+  Serial.println("  done. Any that swung toward the BACK has its DIR flipped.\n");
+}
+
 static void menu() {
-  Serial.println("\n  s stand    w forward    r backward    x stop / limp");
+  Serial.println("\n  f check each hip's forward direction (robot on a box)");
+  Serial.println("  s stand    w forward    r backward    x stop / limp");
   Serial.println("  a steer left    d steer right");
   Serial.println("  z raise left side    c raise right side\n");
 }
@@ -234,6 +269,7 @@ void loop() {
     if (c == 'r' || c == 'R') { if (!attached) stand(); walkDir = -1;
                                 walking = true; Serial.println("  walking backward."); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
+    if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
 
     bool retrim = false;
     if (c == 'a' || c == 'A') { trim += 0.05f; retrim = true; }
@@ -251,9 +287,15 @@ void loop() {
 
   if (!walking) return;
 
+  // Backward is the forward cycle run in reverse. That also reverses the
+  // swing order, which is exactly right: walking backward, the old front legs
+  // are the new rear legs. Negating the hip offsets instead would keep the
+  // forward swing order, and a gait whose order does not match its direction
+  // drifts sideways.
   static float t = 0.0f;
-  t += (float)STEP_MS / CYCLE_MS;
+  t += walkDir * (float)STEP_MS / CYCLE_MS;
   if (t >= 1.0f) t -= 1.0f;
+  if (t <  0.0f) t += 1.0f;
   gaitStep(t);
   delay(STEP_MS);
 }

@@ -644,10 +644,14 @@ sits 3.25 mm from its own lower leg and 67 mm from any other:
 
 | Leg | Hip | GPIO | Lower leg | GPIO | Motors |
 |---|---|---|---|---|---|
-| Right, one end | `R1` | 1 | `R3` | 10 | **0 and 5** |
-| Right, other end | `R2` | 2 | `R4` | 8 | **1 and 4** |
-| Left, one end | `L1` | 4 | `L3` | 13 | **2 and 6** |
-| Left, other end | `L2` | 6 | `L4` | 14 | **3 and 7** |
+| **Front**-right | `R1` | 1 | `R3` | 10 | **0 and 5** |
+| **Rear**-right | `R2` | 2 | `R4` | 8 | **1 and 4** |
+| **Front**-left | `L1` | 4 | `L3` | 13 | **2 and 6** |
+| **Rear**-left | `L2` | 6 | `L4` | 14 | **3 and 7** |
+
+**The front is the `R1` / `L1` end.** The STLs could not say which end was the
+head; the assembled robot does. Anything that depends on front and back — the
+order the gait lifts its feet, above all — takes it from here.
 
 The rule is **1 pairs with 3, 2 pairs with 4**, on each side. But motor 0's
 partner is motor **5**, not motor 4 — so when one leg misbehaves, the two
@@ -751,19 +755,25 @@ Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
 All eight servos respond and hold. The bench test is complete; what is left is
 mechanical.
 
-### Leg directions check out against the mirror pairs
+### Leg directions check out against the diagonal pairs
 
 After reseating all four lower legs, which command end puts the leg up:
 
-| Leg | 0 = | Mirror | Its 0 = | |
+| Leg | 0 = | Diagonal | Its 0 = | |
 |---|---|---|---|---|
-| `R3` | top | `L4` | top | ✅ |
-| `R4` | bottom | `L3` | bottom | ✅ |
+| `R3` front-right | top | `L4` rear-left | top | ✅ |
+| `R4` rear-right | bottom | `L3` front-left | bottom | ✅ |
 
-**Both mirror pairs agree**, which is what correct assembly looks like:
-mirrored parts with mirrored servo mounting give the same visual motion from
-the same command. The two pairs being opposite to *each other* is just the
-front and rear leg assemblies sitting 180° apart on the body.
+⚠️ **Correction:** these were first written up as *mirror* pairs. With the
+front established at the `R1` / `L1` end they are **diagonal** — front-right
+with rear-left, rear-right with front-left.
+
+That also explains the STL result that prompted the pairing: `R1`/`L2`,
+`R2`/`L1`, `R3`/`L4` and `R4`/`L3` export to identical coordinates because
+they are the **same part**, used on opposite corners. The body is symmetric
+under a half-turn about the vertical axis, so diagonal legs are twins, and
+twins built the same way respond the same way to the same command. Both
+diagonal pairs agreeing is what correct assembly looks like.
 
 ⚠️ **Direction cannot be changed by reseating a horn.** Rotating the horn adds
 a constant offset; it never reverses which way the leg travels. Direction is
