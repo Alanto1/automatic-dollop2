@@ -732,6 +732,37 @@ Degrees convert as `us = 732 + 2197 × deg / 180`, Sesame's band.
 All eight servos respond and hold. The bench test is complete; what is left is
 mechanical.
 
+### ⚠️ These servos stop tracking above ~2624 µs
+
+Found on the spare servo and confirmed on `R3`: commanding above about
+**2624 µs** (155° in Sesame's mapping) makes the servo stop holding position
+and **rotate continuously**. At 2929 µs it wraps and jumps back to 0°.
+
+A servo cannot spin continuously while its feedback loop is working, so this is
+the controller no longer reading the pulse as a position. Sesame's band is
+732–2929 µs, which is wider than this batch of MG90S can use — they reach their
+full 180° of physical travel by ~2624 and the rest of the band is overdrive.
+
+**Nothing is lost.** 0–155 already sweeps the full mechanical range. But two
+things follow:
+
+**1. Re-read the limits table.** `R1`'s upper limit of 155° was almost
+certainly this, not the chassis. Any measured limit sitting near 155 is
+suspect — it is where the servo gave up, not where the robot stopped it.
+
+**2. Narrow the band before flashing stock firmware.** Sesame's poses assume
+the full band, so a pose commanding a high angle will make that servo run away
+— with legs fitted and loaded, that breaks things. The range lives in the
+`servos[i].attach()` calls:
+
+```c
+servos[i].attach(servoPins[i], 732, 2600);   // was 2929
+```
+
+That maps the firmware's 0–180° onto the travel these servos actually deliver.
+Probe 156–159 first to find the exact breakdown, then set the ceiling ~40 µs
+below it.
+
 ### The mis-clocking is mirrored, not random
 
 | | Right | Left |
