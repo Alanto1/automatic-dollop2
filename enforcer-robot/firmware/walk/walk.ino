@@ -29,8 +29,13 @@
 // stance, and it is what actually moves the robot.
 //
 //   s   stand -- ease into STAND[] and hold
-//   w   walk
+//   w   walk forward        r   walk backward
+//   a   steer left          d   steer right      (trim while it walks)
+//   z   raise left side     c   raise right side (level it)
 //   x   stop and go limp
+//
+// a/d/z/c print the current trim and lean. Once it walks straight and level,
+// send those two numbers back so they can be written in as defaults.
 //
 // ⚠️ Eight servos moving at once is the largest load this robot has drawn.
 // If the board resets mid-gait, that is a brownout, not a bug: the legs will
@@ -72,6 +77,13 @@ static const int DIR[8] = {
 // One leg is a hip and a knee, and they are not adjacent motor numbers.
 static const int HIP[4]  = {0, 1, 2, 3};      // R1  R2  L1  L2
 static const int KNEE[4] = {5, 4, 6, 7};      // R3  R4  L3  L4
+static const int SIDE[4] = {+1, +1, -1, -1};  // right, right, left, left
+static const int LEG_OF[8] = {0, 1, 2, 3, 1, 0, 2, 3};   // motor -> leg
+
+// The first walk went BACKWARDS with the hips driven straight from DIR[].
+// Rather than flip all four entries -- DIR[] is a record of what was
+// measured on each joint -- flip the gait's idea of forward here.
+static const int FORWARD_SIGN = -1;
 
 // When each leg swings, as a fraction of the cycle. Consecutive swings must
 // not be adjacent legs or the support triangle collapses under the robot.
@@ -89,8 +101,11 @@ static const int   SWING    = 28;      // hip travel either side of stand
 static const int   CYCLE_MS = 2000;    // one full gait cycle; try 1500 next
 static const int   STEP_MS  = 20;
 
-static bool attached = false;
-static int  cur[8];
+static bool  attached = false;
+static int   cur[8];
+static int   walkDir = +1;    // +1 forward, -1 backward
+static float trim    = 0.0f;  // + lengthens the right-side stride: steers left
+static int   lean    = 0;     // + raises the right side of the body
 
 static void attachAll() {
   if (attached) return;
@@ -130,15 +145,25 @@ static void limp() {
   Serial.println("  LIMP -- all eight free.");
 }
 
+// Lean is split across both sides -- half the feet on one side go down, half
+// on the other go up -- so levelling the body does not change its height.
+static int kneeLean(int m) {
+  return (int)(DIR[m] * (-SIDE[LEG_OF[m]] * lean * 0.5f));
+}
+
+static int standTarget(int m) {
+  return (m < 4) ? STAND[m] : STAND[m] + kneeLean(m);
+}
+
 // Ease into the stand pose over a second. Never snap eight servos at once
 // with the robot's weight on them.
 static void stand() {
   attachAll();
   int from[8];
-  for (int i = 0; i < 8; i++) from[i] = cur[i] ? cur[i] : STAND[i];
+  for (int i = 0; i < 8; i++) from[i] = cur[i] ? cur[i] : standTarget(i);
   for (int s = 0; s <= 50; s++) {
     for (int i = 0; i < 8; i++)
-      put(i, from[i] + (STAND[i] - from[i]) * s / 50);
+      put(i, from[i] + (standTarget(i) - from[i]) * s / 50);
     delay(20);
   }
   Serial.println("  standing.");
@@ -149,27 +174,34 @@ static void gaitStep(float t) {
     float u = t - PHASE[leg];
     while (u < 0.0f) u += 1.0f;
 
+    // Steering: one side takes a longer stride than the other.
+    float stride = SWING * (1.0f + SIDE[leg] * trim);
+
     float hipOff, lift;
     if (u < 0.25f) {                     // swing: foot in the air, going forward
       float k = u / 0.25f;
       lift   = LIFT * sinf(k * PI);      // up and back down within the phase
-      hipOff = -SWING + 2.0f * SWING * k;
+      hipOff = -stride + 2.0f * stride * k;
     } else {                             // stance: foot planted, pushing back
       float k = (u - 0.25f) / 0.75f;
       lift   = 0.0f;
-      hipOff = SWING - 2.0f * SWING * k;
+      hipOff = stride - 2.0f * stride * k;
     }
 
     int h = HIP[leg], n = KNEE[leg];
-    put(h, STAND[h] + (int)(DIR[h] * hipOff));
-    put(n, STAND[n] + (int)(DIR[n] * lift));
+    put(h, STAND[h] + (int)(DIR[h] * FORWARD_SIGN * walkDir * hipOff));
+    put(n, STAND[n] + (int)(DIR[n] * lift) + kneeLean(n));
   }
 }
 
 static void menu() {
-  Serial.println("\n  s  stand and hold");
-  Serial.println("  w  walk");
-  Serial.println("  x  stop, go limp\n");
+  Serial.println("\n  s stand    w forward    r backward    x stop / limp");
+  Serial.println("  a steer left    d steer right");
+  Serial.println("  z raise left side    c raise right side\n");
+}
+
+static void showTrim() {
+  Serial.printf("  trim %+.2f   lean %+d\n", trim, lean);
 }
 
 static bool walking = false;
@@ -197,9 +229,24 @@ void loop() {
   while (Serial.available()) {
     char c = Serial.read();
     if (c == 's' || c == 'S') { walking = false; stand(); }
-    if (c == 'w' || c == 'W') { if (!attached) stand();
-                                walking = true; Serial.println("  walking."); }
+    if (c == 'w' || c == 'W') { if (!attached) stand(); walkDir = +1;
+                                walking = true; Serial.println("  walking forward."); }
+    if (c == 'r' || c == 'R') { if (!attached) stand(); walkDir = -1;
+                                walking = true; Serial.println("  walking backward."); }
     if (c == 'x' || c == 'X') { walking = false; limp(); }
+
+    bool retrim = false;
+    if (c == 'a' || c == 'A') { trim += 0.05f; retrim = true; }
+    if (c == 'd' || c == 'D') { trim -= 0.05f; retrim = true; }
+    if (c == 'z' || c == 'Z') { lean -= 2;     retrim = true; }
+    if (c == 'c' || c == 'C') { lean += 2;     retrim = true; }
+    if (retrim) {
+      trim = constrain(trim, -0.4f, 0.4f);
+      lean = constrain(lean, -20, 20);
+      showTrim();
+      if (attached && !walking)          // standing: show the new lean at once
+        for (int i = 0; i < 8; i++) put(i, standTarget(i));
+    }
   }
 
   if (!walking) return;
