@@ -198,8 +198,12 @@ Follow the upstream build guide. Don't improvise.
       their letters (`R2` back-left, `L2` back-right); fixed, and it spins
 - [x] ~~**Slide sideways**~~ — `,` and `.`, kept on purpose: the crab from that
       first turning attempt, useful for lining up without turning away
-- [ ] Measure **degrees turned per gait cycle** -- aiming will need it to know
-      how long to turn toward a target
+- [x] ~~Measure **degrees turned per gait cycle**~~ -- 90 deg in ~5 s at a 1500ms
+      crawl cycle, stride 28: **~27 deg per cycle**. Re-measure once the gait
+      settles (trot, stride and cycle all change it)
+- [ ] **Faster, and over a 10mm mat edge.** Trot gait (`g`), a step-over swing
+      (up, across, down instead of a sine arc), lift raised to 35, and a live
+      body height (`t` / `b`). Try on the robot
       rest, stand, wave, dance, swim, point, pushup, bow, cute, freaky, worm,
       shake, shrug, dead, crab
 

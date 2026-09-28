@@ -37,6 +37,8 @@
 //   z   raise left side     c   raise right side (level it)
 //   u   lift feet higher    j   lift feet lower
 //   q   slower              e   faster
+//   t   stand taller        b   stand lower      (clear an edge with the body)
+//   g   switch crawl <-> trot   -- trot is roughly 3x faster, less stable
 //   k   longer steps        i   shorter steps
 //   v   flip R1's direction -- the one hip never measured
 //   1-4 pick a hip (R1 R2 L1 L2), + / - turn it, p prints the STAND[] line.
@@ -139,8 +141,20 @@ static const float PHASE[4] = {0.75f, 0.00f, 0.25f, 0.50f};
 // ~1200 -- swing is a quarter of the cycle, and under ~300ms an MG90S cannot
 // lift, swing and land, so feet drag and it gets slower, not faster.
 static int         swingAmt = 28;      // hip travel either side of stand (k / i live)
-static int         liftAmt  = 25;      // knee travel during swing   (u / j live)
+static int         liftAmt  = 35;      // knee travel during swing   (u / j live)
+                                       // 25 walked the desk; 35 so the step
+                                       // clears a 10mm mat edge
 static int         cycleMs  = 1500;    // one full gait cycle        (q / e live)
+static int         heightOff = 0;      // + stands taller, feet pushed down (t / b live)
+
+// Two gaits. The crawl lifts one foot at a time -- three always down, so it
+// cannot fall over, but it is slow: each foot gets only a quarter of the cycle
+// to swing, which puts a floor of ~1200ms on the cycle. The trot swings the
+// diagonal pairs together (front-right + back-left, then front-left +
+// back-right): half the cycle to swing, so the cycle can drop to ~600ms, and
+// each foot pushes for a larger share of the time. Roughly three times the
+// speed, at the price of standing on two feet while the other two swing.
+static bool        trot     = false;   // 'g' switches
                                        // 1500 tuned on the robot: fastest it
                                        // walks cleanly with lift 25
 static const int   STEP_MS  = 20;
@@ -152,6 +166,9 @@ static float trim    = 0.0f;  // + lengthens the right-side stride: steers left
 static int   lean    = 0;     // + raises the right side of the body
 static int   selHip  = 0;     // hip being posed with 1-4 and + / -  (0 = R1)
 static int   turnMode = 0;    // 0 straight, -1 turn left, +1 turn right (on the spot)
+// Measured: 90 degrees in ~5 s in the crawl at a 1500ms cycle and stride 28,
+// so ~27 degrees per cycle. Aiming will need this; re-measure after changing
+// gait, stride or cycle.
 
 // Sliding sideways -- kept on purpose. It is what the first turning attempt
 // actually did: opposing one diagonal pair against the other cancels the
@@ -200,7 +217,9 @@ static void limp() {
 // Lean is split across both sides -- half the feet on one side go down, half
 // on the other go up -- so levelling the body does not change its height.
 static int kneeLean(int m) {
-  return (int)(DIR[m] * (-SIDE[LEG_OF[m]] * lean * 0.5f));
+  // lean: half the feet on one side down, the other side up -- height kept.
+  // heightOff: every foot down together -- the body rises.
+  return (int)(DIR[m] * (-SIDE[LEG_OF[m]] * lean * 0.5f - heightOff));
 }
 
 static int standTarget(int m) {
@@ -221,9 +240,21 @@ static void stand() {
   Serial.println("  standing.");
 }
 
+// 0 below e0, 1 above e1, a smooth S between. Used to shape the swing.
+static float smoothBetween(float e0, float e1, float x) {
+  float k = (x - e0) / (e1 - e0);
+  if (k < 0.0f) k = 0.0f;
+  if (k > 1.0f) k = 1.0f;
+  return k * k * (3.0f - 2.0f * k);
+}
+
 static void gaitStep(float t) {
+  // Swing takes this share of the cycle; the rest is stance.
+  const float sf = trot ? 0.5f : 0.25f;
   for (int leg = 0; leg < 4; leg++) {
-    float u = t - PHASE[leg];
+    // Trot: the two diagonals, half a cycle apart. Crawl: one at a time.
+    float ph = trot ? (DIAG[leg] > 0 ? 0.0f : 0.5f) : PHASE[leg];
+    float u = t - ph;
     while (u < 0.0f) u += 1.0f;
 
     // Steering: one side takes a longer stride than the other. Trim corrects a
@@ -240,12 +271,18 @@ static void gaitStep(float t) {
     if (strafeMode) sideFactor = (float)(-strafeMode * DIAG[leg]);   // the crab
 
     float hipOff, lift;
-    if (u < 0.25f) {                     // swing: foot in the air, going forward
-      float k = u / 0.25f;
-      lift   = liftAmt * sinf(k * PI);   // up and back down within the phase
-      hipOff = -stride + 2.0f * stride * k;
+    if (u < sf) {
+      // Swing: UP, then ACROSS, then DOWN -- a step over, not a scuff. The
+      // first version lifted in a sine arc while the hip moved the whole time,
+      // so the foot was low at both ends of the swing and moving forward while
+      // low: exactly when it meets the edge of a mat. Now the foot is fully up
+      // before it travels and fully across before it comes down.
+      float k = u / sf;
+      lift   = liftAmt * fminf(smoothBetween(0.0f, 0.3f, k),
+                               1.0f - smoothBetween(0.7f, 1.0f, k));
+      hipOff = -stride + 2.0f * stride * smoothBetween(0.15f, 0.85f, k);
     } else {                             // stance: foot planted, pushing back
-      float k = (u - 0.25f) / 0.75f;
+      float k = (u - sf) / (1.0f - sf);
       lift   = 0.0f;
       hipOff = stride - 2.0f * stride * k;
     }
@@ -314,6 +351,7 @@ static void menu() {
   Serial.println("  z raise left side    c raise right side");
   Serial.println("  u lift feet higher   j lift feet lower");
   Serial.println("  q slower             e faster");
+  Serial.println("  t stand taller       b stand lower      g crawl <-> TROT (fast)");
   Serial.println("  k longer steps       i shorter steps");
   Serial.println("  v flip R1's direction (the one never measured)");
   Serial.println("  1 2 3 4  pick hip R1 R2 L1 L2   + / -  turn it   p  print pose\n");
@@ -332,8 +370,8 @@ static void showStand() {
 }
 
 static void showTrim() {
-  Serial.printf("  trim %+.2f   lean %+d   lift %d   stride %d   cycle %d ms\n",
-                trim, lean, liftAmt, swingAmt, cycleMs);
+  Serial.printf("  %s   trim %+.2f   lean %+d   height %+d   lift %d   stride %d   cycle %d ms\n",
+                trot ? "TROT " : "crawl", trim, lean, heightOff, liftAmt, swingAmt, cycleMs);
 }
 
 static bool walking = false;
@@ -393,15 +431,23 @@ void loop() {
     if (c == 'c' || c == 'C') { lean += 2;     retrim = true; }
     if (c == 'u' || c == 'U') { liftAmt += 5;  retrim = true; }
     if (c == 'j' || c == 'J') { liftAmt -= 5;  retrim = true; }
-    if (c == 'q' || c == 'Q') { cycleMs += 250; retrim = true; }
-    if (c == 'e' || c == 'E') { cycleMs -= 250; retrim = true; }
+    if (c == 'q' || c == 'Q') { cycleMs += (trot ? 100 : 250); retrim = true; }
+    if (c == 'e' || c == 'E') { cycleMs -= (trot ? 100 : 250); retrim = true; }
+    if (c == 't' || c == 'T') { heightOff += 3; retrim = true; }
+    if (c == 'b' || c == 'B') { heightOff -= 3; retrim = true; }
+    if (c == 'g' || c == 'G') { trot = !trot;
+                                cycleMs = trot ? 800 : 1500;   // each gait's own starting pace
+                                retrim = true; }
     if (c == 'k' || c == 'K') { swingAmt += 2; retrim = true; }
     if (c == 'i' || c == 'I') { swingAmt -= 2; retrim = true; }
     if (retrim) {
       trim = constrain(trim, -0.4f, 0.4f);
       lean = constrain(lean, -20, 20);
-      liftAmt = constrain(liftAmt, 10, 50);
-      cycleMs = constrain(cycleMs, 1200, 8000);   // below ~1200 the feet cannot keep up
+      liftAmt = constrain(liftAmt, 10, 60);
+      heightOff = constrain(heightOff, -15, 30);
+      // Swing is a quarter of a crawl cycle and half a trot cycle, and it
+      // needs ~300ms for an MG90S to lift, cross and land. Hence the floors.
+      cycleMs = constrain(cycleMs, trot ? 600 : 1200, 8000);
       // Capped at 34. Past that, a front leg at the back of its stroke and the
       // rear leg on the same side at the front of its stroke point at almost
       // the same spot -- and in the lateral sequence that is the exact moment
