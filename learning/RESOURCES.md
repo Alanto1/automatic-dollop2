@@ -13,6 +13,11 @@ remembered.
 
 ---
 
+**Starting from scratch?** [`FOUNDATIONS.md`](FOUNDATIONS.md) carries its
+own resource list for physics, chemistry and introductory calculus
+(OpenStax, Khan, PhET, Desmos — all free). This file covers the
+engineering layer above that.
+
 ## The short list
 
 If you only use five things, use these.
@@ -42,6 +47,52 @@ If you only use five things, use these.
    Steven Smith's book, free in full online.
    *Good at:* practical DSP explained without hiding behind notation.
    *Bad at:* rigour, if you need the proofs.
+
+---
+
+## Interactive and practice-first
+
+What you'll actually use daily. Checked live 2026-09-05 / 2026-09-12.
+
+### Circuits — explanation plus embedded simulation
+
+| Resource | Link | Notes |
+|---|---|---|
+| **Khan Academy — Electrical Engineering** | `[✓]` khanacademy.org/science/electrical-engineering | A full circuit-analysis course by Willy McAllister, Khan's EE Content Fellow. Ohm/Kirchhoff, node-voltage and mesh-current, RC/RLC natural and step response, AC analysis, amplifiers, signals — essentially Modules 01–02. **Caveat: not exercise-driven like Khan's math courses.** Videos and articles with an embedded simulator, not a mastery loop. |
+| **Spinning Numbers** | `[✓]` spinningnumbers.org | McAllister's own site, built after that fellowship. Same voice, more depth — adds semiconductors, digital electronics, electrostatics, DSP. Its **Circuit Sandbox** simulator is embedded in the articles, so you edit the circuit being discussed while reading. Treat this as the fuller version of the Khan course. |
+| **Ultimate Electronics** (CircuitLab) | `[✓]` ultimateelectronicsbook.com | Free, and the most interactive electronics text there is: **203+ live schematics you edit and simulate inline**. **Caveat: incomplete.** Chapters 1 (foundations), 2 (linear DC) and 7 (op-amps) are finished; 3–6 and 8–19 are still "coming soon." Excellent for Module 01 Part A and Module 02 §2.5; don't plan the rest of your reading around it. |
+| **CircuitBread** | `[✓]` circuitbread.com | Practice problems with worked solutions. Use when you want more drilling. |
+
+### Sandboxes — intuition, not grading
+
+| Resource | Link | Notes |
+|---|---|---|
+| **PhET Circuit Construction Kit** | `[✓]` phet.colorado.edu — DC and AC versions | University of Colorado. Gentler than Falstad: realistic-looking parts, a virtual multimeter you place by hand. **Best starting point if a schematic still feels abstract.** |
+| **Falstad** | `[✓]` falstad.com/circuit | Faster and denser than PhET once you're past beginner stage. See the short list above. |
+| **Multisim Live** | `[✓]` multisim.com | Browser SPICE, free tier. A step toward LTspice with nothing to install. |
+| **Tinkercad Circuits / Wokwi** | `[✓]` | The ones that reach the Arduino level — where Module 03 Part C practice happens. |
+
+### Genuinely auto-graded — but digital only
+
+This is where a real Khan-style feedback loop actually exists.
+
+| Resource | Link | Notes |
+|---|---|---|
+| **nandgame** | `[✓]` nandgame.com | Build a computer from NAND gates in the browser. Each level auto-validates and won't let you pass until the circuit is correct. The gamified Nand2Tetris, and **the closest thing to Khan's mastery loop in all of hardware.** Start here for Module 03 Part A. |
+| **HDLBits** | `[✓]` hdlbits.01xz.net | Hundreds of Verilog exercises, auto-graded against a reference, with waveform diffs showing exactly where your output diverged. **This is Khan Academy for HDL.** Module 03 §3.6. |
+| **CircuitVerse** + its book | `[✓]` circuitverse.org · learn.circuitverse.org | Free digital-logic simulator with a teaching text built around it. |
+
+### The gap, stated plainly
+
+**Auto-graded analog circuit practice basically doesn't exist for free.**
+Digital has nandgame and HDLBits; analog has explanations and sandboxes
+but no grader. The substitute — and it's better training anyway:
+
+> Work problems from **All About Circuits** (each chapter ends with
+> worksheets that have answers), predict the result on paper *first*,
+> then build it in Falstad and check. That predict-then-verify loop is
+> exactly how real design verification works, and it's the loop
+> `PROJECTS.md` asks you to document.
 
 ---
 

@@ -69,8 +69,36 @@ Then check it against the ~10 kΩ figure in your `PURCHASE_LIST.md`. You
 should get 9.6 kΩ, and now you know *why* 10 kΩ is the right nearest
 standard value and what current it actually gives.
 
-**Resource:** Khan Academy Algebra II + Trigonometry. Fast, free, and it
-tests you rather than lecturing at you.
+**Resource:** Khan Academy **Algebra 2**, but not all of it. That course
+has 12 units and they are not equally useful here. Triaged:
+
+| Priority | Units | Why |
+|---|---|---|
+| **Load-bearing — do these properly** | 2 Complex numbers · 7 Exponential models · 8 Logarithms · 11 Trigonometry | Complex numbers gate all of AC analysis. Logs gate decibels and Bode plots (log-log axes). Exponentials are `e^(−t/RC)` — the most common function in this plan. Trig is every AC signal. |
+| **Do solidly** | 3 Polynomial factorization · 4 Polynomial division · 6 Rational exponents & radicals | Factoring *is* finding poles. Division underpins partial fractions (§6). Radicals are `√(k/m)`, `√(L/C)`, `V_peak/√2`, `√N`. |
+| **Move fast** | 1 Polynomial arithmetic · 9 Transformations of functions · 10 Equations | Expand `(s+2)(s+5)` and back; rational equations for combining impedances. Fluency only. |
+| **Skim or skip** | 5 Polynomial graphs · 12 Modeling | Low yield for the time. |
+
+**Suggested order** (not the course order): 11 → 7 → 8 → 2 → 3 → 4 → 6
+→ 1 → 9 → 10. Trig and exponentials first because Module 01 needs them
+immediately; complex numbers next because everything AC is gated on it.
+
+**Two gaps Algebra 2 does not fill:**
+
+1. **Euler's formula** (`e^(jθ) = cos θ + j·sin θ`) is in Khan's
+   **Precalculus**, not Algebra 2 — and it is the entire reason complex
+   numbers are in electrical engineering. After Unit 2, go to
+   Precalculus → Complex numbers for polar form and Euler.
+2. **Radians and trig identities in depth.** Algebra 2's trig unit is
+   lighter than Precalculus's. You need radians to be your native unit,
+   because `ω = 2πf` is in rad/s everywhere in this plan.
+
+**You're done when** you can do the README placement test's Tier A
+without hesitation, plus Tier B questions 6 and 8. That's the exit
+criterion — not Khan's mastery percentage.
+
+If Algebra 2 itself feels like a stretch, back up to
+[`FOUNDATIONS.md`](FOUNDATIONS.md) §1 and §2 first.
 
 ---
 
