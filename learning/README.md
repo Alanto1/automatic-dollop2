@@ -235,6 +235,7 @@ wasteful and it is not.
 
 | File | What it is |
 |---|---|
+| [`lessons/`](lessons/) | **Worked lessons, as they actually happen.** Full theory, the practice sets, the answers, and a record of which mistakes were made and what fixed them. Lesson 1 (charge, current, voltage, resistance) is done. |
 | [`FOUNDATIONS.md`](FOUNDATIONS.md) | **The ground floor** — physics, math, trigonometry, a little chemistry, calculus. The general science everything else assumes. Start here if you're starting from scratch; it's the only file covering physics and chemistry. |
 | [`00-math-backbone.md`](00-math-backbone.md) | The math track, sequenced by what it unlocks. Start here if the placement test says so. |
 | [`01-circuits.md`](01-circuits.md) | DC and AC circuit theory. Ohm → KCL/KVL → Thevenin → impedance → resonance. |
