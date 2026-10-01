@@ -40,6 +40,12 @@
 //   t   stand taller        b   stand lower      (clear an edge with the body)
 //   g   switch crawl <-> trot   -- trot is roughly 3x faster, less stable
 //   o   step-over swing on/off  -- up, across, down; for climbing a mat edge
+//   #   arm / disarm the pump (starts disarmed)    !   fire 200 ms
+//   l   show the four cliff sensor readings
+//
+// CLIFF REFLEX: once CLIFF_THRESH[] holds real values from cliff_test, any
+// sensor seeing an edge stops the walk and backs away from it. It overrides
+// every command. Until then it is OFF and says so at boot.
 //   h   sliding drifts forward -> pull it back
 //   n   sliding drifts backward -> push it forward
 //   k   longer steps        i   shorter steps
@@ -369,6 +375,7 @@ static void menu() {
   Serial.println("  q slower             e faster");
   Serial.println("  t stand taller       b stand lower      g crawl <-> TROT (fast)");
   Serial.println("  o step-over swing on/off (for climbing)");
+  Serial.println("  # arm / disarm pump    ! fire 200 ms    l show cliff sensors");
   Serial.println("  h slide drifts forward -> pull back     n slide drifts back -> push forward");
   Serial.println("  k longer steps       i shorter steps");
   Serial.println("  v flip R1's direction (the one never measured)");
@@ -395,7 +402,140 @@ static void showTrim() {
 
 static bool walking = false;
 
+// ===================================================================== PUMP
+//
+// GPIO 11 -> 100 ohm -> IRLZ44N gate (10k gate-to-GND pull-down). Wiring and
+// bench test: ../PUMP_AND_CLIFF.md and ../pump_test.
+//
+// Of BEHAVIOURS.md's five firing interlocks, the ones that live HERE are:
+//   - starts DISARMED; '#' arms it            (a software disable)
+//   - pulse clamped to 50..300 ms             (a squirt, not a jet)
+//   - 2 s cooldown between shots
+//   - the hardware disable jumper            (interlock 5 -- not in code at all)
+// Person detected / STRIKE state / range band / command <1 s old arrive with
+// the Pi link; this is the keyboard-driven version for testing.
+static const int  PUMP_PIN = 11;
+static const int  PUMP_MAX_MS = 300;
+static const unsigned long PUMP_COOLDOWN_MS = 2000;
+static bool       pumpArmed = false;
+static unsigned long lastFire = 0;
+
+static void fire(int ms) {
+  if (!pumpArmed) { Serial.println("  pump DISARMED -- press # to arm"); return; }
+  if (millis() - lastFire < PUMP_COOLDOWN_MS) { Serial.println("  pump cooling down"); return; }
+  ms = constrain(ms, 50, PUMP_MAX_MS);
+  digitalWrite(PUMP_PIN, HIGH);
+  delay(ms);                 // blocking on purpose: nothing can leave the pump on
+  digitalWrite(PUMP_PIN, LOW);
+  lastFire = millis();
+  Serial.printf("  fired %d ms\n", ms);
+}
+
+// ============================================================ CLIFF REFLEX
+//
+// Level 1 of the arbitration stack: it outranks every command, including a
+// walk the user just typed. Four TCRT5000 on ADC1. Desk under a sensor reads
+// LOW; an edge reads HIGH. Wiring and calibration: ../PUMP_AND_CLIFF.md and
+// ../cliff_test.
+//
+//                                       front-left front-right back-left back-right
+static const int   CLIFF_PIN[4]       = {3,         5,          7,        9};
+static const char *CLIFF_NAME[4]      = {"front-left", "front-right", "back-left", "back-right"};
+// Paste cliff_test's 'p' line over this. Any 0 = not calibrated, and the
+// reflex stays OFF -- an uncalibrated threshold either never triggers or
+// always triggers, and both are worse than knowing it is off.
+static const int   CLIFF_THRESH[4] = {0, 0, 0, 0};
+
+static int  edgeHits[4];                 // consecutive over-threshold reads
+static bool retreating = false;
+static unsigned long retreatUntil = 0;
+
+static bool cliffReady() {
+  for (int i = 0; i < 4; i++) if (CLIFF_THRESH[i] <= 0) return false;
+  return true;
+}
+
+// Bit per sensor seeing an edge: 1 FL, 2 FR, 4 BL, 8 BR. Two reads in a row
+// (40 ms) before it counts, so one noisy sample during a servo move does not
+// stop the robot -- and 40 ms of walking is well under a millimetre.
+static int cliffEdges() {
+  int mask = 0;
+  for (int i = 0; i < 4; i++) {
+    int v = analogRead(CLIFF_PIN[i]);
+    edgeHits[i] = (v > CLIFF_THRESH[i]) ? edgeHits[i] + 1 : 0;
+    if (edgeHits[i] >= 2) mask |= (1 << i);
+  }
+  return mask;
+}
+
+static void showCliff() {
+  Serial.printf("  cliff reflex %s\n", cliffReady() ? "ON" : "OFF (not calibrated -- run cliff_test)");
+  for (int i = 0; i < 4; i++) {
+    int v = analogRead(CLIFF_PIN[i]);
+    Serial.printf("    %-12s %4d   threshold %4d   %s\n", CLIFF_NAME[i], v, CLIFF_THRESH[i],
+                  CLIFF_THRESH[i] <= 0 ? "-" : (v > CLIFF_THRESH[i] ? "EDGE" : "desk"));
+  }
+}
+
+static void reportEdges(int mask) {
+  Serial.print("  CLIFF:");
+  for (int i = 0; i < 4; i++) if (mask & (1 << i)) Serial.printf(" %s", CLIFF_NAME[i]);
+  Serial.println();
+}
+
+// An edge was seen. Back away from it for one gait cycle if the other end is
+// safe; if edges are at both ends -- or only along one side -- just stop.
+static void reactToEdge(int mask) {
+  reportEdges(mask);
+  bool front = mask & 0x3, back = mask & 0xC;
+  turnMode = 0;
+  strafeMode = 0;
+  if (front && !back) {
+    walkDir = -1; retreating = true; retreatUntil = millis() + cycleMs;
+    Serial.println("  backing away.");
+  } else if (back && !front) {
+    walkDir = +1; retreating = true; retreatUntil = millis() + cycleMs;
+    Serial.println("  stepping away forward.");
+  } else {
+    walking = false; retreating = false;
+    stand();
+    Serial.println("  edge on more than one side -- stopping. Move it by hand.");
+  }
+}
+
+// Called every gait step. Returns false if the robot must not take this step.
+static bool cliffGuard() {
+  if (!cliffReady()) return true;
+  int mask = cliffEdges();
+  if (retreating) {
+    // While backing off, the sensors that tripped are still over the edge.
+    // Only the end we are now moving toward matters.
+    int ahead = (walkDir > 0) ? 0x3 : 0xC;
+    if (mask & ahead) {
+      reportEdges(mask);
+      walking = false; retreating = false; stand();
+      Serial.println("  edge behind too -- stopping. Move it by hand.");
+      return false;
+    }
+    if (millis() >= retreatUntil) {
+      walking = false; retreating = false; stand();
+      Serial.println("  clear of the edge. Standing.");
+      return false;
+    }
+    return true;
+  }
+  if (mask) { reactToEdge(mask); return walking; }
+  return true;
+}
+
 void setup() {
+  // Pump OFF before anything else. The 10k gate pull-down covers power-on up
+  // to this line; this covers everything after it.
+  digitalWrite(PUMP_PIN, LOW);
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW);
+  analogReadResolution(12);              // cliff sensors read 0..4095
+
   for (int i = 0; i < 8; i++) {          // LEDC survives a reflash
 #if ESP_ARDUINO_VERSION_MAJOR >= 3
     ledcDetach(PINS[i]);
@@ -410,7 +550,8 @@ void setup() {
   while (!Serial && millis() - t0 < 3000) {}
 
   Serial.println("\n  crawl gait -- all eight LIMP until you press s");
-  Serial.println("  Fill in STAND[] before expecting this to work.");
+  Serial.println("  pump DISARMED (# to arm).");
+  Serial.printf("  cliff reflex %s\n", cliffReady() ? "ON" : "OFF -- not calibrated, run cliff_test");
   menu();
 }
 
@@ -419,18 +560,22 @@ void loop() {
     char c = Serial.read();
     if (c == 's' || c == 'S') { walking = false; stand(); }
     if (c == 'w' || c == 'W') { if (!attached) stand(); walkDir = +1; turnMode = 0; strafeMode = 0;
-                                walking = true; Serial.println("  walking forward."); }
+                                walking = true; retreating = false; Serial.println("  walking forward."); }
     if (c == 'r' || c == 'R') { if (!attached) stand(); walkDir = -1; turnMode = 0; strafeMode = 0;
-                                walking = true; Serial.println("  walking backward."); }
+                                walking = true; retreating = false; Serial.println("  walking backward."); }
     if (c == '<')             { if (!attached) stand(); walkDir = +1; turnMode = -1; strafeMode = 0;
-                                walking = true; Serial.println("  turning left."); }
+                                walking = true; retreating = false; Serial.println("  turning left."); }
     if (c == '>')             { if (!attached) stand(); walkDir = +1; turnMode = +1; strafeMode = 0;
-                                walking = true; Serial.println("  turning right."); }
+                                walking = true; retreating = false; Serial.println("  turning right."); }
     if (c == ',')             { if (!attached) stand(); walkDir = +1; turnMode = 0; strafeMode = -1;
-                                walking = true; Serial.println("  sliding left."); }
+                                walking = true; retreating = false; Serial.println("  sliding left."); }
     if (c == '.')             { if (!attached) stand(); walkDir = +1; turnMode = 0; strafeMode = +1;
-                                walking = true; Serial.println("  sliding right."); }
-    if (c == 'x' || c == 'X') { walking = false; limp(); }
+                                walking = true; retreating = false; Serial.println("  sliding right."); }
+    if (c == 'x' || c == 'X') { walking = false; retreating = false; limp(); }
+    if (c == '#')             { pumpArmed = !pumpArmed;
+                                Serial.println(pumpArmed ? "  pump ARMED" : "  pump disarmed"); }
+    if (c == '!')             { fire(200); }
+    if (c == 'l' || c == 'L') { showCliff(); }
     if (c == 'f' || c == 'F') { walking = false; forwardCheck(); }
     if (c >= '1' && c <= '4') { selHip = c - '1';
                                 Serial.printf("  posing %s   (stand %d)\n", NAME[selHip], STAND[selHip]); }
@@ -483,6 +628,7 @@ void loop() {
   }
 
   if (!walking) return;
+  if (!cliffGuard()) return;             // level 1: outranks every command
 
   // Backward is the forward cycle run in reverse. That also reverses the
   // swing order, which is exactly right: walking backward, the old front legs

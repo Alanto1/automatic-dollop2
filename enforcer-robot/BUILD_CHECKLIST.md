@@ -278,7 +278,13 @@ Do this **before** designing anything around the reservoir.
       **18–30 cm** firing band. Half the datasheet; the needle is the trade
 - [ ] Wire the pump via **MOSFET + flyback diode**, with a **~22Ω series
       resistor** — it is a 3 V motor on a 5.1 V rail and all 8 LEDC channels
-      are on servos, so PWM is not available. Measure the real current first
+      are on servos, so PWM is not available. **Firmware and step-by-step
+      ready:** `firmware/PUMP_AND_CLIFF.md` Part 1, bench sketch `pump_test`
+      (its `m` run is how the resistor gets sized). Disable jumper = interlock 5
+- [ ] **Cliff sensors** wired on the perfboard while the body is open, then
+      calibrated on the real desk with `cliff_test` and pasted into `walk.ino`.
+      Step-by-step: `firmware/PUMP_AND_CLIFF.md` Part 2. Reflex is written and
+      stays OFF until calibrated
 - [ ] Fire it dry, then wet
 - [ ] ⚠️ **Range calibration.** Fire a 200ms pulse at 30/40/50/60cm onto paper
       laid on the desk; mark each landing point. Theory says a 20–56cm band.
