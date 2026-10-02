@@ -55,11 +55,11 @@ and a scale.
 | 0 | 20 mm calibration cube | no | 20 min |
 | 0b | `boss_coupon` at **2 walls**, then again at **4** | no | 2 x 12 min |
 | 1 | **one** joint — `R1-v117` | no | 11 min |
-| 2 | remaining 7 joints + 4× `cliff_bracket` + `nozzle_mount` | no | ≈ 1.9 h |
+| 2 | remaining 7 joints + 4× `cliff_bracket` | no | ≈ 1.9 h |
 | 3 | `Internal-Frame-v121` + `Bottom-Cover-v121` | no | ≈ 1.6 h |
 | 4 | `Top-Cover-Enclosed-v117` | **yes** | ≈ 50 min |
 | — | *assemble, get it walking, weigh it, measure it* | | |
-| 5 | `payload_deck` + `camera_mount` + 2× `reservoir_cradle` | no | ≈ 1.1 h |
+| 5 | `payload_frame` — one part | no | ≈ 2 h |
 
 **Plate 0b decides the wall count for everything else.** The joints' screw
 bosses have a measured 1.50-1.59 mm of wall around a 1.72 mm bore, which is
@@ -112,50 +112,62 @@ below.
 
 ## Batch 2 — the Enforcer payload (plate 5, print AFTER measuring)
 
-⚠️ **Do not print these tonight.** Three of the six have dimensions that are
-currently estimates, marked as such in `make_stl.py`, and the measurements
-come off the assembled Sesame and the actual bottle:
+**One part: `payload_frame`.** It replaced five (`payload_deck`, two
+`reservoir_cradle`, `camera_mount`, `nozzle_mount`), which had four faults
+between them:
+
+1. the deck carried Pi Zero holes, and a 3A+'s would have cut into the strap
+   slots;
+2. a flat 3A+ covers 68% of a 90 × 60 deck, leaving 25 mm for a 36 mm bottle;
+3. not one bolt-on part's hole spacing (22, 16, 40 mm) landed on the deck's
+   12 mm grid, so none of them could actually have been bolted on;
+4. the cradles laid the bottle down, where 30 ml is 18 mm deep and the
+   23.5 mm pump sucks air. Standing, it is 29 mm.
+
+What it is now, front to back: a wall leaning back 20° carrying the **camera**
+(back face, lens through the window) and the **nozzle** tube (hole below the
+window) — one wall, so they cannot aim apart; the **bottle standing up** in a
+socket on the centreline; and the **Pi standing up** on a wall at the back,
+component side facing outward so a spill while refilling runs down the wall
+rather than over the board. Standoffs for both the 3A+ and the Zero.
+
+Placement is for balance: the water and pump (58 g, the heaviest thing up
+there) sit low and central, and the Pi wall is set in from the back edge until
+the payload's centre of mass was within ~8 mm of the middle — Sesame's battery
+already sits at the back.
+
+⚠️ **Do not print it yet.** Its size comes from estimates:
 
 | Constant | Now | Where the real number comes from |
 |---|---|---|
-| `DECK_L` × `DECK_W` | 90 × 60 mm | measure the printed top cover |
-| `BOTTLE_D` | 36 mm | measure a UMETASS 60 ml bottle |
+| `DECK_L` × `DECK_W` | 90 × 60 mm | measure the top cover's flat area |
+| `BOTTLE_D` | 36 mm | measure your bottle's **outside** diameter |
+| `CAM_HOLES` | 21 × 12.5 mm | measure your camera's 4 mounting holes, centre to centre |
 | `SESAME_MASS_G` | 380 g | weigh the assembled robot |
 
 Set them, re-run `python3 make_stl.py --test`, *then* print:
 
-| Part | Qty | g | est. | Waiting on |
+| Part | Qty | g | est. | Settings |
 |---|---|---|---|---|
-| `payload_deck` | 1 | 14 | 37 min | `DECK_L`/`DECK_W` |
-| `reservoir_cradle` | 2 | 6 | 16 min | `BOTTLE_D` |
-| `cliff_bracket` | 4 | 6 | 16 min | nothing — print with batch 1 if you like |
-| `nozzle_mount` | 1 | 3 | 7 min | nothing |
-| `boss_coupon` | 2 | 5 | 12 min | nothing — print this FIRST, see plate 0b |
-| `camera_mount` | 1 | 4 | 10 min | see below |
-| | **9** | **33 g** | **≈ 1.4 h** | |
+| `payload_frame` | 1 | ~33 | ≈ 2 h | deck down on the bed, **no supports**, 4 walls, 25% infill |
+| `cliff_bracket` | 4 | 6 | 16 min | nothing to wait for |
+| `boss_coupon` | 2 | 5 | 12 min | done — see plate 0b |
 
-`payload_deck` is the one part everything else bolts to, and it is the one
-whose dimensions are guessed. Printing it first is how you print it twice.
+**Fixings:** 4 × **M2.5 × 8** screws for the Pi (they thread into the
+standoffs), 4 × **M2** screws + nuts for the camera, zip ties through the four
+deck slots to hold it to the top cover. The bottle is a snug push fit; a pad
+of double-sided foam tape under it makes it permanent.
 
-`cliff_bracket` and `nozzle_mount` depend on nothing — add them to batch 1's
-plate if there is room.
+### The trade-off of one part
 
-### The camera mount has an open question against it
-
-`camera_mount` fixes the camera at the same +20° as the nozzle, and that
-pairing is deliberate: the robot yaws to centre the target and the vertical
-angle is mechanical, so if the two disagree it aims high or low by exactly
-the difference.
-
-But the perception work measured that **a phone held in the hand leaves the
-frame** at the real lens angle, while a phone lying on the desk does not —
-the opposite of what the robot needs. See
-[`../../perception/README.md`](../../perception/README.md). The fix is
-framing, and the framing is this bracket.
-
-Print it, mount it, and **re-record a few minutes of footage through the real
-camera before committing to it**. It is a 10-minute, 4 g part; finding out
-after the Week 4 shell restyle is the expensive version.
+The camera angle is printed in. The perception work found that **a phone held
+in the hand leaves the frame** at the real lens angle (see
+[`../../perception/README.md`](../../perception/README.md)), and the fix for
+that is framing — i.e. this angle. If footage through the real camera says
++20° is wrong, the change is one constant, `NOZZLE_TILT`, and a ~2 h reprint
+of the whole frame, where it used to be a 10-minute bracket. Five loose parts
+that could not bolt together was not a better deal, but re-record a few
+minutes through the real camera before committing to the print.
 
 ## Not printing: `phone_tray`
 

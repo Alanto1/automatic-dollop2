@@ -14,10 +14,7 @@ never have to re-print an upstream component when your own design changes.
 
 | Part | Qty | What it does |
 |---|---|---|
-| `payload_deck` | 1 | Straps to Sesame's top cover. 5×3 M3 grid at 12mm pitch, plus the Pi Zero 2 W bolt pattern |
-| `reservoir_cradle` | 2 | Bottle drops in from above, zip-ties down |
-| `nozzle_mount` | 1 | Holds the tubing at +20° above horizontal |
-| `camera_mount` | 1 | Holds the Pi camera at **the same** +20° |
+| `payload_frame` | 1 | **The whole payload in one print.** Deck that zip-ties to Sesame's top cover; the Pi standing on its own wall at the back (standoffs for the 3A+ *and* the Zero); the bottle standing upright in a socket fused to that wall; the camera and the nozzle cut through one front wall at +20°, so they cannot aim apart |
 | `cliff_bracket` | 4 | Holds a TCRT5000 facing down past the deck edge |
 | `phone_tray` | 1 | Warden mode, with a lip at each end |
 

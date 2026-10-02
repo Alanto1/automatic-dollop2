@@ -85,10 +85,9 @@ What it costs:
 - **+12 g.** Payload is now 139 g. Per `make_stl.py --test`, 30 ml + voice
   still fits (1.20 of 1.21 kg-cm — marginal) and **50 ml no longer does**.
   The load test decides it for real; do it at 139 g, not 127.
-- **The payload deck must be redrawn.** The 3A+'s 58 × 49 mm hole pattern
-  hits the strap slots, and the board covers most of a 90 × 60 deck. Redraw
-  it with the measured `DECK_L` / `DECK_W`, likely with the board stacked on
-  standoffs over the reservoir.
+- **The payload deck was redrawn for it** — now `payload_frame`, one print,
+  with the Pi standing on its own wall at the back. See `cad/print/README.md`
+  "Batch 2" for why the old five-part deck could not have worked.
 - **~1 W more** from the 7.4 V pack — roughly 10–15% less runtime. Check the
   Pi's buck is rated at least 2 A.
 

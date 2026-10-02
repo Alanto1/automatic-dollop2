@@ -57,13 +57,24 @@ PIZERO_HOLES = (58.0, 23.0)  # Raspberry Pi Zero 2 W mounting pattern
 # the RPIC-ZSAD adapter, in stock in Germany. It costs 12g and a footprint
 # twice as wide (65 x 56.5mm, holes 58 x 49mm).
 #
-# ⚠️ The payload deck below is still drawn for the Zero -- its hole pattern
-# would collide with the strap slots, and the 3A+ covers most of the deck.
-# It gets redrawn once DECK_L / DECK_W are measured, not twice.
-#
-# If a Zero 2 W turns up later, set these back: nothing else changes.
+# The payload frame carries the brain STANDING UP on its own wall, with
+# standoffs for both the 3A+ pattern and the Zero's, so a Zero swaps back in
+# without reprinting. Set these back if it does; nothing else changes.
 BRAIN = "Pi 3 Model A+"
 BRAIN_G = 23.0              # Pi Zero 2 W: 11.0
+PI3A_HOLES = (58.0, 49.0)   # Raspberry Pi 3 Model A+ (and 3B/4) pattern
+PI3A_BOARD = (65.0, 56.5)
+PI_PILOT = 2.2              # M2.5 screw threading into PLA
+STANDOFF_D = 6.5            # boss_coupon: bosses >= 6mm held at 4 walls,
+                            # 4.68mm (Sesame's) only just did
+STANDOFF_H = 6.0            # clears header pins and microSD underneath
+PI_LIFT = 2.0               # board's lower edge above the deck top
+
+# The bottle STANDS UP in a socket. Lying down -- the old cradles -- 30ml is
+# 18mm deep and the 23.5mm pump sucks air; standing, it is 29mm.
+SOCKET_H = 24.0             # socket wall height
+SOCKET_WALL = 2.4
+SOCKET_CLEAR = 0.4          # diametral clearance round the bottle
 CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 
 # --- the screw bosses that keep splitting --------------------------------
@@ -573,7 +584,7 @@ def payload_cases():
     cannot: a phone is ~half of Sesame's own mass, and the torque needed at
     any usable stance is past what MG90S can hold. See BEHAVIOURS.md.
     """
-    deck_pi_cam = 30.0 + BRAIN_G + 5.0  # printed parts, brain, camera
+    deck_pi_cam = 33.0 + BRAIN_G + 5.0  # payload_frame, brain, camera
     rig = 20.0                          # pump + tubing
     voice = AMP_G + MIC_G + SPEAKER_G   # amp + mic + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
@@ -591,8 +602,7 @@ def payload_cases():
 
 
 def grid_holes(cols=GRID_COLS, rows=GRID_ROWS, pitch=GRID_PITCH, d=M3):
-    """Mounting grid. Every add-on lines up to this, so the reservoir can move
-    fore/aft after you weigh the robot and find the balance point."""
+    """A rectangular grid of holes. Only phone_tray uses it now."""
     out = []
     for i in range(cols):
         for j in range(rows):
@@ -602,55 +612,194 @@ def grid_holes(cols=GRID_COLS, rows=GRID_ROWS, pitch=GRID_PITCH, d=M3):
     return out
 
 
-def strap_slots():
-    """Zip-tie slots. Sesame's own build uses zip ties and underside channels,
-    so strapping the deck on matches how the robot is already assembled --
-    and it means no screws into upstream parts."""
-    return [
-        rounded_rect(sx * 30.0, sy * 26.0, 14.0, 3.5, 1.7, cw=True)
-        for sx in (-1, 1)
-        for sy in (-1, 1)
-    ]
+def remap(tris, f, flip=False):
+    """Move every vertex through f. flip=True reverses winding, which a mirror
+    (an odd swap of axes) needs to keep the faces pointing outward."""
+    if flip:
+        return [(f(c), f(b), f(a)) for a, b, c in tris]
+    return [(f(a), f(b), f(c)) for a, b, c in tris]
 
 
-def pi_zero_holes():
-    """The brain bolts straight to the deck -- no separate carrier part."""
-    px, py = PIZERO_HOLES[0] / 2, PIZERO_HOLES[1] / 2
-    return [circle(sx * px, sy * py, M25) for sx in (-1, 1) for sy in (-1, 1)]
-
-
-def payload_deck():
-    """The one part that touches Sesame. Everything else bolts to this."""
-    return extrude(
-        rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
-        grid_holes() + strap_slots() + pi_zero_holes(),
-        0,
-        PLATE_T,
-    )
-
-
-def _cradle_profile(w, h, bottle_d, seg=20):
-    """Rectangle with a semicircular bite out of the top edge, CCW.
-
-    Built as an outline rather than as a hole: the bottle drops in from
-    above, so the notch has to be open at the top.
-    """
-    r = bottle_d / 2.0
-    cy = h / 2.0
-    pts = [(-w / 2, -h / 2), (w / 2, -h / 2), (w / 2, h / 2)]
-    # arc from the right lip down through the notch and up to the left lip
-    for i in range(seg + 1):
-        a = 2 * math.pi * (i / seg) * 0.5  # 0 .. pi
-        pts.append((r * math.cos(a), cy - r * math.sin(a)))
-    pts.append((-w / 2, h / 2))
+def _triangle(p0, p1, p2):
+    """A triangle as a CCW outline, whichever order the points come in."""
+    pts = [p0, p1, p2]
+    if signed_area(pts) < 0:
+        pts.reverse()
     return pts
 
 
-def reservoir_cradle():
-    """Print 2. Bottle drops in and gets zip-tied down through the slots."""
-    prof = _cradle_profile(50.0, 30.0, BOTTLE_D)
-    holes = [circle(sx * 20.0, -8.0, M3) for sx in (-1, 1)]
-    return extrude(prof, holes, 0, PLATE_T)
+def _c_ring(cx, cy, r_in, r_out, gap, seg=48):
+    """An open ring, slit at the +x side, as one simple outline (CCW)."""
+    a_out = math.asin(gap / 2 / r_out)
+    a_in = math.asin(gap / 2 / r_in)
+    pts = []
+    for i in range(seg + 1):
+        a = a_out + (2 * math.pi - 2 * a_out) * i / seg
+        pts.append((cx + r_out * math.cos(a), cy + r_out * math.sin(a)))
+    for i in range(seg + 1):
+        a = (2 * math.pi - a_in) - (2 * math.pi - 2 * a_in) * i / seg
+        pts.append((cx + r_in * math.cos(a), cy + r_in * math.sin(a)))
+    return pts
+
+
+# --------------------------------------------------------------------------
+# The payload frame -- ONE print
+# --------------------------------------------------------------------------
+#
+# Replaces payload_deck + 2 reservoir_cradle + camera_mount + nozzle_mount.
+# Those five parts were meant to bolt together on a 12mm grid, and none of
+# their hole spacings (22, 16, 40mm) landed on it; the deck had Pi Zero holes
+# that a 3A+ would have cut into the strap slots with; a flat 3A+ covered 68%
+# of the deck, leaving 25mm for a 36mm bottle; and the cradles laid the bottle
+# down, where 30ml is too shallow to cover the pump.
+#
+# So: one part. Nothing to line up, nothing to work loose on a walking robot,
+# and the camera and nozzle are cut through the same wall, so they cannot
+# point different ways -- the thing the old tilt test could only hope for.
+#
+#   x = fore/aft, +x is the FRONT (the R1/L1 end). y = across. z = up.
+#
+#        side view                           top view
+#
+#   Pi   |                                 back            front
+#  board |  socket          camera           +--+------------+----+
+#   ==== |  +-----+         / nozzle         |  |   ( bottle  ) |  /|
+#   ==== |  |     |        /                 |  |   (  socket ) | / |
+#   ==== |__|_____|_______/__                +--+------------+----+
+#        deck plate                         Pi wall          front wall
+#
+# Weight sits where it should: the water and pump -- 58g, the heaviest thing
+# on the deck -- low and on the centreline; the Pi standing at the back with
+# the wall between it and the water, so a spill while refilling runs down the
+# wall, not over the board.
+
+def _pi_wall_x():
+    """Back face of the Pi wall.
+
+    Placed for balance, not packing. The Pi (23g) hangs off the back of this
+    wall, and Sesame's battery is already at the rear of its frame. At 10mm
+    in from the back edge the payload's centre of mass sat 15mm behind
+    centre; at 18mm it is ~8mm, the board overhangs the back by ~5mm instead
+    of 13, and the camera still has 17mm of room behind the front wall."""
+    return -DECK_L / 2 + 18.0
+
+
+def _pi_hole_rows():
+    """Heights of the standoff rows on the Pi wall (board's lower edge at
+    PLATE_T + PI_LIFT). The bottom row is shared by the 3A+ and the Zero; the
+    3A+ adds the top row, the Zero a middle one."""
+    z0 = PLATE_T + PI_LIFT + 3.5
+    return z0, z0 + PIZERO_HOLES[1], z0 + PI3A_HOLES[1]
+
+
+def _pi_wall_size():
+    return PI3A_BOARD[0] + 1.0, _pi_hole_rows()[2] + STANDOFF_D / 2 + 2.0
+
+
+def _pi_wall_profile():
+    """(u across, v up). Pilot holes at every standoff, a window to save
+    weight and let air past the board."""
+    w, h = _pi_wall_size()
+    zb, zm, zt = _pi_hole_rows()
+    hx = PI3A_HOLES[0] / 2
+    holes = [circle(sx * hx, v, PI_PILOT) for sx in (-1, 1) for v in (zb, zm, zt)]
+    win_w = PI3A_HOLES[0] - STANDOFF_D - 6.0
+    holes.append(rounded_rect(0.0, (zb + zt) / 2, win_w, zt - zb - STANDOFF_D - 6.0,
+                              4.0, cw=True))
+    return rounded_rect(0.0, h / 2, w, h, 3.0), holes
+
+
+def _socket_centre():
+    """The bottle socket fuses into the front of the Pi wall: the ring
+    braces the wall, and the wall closes the ring's back."""
+    r_out = BOTTLE_D / 2 + SOCKET_CLEAR / 2 + SOCKET_WALL
+    return _pi_wall_x() + PLATE_T + r_out - 1.0, 0.0
+
+
+def _front_wall_size():
+    return 40.0, 40.0
+
+
+def _front_wall_profile():
+    """(u across, v up the wall). Camera on the back face with the lens
+    through the window; the tube through the hole below it. Same wall, so
+    the same aim, by construction."""
+    w, h = _front_wall_size()
+    cam_v, noz_v = 27.0, 9.0
+    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
+    holes = [circle(sx * cx, cam_v + sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
+    holes.append(rounded_rect(0.0, cam_v, 10.0, 10.0, 1.5, cw=True))
+    holes.append(circle(0.0, noz_v, TUBE_D))
+    return rounded_rect(0.0, h / 2, w, h, 3.0), holes
+
+
+def _deck_profile():
+    """Outline plus every hole: four zip-tie slots, and a cable slot behind
+    the Pi wall for the pump wires, the Pi's power and the ESP32 link."""
+    xw = _pi_wall_x()
+    slots = [rounded_rect(sx, sy * 26.0, 14.0, 3.5, 1.7, cw=True)
+             for sx in (0.0, 22.0) for sy in (-1, 1)]   # clear of every gusset
+    cable = rounded_rect(xw - 3.25, 0.0, 4.0, 24.0, 1.9, cw=True)
+    return rounded_rect(0, 0, DECK_L, DECK_W, 5.0), slots + [cable]
+
+
+def payload_frame():
+    """Deck, bottle socket, Pi wall and camera/nozzle wall, in one print.
+
+    Print it deck-down, no supports: the Pi wall is vertical and the front
+    wall leans back 20 degrees, both well inside what prints unsupported.
+    4 walls, 25% infill, like the rest of our parts.
+    """
+    T = PLATE_T
+    outline, holes = _deck_profile()
+    tris = extrude(outline, holes, 0, T)
+
+    # --- Pi wall: profile (u, v) extruded through w, set at x = xw + w ----
+    xw = _pi_wall_x()
+    to_wall = lambda q: (xw + q[2], q[0], q[1])          # cyclic: no flip
+    w_out, w_holes = _pi_wall_profile()
+    tris += remap(extrude(w_out, w_holes, 0, T), to_wall)
+
+    # standoffs on the BACK face; the board faces outward, away from the water
+    hx = PI3A_HOLES[0] / 2
+    for v in _pi_hole_rows():
+        for sx in (-1, 1):
+            so = extrude(circle(sx * hx, v, STANDOFF_D, cw=False),
+                         [circle(sx * hx, v, PI_PILOT)], -STANDOFF_H, 0.5)
+            tris += remap(so, to_wall)
+
+    # gussets at the wall's ends, on the deck, in front of the wall
+    for sy in (-1, 1):
+        g = extrude(_triangle((-0.5, T - 0.5), (14.0, T - 0.5), (-0.5, T + 26.0)),
+                    [], 0, 3.0)
+        y0 = sy * (DECK_W / 2 - 3.0) - (3.0 if sy > 0 else 0.0)
+        tris += remap(g, lambda q, y0=y0: (xw + T + q[0], y0 + q[2], q[1]), flip=True)
+
+    # --- bottle socket ----------------------------------------------------
+    cx, cy = _socket_centre()
+    r_in = BOTTLE_D / 2 + SOCKET_CLEAR / 2
+    tris += extrude(_c_ring(cx, cy, r_in, r_in + SOCKET_WALL, 3.0), [],
+                    T - 0.6, T + SOCKET_H)
+
+    # --- front wall, leaning back NOZZLE_TILT -----------------------------
+    t = math.radians(NOZZLE_TILT)
+    nx, nz = math.cos(t), math.sin(t)                 # wall normal: forward, up
+    dx, dz = -math.sin(t), math.cos(t)                # up the wall
+    xf, zf = DECK_L / 2 - 2.0, T - 0.3                # front-bottom edge
+    # (u, v, w) -> origin + u*y + v*up-the-wall + w*normal, w in [-T, 0]
+    to_front = lambda q: (xf + q[1] * dx + q[2] * nx, q[0], zf + q[1] * dz + q[2] * nz)
+    f_out, f_holes = _front_wall_profile()
+    tris += remap(extrude(f_out, f_holes, -T, 0.0), to_front)
+
+    # its gussets, behind, clear of a camera board up to 32mm wide
+    fw, _ = _front_wall_size()
+    bx, bz = xf - T * nx + 0.8, zf - T * nz          # back face, at the deck
+    top = (bx + 22.0 * dx, bz + 22.0 * dz)
+    for sy in (-1, 1):
+        g = extrude(_triangle((bx, bz), (bx - 14.0, T - 0.5), top), [], 0, 3.0)
+        y0 = sy * (fw / 2) - (3.0 if sy > 0 else 0.0)
+        tris += remap(g, lambda q, y0=y0: (q[0], y0 + q[2], q[1]), flip=True)
+    return tris
 
 
 def _wall_normal(tilt: float):
@@ -678,35 +827,6 @@ def _l_bracket(base_w, base_d, wall_w, wall_h, base_holes, wall_holes, tilt=0.0)
         move=(0.0, -base_d / 2 + 1.5, wall_h / 2),
     )
     return tris + wall
-
-
-def nozzle_mount():
-    """Holds the tubing at NOZZLE_TILT above horizontal, at the deck's front
-    edge. Aimed at a seated person's torso -- never at a face."""
-    return _l_bracket(
-        24.0, 18.0, 24.0, 22.0,
-        [circle(sx * 8.0, -4.0, M3) for sx in (-1, 1)],
-        [circle(0.0, 2.0, TUBE_D)],
-        tilt=NOZZLE_TILT,
-    )
-
-
-def camera_mount():
-    """Carries the Pi camera at the same tilt as the nozzle.
-
-    Both looking the same way is the whole trick: the robot turns until the
-    target is centred in frame, and the nozzle is then pointed at it. Get
-    these two angles out of step and the robot aims high or low by exactly
-    the difference.
-    """
-    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
-    return _l_bracket(
-        30.0, 18.0, 30.0, 26.0,
-        [circle(sx * 11.0, -4.0, M3) for sx in (-1, 1)],
-        [circle(sx * cx, sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
-        + [rounded_rect(0.0, 0.0, 10.0, 10.0, 1.5, cw=True)],
-        tilt=NOZZLE_TILT,
-    )
 
 
 def cliff_bracket():
@@ -771,10 +891,7 @@ def phone_tray():
 
 
 PARTS = {
-    "payload_deck": (payload_deck, 1),
-    "reservoir_cradle": (reservoir_cradle, 2),
-    "nozzle_mount": (nozzle_mount, 1),
-    "camera_mount": (camera_mount, 1),
+    "payload_frame": (payload_frame, 1),
     "cliff_bracket": (cliff_bracket, 4),
     "boss_coupon": (boss_coupon, 1),
     "phone_tray": (phone_tray, 1),
@@ -818,26 +935,9 @@ def check_profile(outer, holes, label):
 
 def profile_checks():
     out = []
-    out += check_profile(
-        rounded_rect(0, 0, DECK_L, DECK_W, 5.0),
-        grid_holes() + strap_slots() + pi_zero_holes(),
-        "payload_deck",
-    )
-    out += check_profile(
-        _cradle_profile(50.0, 30.0, BOTTLE_D),
-        [circle(sx * 20.0, -8.0, M3) for sx in (-1, 1)],
-        "reservoir_cradle",
-    )
-    out += check_profile(
-        rounded_rect(0, 0, 24.0, 22.0, 3.0), [circle(0.0, 2.0, TUBE_D)], "nozzle wall"
-    )
-    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
-    out += check_profile(
-        rounded_rect(0, 0, 30.0, 26.0, 3.0),
-        [circle(sx * cx, sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
-        + [rounded_rect(0.0, 0.0, 10.0, 10.0, 1.5, cw=True)],
-        "camera wall",
-    )
+    out += check_profile(*_deck_profile(), "payload_frame deck")
+    out += check_profile(*_pi_wall_profile(), "payload_frame Pi wall")
+    out += check_profile(*_front_wall_profile(), "payload_frame front wall")
     out += check_profile(
         rounded_rect(0, 0, 18.0, 16.0, 3.0),
         [rounded_rect(0.0, 1.0, TCRT_W, TCRT_H, 1.0, cw=True)],
@@ -902,7 +1002,7 @@ def self_test():
     water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm fill, 1g/ml
     payload = {
         "water": water_g,
-        "printed parts": 30.0,
+        "payload_frame": 33.0,          # 36 cm3, thin walls print near-solid
         BRAIN: BRAIN_G,
         "camera + ribbon": 5.0,
         "pump + tubing": 20.0,
