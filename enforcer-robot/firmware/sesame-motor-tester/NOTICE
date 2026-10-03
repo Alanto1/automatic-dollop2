@@ -1,0 +1,13 @@
+sesame-motor-tester-UPSTREAM.ino and LICENSE-sesame are from the Sesame robot
+project, unmodified:
+
+    https://github.com/dorianborian/sesame-robot
+    firmware/debugging-firmware/sesame-motor-tester.ino
+    Licensed under the Apache License, Version 2.0
+
+Vendored here because it is needed during assembly and downloading a single
+file out of another repository, at a workbench, is more friction than it is
+worth. Re-fetch from upstream rather than editing it here.
+
+motor_test.ino is this project's own, and reimplements the same interface on
+LEDC so the ESP32Servo library is not required.

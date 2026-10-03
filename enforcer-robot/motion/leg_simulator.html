@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Enforcer Leg Motion</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:#12100e; --surface:#1b1815; --surface-2:#241f1a; --border:#352d25;
+    --text:#f1ece6; --text-muted:#a2958a; --accent:#ff8c32;
+    --hard:#f2554e; --soft:#4fd8c4; --grid:#2b241d;
+    --font-mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --font-sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { color-scheme: light;
+      --bg:#f4f1ed; --surface:#fff; --surface-2:#ebe6e0; --border:#d8d0c7;
+      --text:#1c1814; --text-muted:#6b6058; --accent:#c25c0a;
+      --hard:#c43a32; --soft:#0e8c7a; --grid:#ded6cc; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark;
+    --bg:#12100e; --surface:#1b1815; --surface-2:#241f1a; --border:#352d25;
+    --text:#f1ece6; --text-muted:#a2958a; --accent:#ff8c32;
+    --hard:#f2554e; --soft:#4fd8c4; --grid:#2b241d; }
+  :root[data-theme="light"] { color-scheme: light;
+    --bg:#f4f1ed; --surface:#fff; --surface-2:#ebe6e0; --border:#d8d0c7;
+    --text:#1c1814; --text-muted:#6b6058; --accent:#c25c0a;
+    --hard:#c43a32; --soft:#0e8c7a; --grid:#ded6cc; }
+
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 16px 48px;background:var(--bg);color:var(--text);
+       font-family:var(--font-sans);line-height:1.5}
+  .wrap{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h1{font-size:1.35rem;margin:0}
+  .sub{color:var(--text-muted);font-size:.9rem;margin:2px 0 20px}
+  .sub code{font-family:var(--font-mono);font-size:.85em}
+  #theme{margin-left:auto;background:var(--surface-2);color:var(--text-muted);
+    border:1px solid var(--border);border-radius:999px;padding:5px 12px;
+    font-size:.78rem;cursor:pointer;font-family:inherit}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin-bottom:14px}
+  .panel h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;
+    color:var(--text-muted);margin:0 0 12px;font-weight:600}
+  canvas{width:100%;display:block;border-radius:8px;background:var(--surface-2)}
+  .legs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.legs{grid-template-columns:1fr}}
+  .cap{font-family:var(--font-mono);font-size:.8rem;margin:8px 0 0;text-align:center}
+  .cap.hard{color:var(--hard)} .cap.soft{color:var(--soft)}
+  .rows{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  button.tog{font-family:inherit;font-size:.85rem;padding:8px 14px;cursor:pointer;
+    border-radius:8px;border:1px solid var(--border);background:var(--surface-2);
+    color:var(--text-muted)}
+  button.tog[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);
+    color:#12100e;font-weight:600}
+  .knobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px 20px}
+  .knob label{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:3px}
+  .knob label b{font-family:var(--font-mono);color:var(--accent);font-weight:600}
+  .knob input{width:100%;accent-color:var(--accent)}
+  .knob p{font-size:.72rem;color:var(--text-muted);margin:3px 0 0}
+  pre{font-family:var(--font-mono);font-size:.76rem;background:var(--surface-2);
+    border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;margin:0}
+  footer{color:var(--text-muted);font-size:.78rem;margin-top:20px}
+  footer code{font-family:var(--font-mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header><h1>Leg motion prototype</h1>
+<button id="theme" type="button">theme</button></header>
+<p class="sub">
+  One of Sesame's 2-DOF legs, side view. The left leg goes straight to the
+  target the way naive servo code does. The right leg uses the motion engine.
+  Same target, same duration — the difference is entirely in <em>how</em> it
+  gets there. Get the feel right here, then port the curve to the ESP32.
+</p>
+
+<div class="panel">
+  <h2>Same command, two ways of obeying it</h2>
+  <div class="legs">
+    <div><canvas id="legHard" width="900" height="720"></canvas>
+      <p class="cap hard">HARD — linear ramp straight to the angle</p></div>
+    <div><canvas id="legSoft" width="900" height="720"></canvas>
+      <p class="cap soft">MOTION ENGINE — eased, anticipated, breathing</p></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Poses — click one and watch both legs</h2>
+  <div class="rows">
+    <button class="tog" type="button" data-pose="stand">stand</button>
+    <button class="tog" type="button" data-pose="crouch">crouch</button>
+    <button class="tog" type="button" data-pose="lunge">lunge</button>
+    <button class="tog" type="button" data-pose="step">step</button>
+    <button class="tog" type="button" data-pose="recoil">recoil</button>
+    <span style="flex:1"></span>
+    <button class="tog" type="button" id="bBreathe" aria-pressed="true">breathing</button>
+    <button class="tog" type="button" id="bAnticip" aria-pressed="true">anticipation</button>
+    <button class="tog" type="button" id="bFollow" aria-pressed="true">follow-through</button>
+    <button class="tog" type="button" id="bLoop" aria-pressed="false">auto-cycle</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Hip angle over time — the curve is the whole point</h2>
+  <canvas id="plot" width="1800" height="360"></canvas>
+</div>
+
+<div class="panel">
+  <h2>Tuning</h2>
+  <div class="knobs" id="knobs"></div>
+</div>
+
+<div class="panel">
+  <h2>Port these to the ESP32</h2>
+  <pre id="export"></pre>
+</div>
+
+<footer>
+  See README, "Making it move like a creature". This runs on the <b>ESP32</b>,
+  not the Pi — smooth motion needs steady timing, and the Pi is busy doing
+  YOLO at 1–2 FPS. Watch <code>MOTION_HZ</code>: drag it below ~15 and the
+  eased leg starts to look like the hard one again.
+</footer>
+
+</div>
+<script>
+"use strict";
+
+/* =====================================================================
+   The motion engine, in the shape it will take on the ESP32.
+
+   Deliberately cheap: one cubic, one sine, no allocation per frame. The
+   ESP32 runs this for 8 joints at 30-50 Hz while also talking to the Pi.
+   ===================================================================== */
+
+const C = {
+  MOVE_MS: 420,        // how long a pose change takes
+  MOTION_HZ: 40,       // interpolation rate on the ESP32
+  BREATH_DEG: 2.5,     // idle breathing amplitude
+  BREATH_HZ: 0.2,      // idle breathing rate
+  ANTICIP_DEG: 7,      // wind-up in the OPPOSITE direction before a move
+  ANTICIP_FRAC: 0.22,  // fraction of the move spent winding up
+  OVERSHOOT: 0.14,     // how far past the target, as a fraction of the move
+  SETTLE_MS: 260,      // how long the overshoot takes to settle out
+  JITTER: 0.15,        // +/- randomisation of duration, so it never loops identically
+};
+
+// Cubic ease-in-out. THE function. Slow out of rest, fast through the middle,
+// slow into the target -- what every limb with mass does. A servo commanded
+// straight to an angle has no mass in the command, and it shows.
+function easeInOut(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Poses are [hip, knee] in degrees. Hip 0 = horizontal; knee is relative.
+const POSES = {
+  stand:  [-28, 74],
+  crouch: [-58, 116],
+  lunge:  [ 10, 46],
+  step:   [ -6, 92],
+  recoil: [-70, 60],
+};
+
+const opt = { breathe: true, anticip: true, follow: true, loop: false };
+
+class Joint {
+  constructor(deg) { this.from = deg; this.to = deg; this.t0 = -1; this.dur = C.MOVE_MS; }
+
+  moveTo(deg, now, dur) {
+    this.from = this.valueRaw(now);
+    this.to = deg;
+    this.t0 = now;
+    // Jitter every move. Eight joints with identical timing is the single
+    // loudest "this is a machine" tell there is.
+    this.dur = Math.max(40, dur * (1 + (Math.random() * 2 - 1) * C.JITTER));
+  }
+
+  // No easing: a plain linear ramp, which is what you get if you just write
+  // the angle and let the servo slew at its own fixed rate.
+  valueHard(now) {
+    if (this.t0 < 0) return this.to;
+    const p = Math.min(1, (now - this.t0) / this.dur);
+    return this.from + (this.to - this.from) * p;
+  }
+
+  valueRaw(now) {
+    if (this.t0 < 0) return this.to;
+    const span = this.to - this.from;
+    if (span === 0) return this.to;
+    const p = Math.min(1, (now - this.t0) / this.dur);
+    const back = opt.anticip ? -Math.sign(span) * C.ANTICIP_DEG : 0;
+
+    if (opt.anticip && p < C.ANTICIP_FRAC) {
+      // Wind up BACKWARDS first. A cat does this before it pounces. It reads
+      // as intent, and it costs one extra keyframe.
+      return this.from + back * easeInOut(p / C.ANTICIP_FRAC);
+    }
+
+    const q = opt.anticip ? (p - C.ANTICIP_FRAC) / (1 - C.ANTICIP_FRAC) : p;
+    const start = this.from + back;
+    let target = this.to;
+
+    if (opt.follow) {
+      // Overshoot, then settle. Mass does not stop dead on the target.
+      const over = this.to + span * C.OVERSHOOT;
+      if (p < 1) {
+        target = over;
+      } else {
+        const s = Math.min(1, (now - this.t0 - this.dur) / C.SETTLE_MS);
+        target = over + (this.to - over) * easeInOut(s);
+      }
+    }
+    return start + (target - start) * easeInOut(Math.min(1, Math.max(0, q)));
+  }
+
+  // Breathing rides on top of everything and never stops. A robot that is
+  // perfectly still between commands reads as switched off.
+  value(now, phase) {
+    let v = this.valueRaw(now);
+    if (opt.breathe) {
+      v += C.BREATH_DEG * Math.sin(2 * Math.PI * C.BREATH_HZ * now / 1000 + phase);
+    }
+    return v;
+  }
+}
+
+const hip = new Joint(POSES.stand[0]);
+const knee = new Joint(POSES.stand[1]);
+let lastSample = 0;
+const trace = [];
+const TRACE_MS = 6000;
+
+function goTo(name) {
+  const now = performance.now();
+  hip.moveTo(POSES[name][0], now, C.MOVE_MS);
+  knee.moveTo(POSES[name][1], now, C.MOVE_MS);
+  document.querySelectorAll("[data-pose]").forEach(b =>
+    b.setAttribute("aria-pressed", String(b.dataset.pose === name)));
+}
+document.querySelectorAll("[data-pose]").forEach(b =>
+  b.addEventListener("click", () => goTo(b.dataset.pose)));
+
+function toggle(id, key) {
+  const b = document.getElementById(id);
+  b.addEventListener("click", () => {
+    opt[key] = !opt[key];
+    b.setAttribute("aria-pressed", String(opt[key]));
+  });
+}
+toggle("bBreathe", "breathe");
+toggle("bAnticip", "anticip");
+toggle("bFollow", "follow");
+toggle("bLoop", "loop");
+
+/* ---------------------------------------------------------------- knobs */
+
+const KNOBS = [
+  ["MOVE_MS", 80, 1200, 10, "ms", "Under ~150ms nothing reads as deliberate."],
+  ["MOTION_HZ", 5, 60, 1, "Hz", "The ESP32's interpolation rate. Drag it to 10 and watch the smooth leg turn ugly."],
+  ["BREATH_DEG", 0, 8, 0.5, "deg", "±2-3 is the sweet spot. Above 5 it looks like it is panting."],
+  ["BREATH_HZ", 0.05, 1, 0.05, "Hz", "0.2Hz is one breath per 5 seconds. A resting animal."],
+  ["ANTICIP_DEG", 0, 20, 1, "deg", "Wind-up before the move. Reads as intent."],
+  ["OVERSHOOT", 0, 0.4, 0.02, "", "Past the target, then settle. Mass does not stop dead."],
+  ["SETTLE_MS", 60, 700, 20, "ms", "How long the overshoot takes to bleed off."],
+  ["JITTER", 0, 0.5, 0.01, "", "Randomises each joint's duration so 8 servos never move as one."],
+];
+const knobs = document.getElementById("knobs");
+for (const [k, min, max, step, unit, why] of KNOBS) {
+  const d = document.createElement("div");
+  d.className = "knob";
+  d.innerHTML = '<label>' + k + ' <b id="v_' + k + '">' + C[k] + unit + '</b></label>' +
+    '<input type="range" id="k_' + k + '" min="' + min + '" max="' + max +
+    '" step="' + step + '" value="' + C[k] + '"><p>' + why + '</p>';
+  knobs.appendChild(d);
+  d.querySelector("input").addEventListener("input", e => {
+    C[k] = parseFloat(e.target.value);
+    document.getElementById("v_" + k).textContent = C[k] + unit;
+    updateExport();
+  });
+}
+
+function updateExport() {
+  document.getElementById("export").textContent =
+"// motion_engine.h  -- paste into the Sesame firmware\n" +
+"static const uint16_t MOVE_MS      = " + Math.round(C.MOVE_MS) + ";\n" +
+"static const uint8_t  MOTION_HZ    = " + Math.round(C.MOTION_HZ) + ";   // interpolation rate\n" +
+"static const float    BREATH_DEG   = " + C.BREATH_DEG.toFixed(1) + "f;\n" +
+"static const float    BREATH_HZ    = " + C.BREATH_HZ.toFixed(2) + "f;\n" +
+"static const float    ANTICIP_DEG  = " + C.ANTICIP_DEG.toFixed(1) + "f;\n" +
+"static const float    ANTICIP_FRAC = " + C.ANTICIP_FRAC.toFixed(2) + "f;\n" +
+"static const float    OVERSHOOT    = " + C.OVERSHOOT.toFixed(2) + "f;\n" +
+"static const uint16_t SETTLE_MS    = " + Math.round(C.SETTLE_MS) + ";\n" +
+"static const float    JITTER       = " + C.JITTER.toFixed(2) + "f;\n" +
+"\n" +
+"// t in 0..1\n" +
+"static inline float easeInOut(float t) {\n" +
+"  return t < 0.5f ? 4*t*t*t : 1 - powf(-2*t + 2, 3) / 2;\n" +
+"}\n" +
+"\n" +
+"// WARNING: Sesame staggers its servo writes by 20ms to limit inrush current.\n" +
+"// At " + Math.round(C.MOTION_HZ) + "Hz you have " + Math.round(1000 / C.MOTION_HZ) + "ms per frame for all 8 joints, so that\n" +
+"// stagger cannot survive. Fit 1000uF+ across the servo rail FIRST and\n" +
+"// characterise the brown-out before removing it -- BUILD_CHECKLIST week 3.";
+}
+updateExport();
+
+/* ---------------------------------------------------------------- draw */
+
+const L1 = 190, L2 = 210;   // upper and lower segment, px
+
+function cssv(n) {
+  return getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+}
+
+function drawLeg(cv, hipDeg, kneeDeg, colour) {
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H);
+  const ox = W * 0.5, oy = H * 0.30;
+
+  g.strokeStyle = cssv("--grid"); g.lineWidth = 3;
+  g.beginPath(); g.moveTo(0, H - 60); g.lineTo(W, H - 60); g.stroke();
+  g.fillStyle = cssv("--grid");
+  g.fillRect(ox - 150, oy - 54, 300, 54);
+
+  const a1 = hipDeg * Math.PI / 180;
+  const kx = ox + L1 * Math.cos(a1), ky = oy - L1 * Math.sin(a1);
+  const a2 = a1 - kneeDeg * Math.PI / 180;
+  const fx = kx + L2 * Math.cos(a2), fy = ky - L2 * Math.sin(a2);
+
+  g.lineCap = "round"; g.lineJoin = "round";
+  g.strokeStyle = colour; g.lineWidth = 20;
+  g.beginPath(); g.moveTo(ox, oy); g.lineTo(kx, ky); g.lineTo(fx, fy); g.stroke();
+  for (const j of [[ox, oy, 15], [kx, ky, 13], [fx, fy, 10]]) {
+    g.fillStyle = cssv("--surface");
+    g.beginPath(); g.arc(j[0], j[1], j[2], 0, 7); g.fill();
+    g.strokeStyle = colour; g.lineWidth = 5; g.stroke();
+  }
+  g.fillStyle = cssv("--text-muted");
+  g.font = "26px " + cssv("--font-mono");
+  g.fillText("hip  " + hipDeg.toFixed(1) + "°", 20, 40);
+  g.fillText("knee " + kneeDeg.toFixed(1) + "°", 20, 76);
+}
+
+function drawPlot() {
+  const cv = document.getElementById("plot");
+  const g = cv.getContext("2d"), W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H);
+  if (trace.length < 2) return;
+  const now = trace[trace.length - 1].t, t0 = now - TRACE_MS;
+  let lo = Infinity, hi = -Infinity;
+  for (const p of trace) {
+    lo = Math.min(lo, p.hard, p.soft);
+    hi = Math.max(hi, p.hard, p.soft);
+  }
+  lo -= 6; hi += 6;
+  const X = t => ((t - t0) / TRACE_MS) * W;
+  const Y = v => H - 26 - ((v - lo) / (hi - lo || 1)) * (H - 52);
+
+  g.strokeStyle = cssv("--grid"); g.lineWidth = 1;
+  for (let s = Math.ceil(t0 / 1000) * 1000; s <= now; s += 1000) {
+    g.beginPath(); g.moveTo(X(s), 0); g.lineTo(X(s), H); g.stroke();
+  }
+  for (const pair of [["hard", "--hard"], ["soft", "--soft"]]) {
+    g.strokeStyle = cssv(pair[1]); g.lineWidth = 4;
+    g.beginPath();
+    trace.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p[pair[0]]))
+                              : g.moveTo(X(p.t), Y(p[pair[0]])));
+    g.stroke();
+  }
+  g.fillStyle = cssv("--text-muted");
+  g.font = "22px " + cssv("--font-mono");
+  g.fillText("hip angle, last 6s      — hard      — engine", 14, 26);
+}
+
+const CYCLE = ["stand", "lunge", "recoil", "crouch", "step"];
+let cycleIdx = 0, nextPose = 0;
+
+function frame() {
+  const now = performance.now();
+
+  // Sample at MOTION_HZ, not at the browser's refresh rate. That is what
+  // makes the MOTION_HZ slider actually show you something real.
+  if (now - lastSample >= 1000 / C.MOTION_HZ) {
+    lastSample = now;
+    const hHip = hip.valueHard(now), hKnee = knee.valueHard(now);
+    const sHip = hip.value(now, 0), sKnee = knee.value(now, 1.1);
+    drawLeg(document.getElementById("legHard"), hHip, hKnee, cssv("--hard"));
+    drawLeg(document.getElementById("legSoft"), sHip, sKnee, cssv("--soft"));
+    trace.push({ t: now, hard: hHip, soft: sHip });
+    while (trace.length && trace[0].t < now - TRACE_MS) trace.shift();
+    drawPlot();
+  }
+
+  if (opt.loop && now > nextPose) {
+    cycleIdx = (cycleIdx + 1) % CYCLE.length;
+    goTo(CYCLE[cycleIdx]);
+    nextPose = now + 1400;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------------------------------------------------------------- theme */
+document.getElementById("theme").addEventListener("click", () => {
+  const root = document.documentElement, cur = root.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = dark ? "light" : "dark";
+  root.setAttribute("data-theme", next);
+  try { localStorage.setItem("enforcer-theme", next); } catch (e) { /* private mode */ }
+});
+try {
+  const s = localStorage.getItem("enforcer-theme");
+  if (s) document.documentElement.setAttribute("data-theme", s);
+} catch (e) { /* private mode: use the OS default */ }
+
+goTo("stand");
+frame();
+</script>
+</body>
+</html>

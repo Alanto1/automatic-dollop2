@@ -1,0 +1,4 @@
+# Laptop-only. None of this goes on the Pi -- there you install ncnn instead
+# and re-export the model (see README).
+ultralytics>=8.2
+opencv-python>=4.9
