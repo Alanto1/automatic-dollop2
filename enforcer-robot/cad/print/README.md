@@ -127,7 +127,11 @@ between them:
 What it is now, front to back: a wall leaning back 20° carrying the **camera**
 (back face, lens through the window) and the **nozzle** tube (hole below the
 window) — one wall, so they cannot aim apart; the **bottle standing up** in a
-socket on the centreline; and the **Pi standing up** on a wall at the back,
+socket on the centreline, **raised 20 mm on a lip** because its outlet is
+drilled through the base — the tube drops out, bends forward under the bottle
+(15 mm radius, the tightest a 6 mm silicone tube takes without kinking) and
+leaves through the socket's front opening straight to the nozzle; and the
+**Pi standing up** on a wall at the back,
 component side facing outward so a spill while refilling runs down the wall
 rather than over the board. Standoffs for both the 3A+ and the Zero.
 
@@ -142,6 +146,7 @@ already sits at the back.
 |---|---|---|
 | `DECK_L` × `DECK_W` | 90 × 60 mm | measure the top cover's flat area |
 | `BOTTLE_D` | 36 mm | measure your bottle's **outside** diameter |
+| `TUBE_D` | 6 mm | measured — the line the pump head was tested with. Check it is the **outside** diameter |
 | `CAM_HOLES` | 21 × 12.5 mm | measure your camera's 4 mounting holes, centre to centre |
 | `SESAME_MASS_G` | 380 g | weigh the assembled robot |
 
@@ -149,14 +154,19 @@ Set them, re-run `python3 make_stl.py --test`, *then* print:
 
 | Part | Qty | g | est. | Settings |
 |---|---|---|---|---|
-| `payload_frame` | 1 | ~33 | ≈ 2 h | deck down on the bed, **no supports**, 4 walls, 25% infill |
+| `payload_frame` | 1 | ~36 | ≈ 2 h | deck down on the bed, **no supports**, 4 walls, 25% infill |
 | `cliff_bracket` | 4 | 6 | 16 min | nothing to wait for |
 | `boss_coupon` | 2 | 5 | 12 min | done — see plate 0b |
 
 **Fixings:** 4 × **M2.5 × 8** screws for the Pi (they thread into the
 standoffs), 4 × **M2** screws + nuts for the camera, zip ties through the four
-deck slots to hold it to the top cover. The bottle is a snug push fit; a pad
-of double-sided foam tape under it makes it permanent.
+deck slots to hold it to the top cover. The bottle is a snug push fit on its
+lip. **About 6 cm of tube** from the bottle's base to the nozzle — the length
+the pump head was measured with.
+
+⚠️ **Leak-test the glued outlet before it goes on the robot.** It sits directly
+over the deck, and the deck sits over the ESP32. Fill the bottle, stand it on
+paper towel for an hour, look for a wet ring.
 
 ### The trade-off of one part
 

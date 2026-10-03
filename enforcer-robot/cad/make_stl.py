@@ -45,7 +45,9 @@ GRID_COLS = 5
 GRID_ROWS = 3
 
 BOTTLE_D = 36.0             # reservoir diameter -- measure your bottle
-TUBE_D = 4.5                # silicone tubing OD
+TUBE_D = 6.0                # silicone tubing OD -- MEASURED: the 6mm line the
+                            # pump head was measured with (BEHAVIOURS.md)
+TUBE_BEND_R = 2.5 * TUBE_D  # tightest bend a silicone tube takes without kinking
 TCRT_W = 10.6               # TCRT5000 module body
 TCRT_H = 6.2
 
@@ -72,9 +74,17 @@ PI_LIFT = 2.0               # board's lower edge above the deck top
 
 # The bottle STANDS UP in a socket. Lying down -- the old cradles -- 30ml is
 # 18mm deep and the 23.5mm pump sucks air; standing, it is 29mm.
-SOCKET_H = 24.0             # socket wall height
+#
+# The outlet is drilled through the bottle's BOTTOM, so the bottle stands on a
+# raised lip, not on the deck: the tube drops out of the base, bends forward
+# under the bottle and leaves through the socket's front opening, running
+# straight to the nozzle. The lift is what that bend needs (see self_test).
+SOCKET_LIFT = 20.0          # deck top to the bottle's base
+SOCKET_H = 18.0             # socket wall above the bottle's base
 SOCKET_WALL = 2.4
 SOCKET_CLEAR = 0.4          # diametral clearance round the bottle
+SOCKET_OPEN = 16.0          # front opening: the tube, and the pump wires
+RIM_REST = 2.0              # how far in the lip reaches under the bottle's rim
 CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
 
 # --- the screw bosses that keep splitting --------------------------------
@@ -584,7 +594,7 @@ def payload_cases():
     cannot: a phone is ~half of Sesame's own mass, and the torque needed at
     any usable stance is past what MG90S can hold. See BEHAVIOURS.md.
     """
-    deck_pi_cam = 33.0 + BRAIN_G + 5.0  # payload_frame, brain, camera
+    deck_pi_cam = 36.0 + BRAIN_G + 5.0  # payload_frame, brain, camera
     rig = 20.0                          # pump + tubing
     voice = AMP_G + MIC_G + SPEAKER_G   # amp + mic + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
@@ -729,7 +739,7 @@ def _front_wall_profile():
     cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
     holes = [circle(sx * cx, cam_v + sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
     holes.append(rounded_rect(0.0, cam_v, 10.0, 10.0, 1.5, cw=True))
-    holes.append(circle(0.0, noz_v, TUBE_D))
+    holes.append(circle(0.0, noz_v, TUBE_D + 0.4))      # 6mm tube, push fit
     return rounded_rect(0.0, h / 2, w, h, 3.0), holes
 
 
@@ -776,10 +786,18 @@ def payload_frame():
         tris += remap(g, lambda q, y0=y0: (xw + T + q[0], y0 + q[2], q[1]), flip=True)
 
     # --- bottle socket ----------------------------------------------------
+    # One C-shaped wall from the deck up, open at the front, and a lip inside
+    # it that the bottle's rim stands on. The space under the bottle is where
+    # the tube turns; the opening is where it leaves. The lip overhangs the
+    # wall by ~2.4mm inward -- prints without supports, rough underneath,
+    # and nobody sees it.
     cx, cy = _socket_centre()
     r_in = BOTTLE_D / 2 + SOCKET_CLEAR / 2
-    tris += extrude(_c_ring(cx, cy, r_in, r_in + SOCKET_WALL, 3.0), [],
-                    T - 0.6, T + SOCKET_H)
+    z_floor = T + SOCKET_LIFT
+    tris += extrude(_c_ring(cx, cy, r_in, r_in + SOCKET_WALL, SOCKET_OPEN), [],
+                    T - 0.6, z_floor + SOCKET_H)
+    tris += extrude(_c_ring(cx, cy, BOTTLE_D / 2 - RIM_REST, r_in + 0.5, SOCKET_OPEN), [],
+                    z_floor - 2.0, z_floor)
 
     # --- front wall, leaning back NOZZLE_TILT -----------------------------
     t = math.radians(NOZZLE_TILT)
@@ -998,11 +1016,23 @@ def self_test():
     else:
         print(f"  ok    camera and nozzle both +{NOZZLE_TILT:.0f}deg above horizontal")
 
+    # The outlet is in the bottle's base: the tube drops out, bends forward and
+    # must clear the deck. Room needed below the base = a short glued stub,
+    # the bend, and the tube's own radius.
+    need = 2.0 + TUBE_BEND_R + TUBE_D / 2
+    if SOCKET_LIFT < need:
+        print(f"  FAIL  {SOCKET_LIFT:.0f}mm under the bottle; a {TUBE_D:.0f}mm tube needs "
+              f"{need:.0f}mm to turn without kinking")
+        ok = False
+    else:
+        print(f"  ok    {SOCKET_LIFT:.0f}mm under the bottle for the {TUBE_D:.0f}mm tube to turn "
+              f"(needs {need:.0f}mm at a {TUBE_BEND_R:.0f}mm bend)")
+
     # Payload budget. Weigh your Sesame; these are the parts you are adding.
     water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm fill, 1g/ml
     payload = {
         "water": water_g,
-        "payload_frame": 33.0,          # 36 cm3, thin walls print near-solid
+        "payload_frame": 36.0,          # 39 cm3, thin walls print near-solid
         BRAIN: BRAIN_G,
         "camera + ribbon": 5.0,
         "pump + tubing": 20.0,
