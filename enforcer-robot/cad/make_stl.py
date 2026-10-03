@@ -32,8 +32,13 @@ import sys
 # !!! MEASURE YOUR PRINTED SESAME AND SET THESE TWO !!!
 # Everything bolts to one payload deck, so the top cover footprint is the
 # only upstream dimension this file depends on. One unknown, not ten.
-DECK_L = 90.0               # along the robot's spine
-DECK_W = 60.0               # across
+# MEASURED 2026-10-03. Sesame's body is 79 x 37mm (from the STLs); its top
+# cover's flat is ~44 x 26mm (measured by hand; the STL says 55 x 25 including
+# a raised bump at one end). The deck is a tray resting on that flat and
+# overhanging it: as narrow as the 42mm bottle allows, and as long as the
+# Pi wall + socket + camera wall need -- 82mm against a 79mm body.
+DECK_L = 82.0               # along the robot's spine
+DECK_W = 48.0               # across -- the robot is 37
 
 PLATE_T = 3.0               # standard printed plate thickness
 M2 = 2.2                    # clearance holes
@@ -44,7 +49,13 @@ GRID_PITCH = 12.0           # mounting grid on the deck
 GRID_COLS = 5
 GRID_ROWS = 3
 
-BOTTLE_D = 36.0             # reservoir diameter -- measure your bottle
+# MEASURED: 38.8 and 42.1mm -- which one is the body near the base is not
+# yet known. So the socket wall is sized for the LARGER and the lip it stands
+# on for the SMALLER: it fits either way, loose by ~1.6mm if the body is the
+# small one (a wrap of foam tape takes that up).
+BOTTLE_D = 42.1             # socket wall and the water-depth check
+BOTTLE_BASE_D = 38.8        # the lip the base stands on
+FILL_ML = 30.0              # decided 2026-09-27: 50ml is over the servo budget
 TUBE_D = 6.0                # silicone tubing OD -- MEASURED: the 6mm line the
                             # pump head was measured with (BEHAVIOURS.md)
 TUBE_BEND_R = 2.5 * TUBE_D  # tightest bend a silicone tube takes without kinking
@@ -85,7 +96,11 @@ SOCKET_WALL = 2.4
 SOCKET_CLEAR = 0.4          # diametral clearance round the bottle
 SOCKET_OPEN = 16.0          # front opening: the tube, and the pump wires
 RIM_REST = 2.0              # how far in the lip reaches under the bottle's rim
-CAM_HOLES = (21.0, 12.5)     # Raspberry Pi camera module mounting pattern
+# The camera is a bare lens block on a ribbon -- no board, no screw holes.
+# MEASURED 8.8mm across; 5.1mm thick per BerryBase's listing. It slides into
+# a square pocket behind the front wall, lens through a round hole.
+CAM_BLOCK = 8.8
+CAM_THICK = 5.1
 
 # --- the screw bosses that keep splitting --------------------------------
 #
@@ -594,7 +609,7 @@ def payload_cases():
     cannot: a phone is ~half of Sesame's own mass, and the torque needed at
     any usable stance is past what MG90S can hold. See BEHAVIOURS.md.
     """
-    deck_pi_cam = 36.0 + BRAIN_G + 5.0  # payload_frame, brain, camera
+    deck_pi_cam = 34.0 + BRAIN_G + 5.0  # payload_frame, brain, camera
     rig = 20.0                          # pump + tubing
     voice = AMP_G + MIC_G + SPEAKER_G   # amp + mic + 8ohm speaker
     water = lambda ml: float(ml)        # 1 g/ml
@@ -691,7 +706,7 @@ def _pi_wall_x():
     in from the back edge the payload's centre of mass sat 15mm behind
     centre; at 18mm it is ~8mm, the board overhangs the back by ~5mm instead
     of 13, and the camera still has 17mm of room behind the front wall."""
-    return -DECK_L / 2 + 18.0
+    return -DECK_L / 2 + 8.0
 
 
 def _pi_hole_rows():
@@ -726,31 +741,38 @@ def _socket_centre():
     return _pi_wall_x() + PLATE_T + r_out - 1.0, 0.0
 
 
+CAM_V, NOZ_V = 20.0, 9.0   # up the front wall: lens centre, tube centre
+
+
 def _front_wall_size():
-    return 40.0, 40.0
+    return 40.0, 32.0
 
 
 def _front_wall_profile():
-    """(u across, v up the wall). Camera on the back face with the lens
-    through the window; the tube through the hole below it. Same wall, so
-    the same aim, by construction."""
+    """(u across, v up the wall). Lens hole, and the tube hole below it --
+    one wall, so camera and nozzle share an aim by construction."""
     w, h = _front_wall_size()
-    cam_v, noz_v = 27.0, 9.0
-    cx, cy = CAM_HOLES[0] / 2, CAM_HOLES[1] / 2
-    holes = [circle(sx * cx, cam_v + sy * cy, M2) for sx in (-1, 1) for sy in (-1, 1)]
-    holes.append(rounded_rect(0.0, cam_v, 10.0, 10.0, 1.5, cw=True))
-    holes.append(circle(0.0, noz_v, TUBE_D + 0.4))      # 6mm tube, push fit
+    holes = [circle(0.0, CAM_V, 6.5),                   # the lens looks out
+             circle(0.0, NOZ_V, TUBE_D + 0.4)]          # 6mm tube, push fit
     return rounded_rect(0.0, h / 2, w, h, 3.0), holes
 
 
+def _cam_pocket():
+    """Square collar on the wall's back face. The lens block slides in from
+    behind and seats against the wall; the ribbon leaves out of the back."""
+    a = CAM_BLOCK + 0.4
+    return (rounded_rect(0.0, CAM_V, a + 4.0, a + 4.0, 1.5),
+            [rounded_rect(0.0, CAM_V, a, a, 0.6, cw=True)])
+
+
 def _deck_profile():
-    """Outline plus every hole: four zip-tie slots, and a cable slot behind
-    the Pi wall for the pump wires, the Pi's power and the ESP32 link."""
+    """Outline, and a cable slot behind the Pi wall for the pump wires, the
+    Pi's power and the ESP32 link. No zip-tie slots: at 48mm the deck is only
+    5mm wider than the robot each side, with nothing to tie round. It goes on
+    with double-sided foam tape on the cover's flat."""
     xw = _pi_wall_x()
-    slots = [rounded_rect(sx, sy * 26.0, 14.0, 3.5, 1.7, cw=True)
-             for sx in (0.0, 22.0) for sy in (-1, 1)]   # clear of every gusset
-    cable = rounded_rect(xw - 3.25, 0.0, 4.0, 24.0, 1.9, cw=True)
-    return rounded_rect(0, 0, DECK_L, DECK_W, 5.0), slots + [cable]
+    cable = rounded_rect(xw - 3.25, 0.0, 4.0, 20.0, 1.9, cw=True)
+    return rounded_rect(0, 0, DECK_L, DECK_W, 5.0), [cable]
 
 
 def payload_frame():
@@ -796,7 +818,7 @@ def payload_frame():
     z_floor = T + SOCKET_LIFT
     tris += extrude(_c_ring(cx, cy, r_in, r_in + SOCKET_WALL, SOCKET_OPEN), [],
                     T - 0.6, z_floor + SOCKET_H)
-    tris += extrude(_c_ring(cx, cy, BOTTLE_D / 2 - RIM_REST, r_in + 0.5, SOCKET_OPEN), [],
+    tris += extrude(_c_ring(cx, cy, BOTTLE_BASE_D / 2 - RIM_REST, r_in + 0.5, SOCKET_OPEN), [],
                     z_floor - 2.0, z_floor)
 
     # --- front wall, leaning back NOZZLE_TILT -----------------------------
@@ -808,11 +830,13 @@ def payload_frame():
     to_front = lambda q: (xf + q[1] * dx + q[2] * nx, q[0], zf + q[1] * dz + q[2] * nz)
     f_out, f_holes = _front_wall_profile()
     tris += remap(extrude(f_out, f_holes, -T, 0.0), to_front)
+    p_out, p_holes = _cam_pocket()
+    tris += remap(extrude(p_out, p_holes, -T - CAM_THICK - 0.4, -T + 0.5), to_front)
 
-    # its gussets, behind, clear of a camera board up to 32mm wide
+    # its gussets, behind, clear of the camera pocket
     fw, _ = _front_wall_size()
     bx, bz = xf - T * nx + 0.8, zf - T * nz          # back face, at the deck
-    top = (bx + 22.0 * dx, bz + 22.0 * dz)
+    top = (bx + 16.0 * dx, bz + 16.0 * dz)
     for sy in (-1, 1):
         g = extrude(_triangle((bx, bz), (bx - 14.0, T - 0.5), top), [], 0, 3.0)
         y0 = sy * (fw / 2) - (3.0 if sy > 0 else 0.0)
@@ -956,6 +980,7 @@ def profile_checks():
     out += check_profile(*_deck_profile(), "payload_frame deck")
     out += check_profile(*_pi_wall_profile(), "payload_frame Pi wall")
     out += check_profile(*_front_wall_profile(), "payload_frame front wall")
+    out += check_profile(*_cam_pocket(), "payload_frame camera pocket")
     out += check_profile(
         rounded_rect(0, 0, 18.0, 16.0, 3.0),
         [rounded_rect(0.0, 1.0, TCRT_W, TCRT_H, 1.0, cw=True)],
@@ -1029,10 +1054,10 @@ def self_test():
               f"(needs {need:.0f}mm at a {TUBE_BEND_R:.0f}mm bend)")
 
     # Payload budget. Weigh your Sesame; these are the parts you are adding.
-    water_g = math.pi * (BOTTLE_D / 2) ** 2 * 60.0 / 1000.0  # 60mm fill, 1g/ml
+    water_g = FILL_ML                    # 1 g/ml; the bottle is never filled further
     payload = {
         "water": water_g,
-        "payload_frame": 36.0,          # 39 cm3, thin walls print near-solid
+        "payload_frame": 34.0,          # 37 cm3, thin walls print near-solid
         BRAIN: BRAIN_G,
         "camera + ribbon": 5.0,
         "pump + tubing": 20.0,
@@ -1107,7 +1132,7 @@ def self_test():
               else f"        n/a  {r*100:3.0f}cm -> unreachable")
 
     # --- the pump intake must stay submerged ------------------------------
-    fill = 30.0
+    fill = FILL_ML
     depth = reservoir_depth_mm(fill, BOTTLE_D)
     if depth < 20.0:
         print(f"  FAIL  {fill:.0f}ml in a {BOTTLE_D:.0f}mm bottle is only "

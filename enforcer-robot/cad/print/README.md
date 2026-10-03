@@ -140,27 +140,36 @@ there) sit low and central, and the Pi wall is set in from the back edge until
 the payload's centre of mass was within ~8 mm of the middle — Sesame's battery
 already sits at the back.
 
-⚠️ **Do not print it yet.** Its size comes from estimates:
+**Measured 2026-10-03**, and the deck redrawn to them:
 
-| Constant | Now | Where the real number comes from |
-|---|---|---|
-| `DECK_L` × `DECK_W` | 90 × 60 mm | measure the top cover's flat area |
-| `BOTTLE_D` | 36 mm | measure your bottle's **outside** diameter |
-| `TUBE_D` | 6 mm | measured — the line the pump head was tested with. Check it is the **outside** diameter |
-| `CAM_HOLES` | 21 × 12.5 mm | measure your camera's 4 mounting holes, centre to centre |
-| `SESAME_MASS_G` | 380 g | weigh the assembled robot |
+| Constant | Was | Now | Source |
+|---|---|---|---|
+| `DECK_L` × `DECK_W` | 90 × 60 | **82 × 48** | Sesame's body is 79 × 37 (STL); the cover's flat is ~44 × 26 (measured). The old deck was wider than the whole robot |
+| `BOTTLE_D` / `BOTTLE_BASE_D` | 36 | **42.1 / 38.8** | measured. Socket wall sized to the larger, the lip to the smaller, so it fits whichever is the body |
+| camera | 4 screw holes | **8.8 mm lens block in a pocket** | measured. It has no board and no holes |
+| `TUBE_D` | 4.5 | **6** | the line the pump head was measured with |
+
+⚠️ **Still open before printing:**
+
+- **Which end of the top cover the raised bump is at** (front = `R1`/`L1`, or
+  back). It stands 4 mm above the flat the deck rests on; the deck needs a
+  notch there.
+- **Which bottle number is the body near the base** — to take the 1.9 mm of
+  play out of the socket if it is the 38.8.
+- **`SESAME_MASS_G`** — still the 380 g estimate. Weigh it.
 
 Set them, re-run `python3 make_stl.py --test`, *then* print:
 
 | Part | Qty | g | est. | Settings |
 |---|---|---|---|---|
-| `payload_frame` | 1 | ~36 | ≈ 2 h | deck down on the bed, **no supports**, 4 walls, 25% infill |
+| `payload_frame` | 1 | ~34 | ≈ 2 h | deck down on the bed, **no supports**, 4 walls, 25% infill |
 | `cliff_bracket` | 4 | 6 | 16 min | nothing to wait for |
 | `boss_coupon` | 2 | 5 | 12 min | done — see plate 0b |
 
 **Fixings:** 4 × **M2.5 × 8** screws for the Pi (they thread into the
-standoffs), 4 × **M2** screws + nuts for the camera, zip ties through the four
-deck slots to hold it to the top cover. The bottle is a snug push fit on its
+standoffs). The camera's lens block slides into its pocket from behind — a
+dot of hot glue holds it. The frame goes onto the top cover's flat with
+**double-sided foam tape**: at 48 mm wide there is nothing to zip-tie round. The bottle is a snug push fit on its
 lip. **About 6 cm of tube** from the bottle's base to the nozzle — the length
 the pump head was measured with.
 
